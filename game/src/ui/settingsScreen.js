@@ -10,6 +10,7 @@ export const SETTINGS_LAYOUT = [
   { key: 'master', label: 'Master volume', fmt: pct, off: true },
   { key: 'music', label: 'Music', fmt: pct, off: true },
   { key: 'sfx', label: 'Sound effects', fmt: pct, off: true },
+  { key: 'voice', label: 'Voice', fmt: pct, off: true },
   { section: 'Controls' },
   { key: 'mouseSensitivity', label: 'Mouse sensitivity', fmt: (v) => `×${v.toFixed(2)}` },
   { key: 'aimAssist', label: 'Aim assist', fmt: (v) => (v <= 0 ? 'OFF' : pct(v)), off: true },

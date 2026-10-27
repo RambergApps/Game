@@ -4,7 +4,7 @@ const { chromium } = require('/workspace/breach/node_modules/playwright-core');
   const b = await chromium.launch({ executablePath: process.env.HOME + '/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome' });
   const p = await b.newPage({ viewport: { width: 1280, height: 720 } });
   const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
-  await p.goto('http://localhost:8765/index.html?view=34'); await p.waitForTimeout(800);
+  await p.goto(`http://localhost:${process.env.PORT || 8765}/index.html?view=34`); await p.waitForTimeout(800);
   await p.evaluate(() => BREACH.startGame()); await p.waitForTimeout(600);
   for (let i = 0; i < 3; i++) { if (await p.$('.breach-cutscene')) { await p.keyboard.press('Escape'); await p.waitForTimeout(400); } }
   await p.waitForTimeout(2500);

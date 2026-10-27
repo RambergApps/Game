@@ -200,7 +200,7 @@ T.fire = (st, o) => { const e = takeEmitter(st.pool); if (!e) return; e.kind = '
 /** Sprekk-glød før innhopp. { x, y, t (varseltid s), id, type, size=1 } – emitter; avsluttes av 'rise' eller tid. */
 T.crack = (st, o) => {
   const e = takeEmitter(st.pool); if (!e) return; e.kind = 'crack'; e.x = o.x; e.y = o.y; e.life = Math.max(0.2, o.t ?? 0.9); e.id = o.id ?? null;
-  e.size = o.size ?? (o.type === 'heavy' ? 1.25 : 1); e.v = Math.floor(st.rng() * 4); return e;
+  e.size = o.size ?? (o.type === 'heavy' ? 1.25 : 1); e.v = Math.floor(st.rng() * 4); e.hid = !!o.hidden; return e;
 };
 /** Oppbrudd fra bakken (spawnRise). { x, y, id, size=1 } */
 T.rise = (st, o) => {
@@ -251,6 +251,34 @@ T.melee = (st, o) => {
 /** Boss (stub): ventilutblåsning – gjenbruker ild og glør til Fiende-design/Fiende-AI leverer boss-hendelser. { x, y, angle } */
 T.bossVent = (st, o) => { for (let i = 0; i < N(st, 6); i++) fireP(st, o.x, o.y, 20, { a: o.angle ?? -Math.PI / 2, v: 60, vz: 60, r: 9, life: 0.6, heat: 1 }); T.embers(st, { x: o.x, y: o.y, w: 30, h: 30, n: 8, ash: false }); };
 
+// ---- Warden over dekning (coverpose.js). Støv/grus løsner fra toppkanten + kort kaldt blink i kanten; treff oppreist = harde gnister på brystplata.
+/** { x, y (kantpunkt i bakkeplanet), z (dekningshøyde), nx, ny (normal mot fienden), tx, ty (langs kanten), material } */
+T.coverRise = (st, o) => {
+  const R = st.rng, z = o.z ?? 24, nx = o.nx ?? 0, ny = o.ny ?? -1, a = Math.atan2(ny, nx), tx = o.tx ?? -ny, ty = o.ty ?? nx, dd = (o.depth ?? 12) * 0.5, met = o.material === 'metal', k = o.scale ?? 1;   // scale: støvtak (coverpose.js)
+  // varm kantlist: korte glødpunkter langs toppkanten der han reiser seg (additivt, 0,35 s)
+  for (let i = -3; i <= 3; i++) glowP(st, o.x + tx * i * 7 + nx * dd, o.y + ty * i * 7 + ny * dd, z, 9, [255, 196, 120], 0.35, 0.55 - Math.abs(i) * 0.06);
+  glowP(st, o.x + nx * dd, o.y + ny * dd, z + 3, 22, [255, 226, 180], 0.08, 0.75);
+  // tett, lys støvvifte langs normalen (mot fienden), 0,4–0,6 s
+  const n = N(st, 16 * k);
+  for (let i = 0; i < n; i++) { const s = (R() - 0.5) * 50, x = o.x + tx * s + nx * dd, y = o.y + ty * s + ny * dd;
+    puffP(st, x, y, z + R() * 3, { tone: met ? 'smoke' : 'concrete', a: a + (R() - 0.5) * 0.9, v: 70, vz: 14, r: 4.4, grow: 2.2, life: 0.5, alpha: 0.62, drag: 4, fadeIn: 0.02 }); }
+  for (let i = 0; i < N(st, 14 * k); i++) { const s = (R() - 0.5) * 46; const p = shardP(st, o.x + tx * s + nx * dd, o.y + ty * s + ny * dd, z, a + (R() - 0.5) * 1.1, 'concrete', { v: 110, s: 1.4, life: 0.7, el: 0.4 + R() * 0.7 }); p.fadeOut = 3; }
+};
+/** Vedvarende, svak markør mens eksponert: kald glans på skuldre/hjelm + tynn bakkehalo mot fienden. Kalles ~7 ganger/s; fader selv ved dukk. */
+T.exposedCue = (st, o) => {
+  const nx = o.nx ?? 0, ny = o.ny ?? -1;
+  glowP(st, o.x, o.y, 40, 18, [170, 205, 255], 0.3, 0.45);
+  glowP(st, o.x + nx * 14, o.y + ny * 14, 0, 26, [150, 190, 255], 0.3, 0.22, L_UNDER);
+};
+/** Treff mens oppreist/eksponert. { x, y, z, angle (kulas retning), power } */
+T.exposedHit = (st, o) => {
+  const R = st.rng, pw = Math.max(0.5, o.power ?? 1), back = (o.angle ?? 0) + Math.PI, z = o.z ?? 34, x = o.x, y = o.y;
+  glowP(st, x, y, z, 20 * pw, [255, 236, 200], 0.05, 1);
+  glowP(st, x, y, z, 11 * pw, [255, 140, 50], 0.22, 0.9, L_OVER, 0.02);
+  for (let i = 0; i < N(st, 16 * pw); i++) sparkP(st, x, y, z, back + (R() - 0.5) * 2.2, { v: 420, el: R() * 0.9 - 0.2, life: 0.4, len: 3.2, w: 0.8, col: [255, 200, 120], bounce: 0.4, stretch: 0.035 });
+  for (let i = 0; i < N(st, 3); i++) shardP(st, x, y, z, back + (R() - 0.5) * 1.4, 'metal', { v: 110, s: 1.4, life: 1.1, hot: true });
+  puffP(st, x, y, z, { tone: 'smoke', a: back, v: 22, vz: 8, r: 3.5, grow: 2, life: 0.6, alpha: 0.2 });
+};
 export const TYPES = Object.keys(T).filter((k) => k[0] !== '_');
 /** Hovedinngang. Returnerer true hvis typen fantes. */
 function spawnImpl(world, type, params = {}) {
@@ -271,11 +299,13 @@ function updEmitter(st, e, dt) {
   if (e.kind === 'crack') {
     const k = Math.min(1, e.t / e.life); e.p = k;
     e.acc += dt * (8 + 30 * k);                                     // glør + småstein øker mot oppbruddet
+    const log = e.hid ? (st.pool.log = []) : null;                   // skjult bak høy dekning: partiklene til under-laget (som spawnImpl)
     while (e.acc > 1) { e.acc -= 1; const a = R() * TAU, r = (6 + R() * 26 * k) * e.size;
       if (R() < 0.55) T._ember(st, e.x + Math.cos(a) * r, e.y + Math.sin(a) * r, 1, 0.8);
       else { const p = shardP(st, e.x + Math.cos(a) * r, e.y + Math.sin(a) * r, 0, a, R() < 0.5 ? 'concrete' : 'rock', { v: 30 + 40 * k, s: 1.3, life: 0.9, el: 1.2 }); p.fadeOut = 3; }
       if (R() < 0.12) puffP(st, e.x + Math.cos(a) * r * 0.5, e.y + Math.sin(a) * r * 0.5, 1, { tone: 'dust', a, v: 14, vz: 8, r: 5, grow: 1.4, life: 1, alpha: 0.25, layer: L_UNDER });
     }
+    if (log) { st.pool.log = null; for (let i = 0; i < log.length; i++) if (log[i].layer === L_OVER) log[i].layer = L_UNDER; }
     if (e.t > e.life + 0.25 || e.done) e.on = false;
   } else if (e.kind === 'fire') {
     e.acc += dt * 26;
@@ -307,7 +337,7 @@ function updateImpl(dt, world) {
     }
   }
   for (const d of pool.D) if (d.on) { d.t += dt; if (d.t >= d.life) d.on = false; }
-  pool.live = live; pool.taken = 0; autoMed(st, live, dt); if (live > pool.peak) pool.peak = live; setLoad(st, live); if (st.tickHot) st.tickHot(); if (u0) st.stats.updMs = performance.now() - u0;
+  pool.live = live; pool.taken = 0; autoMed(st, live, dt); if (live > pool.peak) pool.peak = live; setLoad(st, live); if (st.tickHot) st.tickHot(); if (st.tickPose) st.tickPose(); if (st.tickCue) st.tickCue(dt); if (u0) st.stats.updMs = performance.now() - u0;
 }
 
 // ---------------------------------------------------------------- tegning

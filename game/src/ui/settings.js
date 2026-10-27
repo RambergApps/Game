@@ -8,7 +8,7 @@ export const SETTINGS_VERSION = 1;
 /** Standardverdier. Volum 0..1, sensitivitet 0.25..2 (1 = nøytral), aimAssist 0..1 (0 = av), screenShake 0..1. */
 export const DEFAULTS = Object.freeze({
   version: SETTINGS_VERSION,
-  master: 0.8, music: 0.42, sfx: 1,
+  master: 0.8, music: 0.42, sfx: 1, voice: 1,
   mouseSensitivity: 1, aimAssist: 0,
   screenShake: 1, showFps: false, damageIndicator: true, offscreenEnemies: true,
 });
@@ -18,6 +18,7 @@ export const SCHEMA = {
   master: { type: 'range', min: 0, max: 1, step: 0.05 },
   music: { type: 'range', min: 0, max: 1, step: 0.05 },
   sfx: { type: 'range', min: 0, max: 1, step: 0.05 },
+  voice: { type: 'range', min: 0, max: 1, step: 0.05 },   // Lyd v1.7 setVoiceVolume
   mouseSensitivity: { type: 'range', min: 0.25, max: 2, step: 0.05 },
   aimAssist: { type: 'range', min: 0, max: 1, step: 0.1 },
   screenShake: { type: 'range', min: 0, max: 1, step: 0.1 },
@@ -101,16 +102,16 @@ export function resetSettings() {
 /** Lytter på endringer: fn(settings, key). Returnerer off(). */
 export function onSettingsChange(fn) { listeners.add(fn); return () => listeners.delete(fn); }
 
-/** Bytt lydkobling. Adapteren trenger setMasterVolume/setMusicVolume/setSfxVolume (alle valgfrie). */
+/** Bytt lydkobling. Adapteren trenger setMasterVolume/setMusicVolume/setSfxVolume/setVoiceVolume (alle valgfrie). */
 export function setAudioAdapter(api) { audioApi = api || null; applyAudio(); }
 
 function applyAudio() {
   const a = audioApi; if (!a) return;
-  a.setMasterVolume?.(current.master); a.setMusicVolume?.(current.music); a.setSfxVolume?.(current.sfx);
+  a.setMasterVolume?.(current.master); a.setMusicVolume?.(current.music); a.setSfxVolume?.(current.sfx); a.setVoiceVolume?.(current.voice);
 }
 
 function applyOne(key) {
-  if (key === 'master' || key === 'music' || key === 'sfx') applyAudio();
+  if (key === 'master' || key === 'music' || key === 'sfx' || key === 'voice') applyAudio();
   const w = bound?.world;
   if (key === 'screenShake' && w?.camera) w.camera.shakeScale = current.screenShake;
   if (key === 'showFps') bound?.fps?.setVisible(current.showFps);

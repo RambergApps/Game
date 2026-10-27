@@ -28,6 +28,8 @@ function pipeBand(c, R, x, y, len, a, col, horiz, ins) {
   const g = horiz ? grad(c, 0, y, 0, y + a, [[0, rgb(col, -0.55)], [0.18, rgb(col, 0.1 + 0.15 * LN)], [0.32, rgb(col, 0.22)], [0.6, rgb(col, -0.12)], [1, rgb(col, -0.6)]])
                   : grad(c, x, 0, x + a, 0, [[0, rgb(col, -0.5)], [0.2, rgb(col, 0.12 + 0.15 * LW)], [0.34, rgb(col, 0.2)], [0.62, rgb(col, -0.15)], [1, rgb(col, -0.6)]]);
   c.fillStyle = g; if (horiz) c.fillRect(x, y, len, a); else c.fillRect(x, y, a, len);
+  c.fillStyle = 'rgba(235,230,215,0.22)'; if (horiz) c.fillRect(x, y + a * 0.24, len, Math.max(0.4, a * 0.07)); else c.fillRect(x + a * 0.26, y, Math.max(0.4, a * 0.07), len);   // speilglans
+  c.fillStyle = 'rgba(0,0,0,0.35)'; if (horiz) c.fillRect(x, y + a * 0.86, len, a * 0.14); else c.fillRect(x + a * 0.86, y, a * 0.14, len);   // kjernemørke
   // flenser / kledningsskjøter
   const sp = ins ? R.r(10, 14) : R.r(36, 56);
   for (let u = R.r(4, sp); u < len - 2; u += sp * R.r(0.85, 1.15)) {
@@ -65,38 +67,44 @@ function paintPipes(c, R, S) {
   }
 }
 function paintValve(c, R, S) {
-  const { w, d, f, g, horiz } = S, y0 = horiz ? 0 : f * 0.6, F = horiz ? f : f * 0.4, BOX = tint(PAINT[Math.floor(R() * 3)], R.r(0.8, 0.95));
-  // kasse: topplate med kant, front med dører/luftespalter
-  const ix = 1, W = w - 2;
-  c.fillStyle = rgb(BOX, 0.04 + 0.06 * LN); c.fillRect(ix, y0, W, d);
-  c.fillStyle = 'rgba(255,255,255,0.08)'; c.fillRect(ix, y0, W, 0.7); c.fillStyle = 'rgba(0,0,0,0.4)'; c.fillRect(ix, y0 + d - 0.7, W, 0.7);
-  c.strokeStyle = rgb(BOX, -0.35); c.lineWidth = 0.8; c.strokeRect(ix + 1.5, y0 + 1.2, W - 3, d - 2.4);
-  // ratt + spindel (flatt ovenfra, rett på toppen)
-  const nW = horiz ? Math.max(1, Math.round(w / 40)) : Math.max(1, Math.round(S.dw / 40));
+  const { w, d, f, g, horiz } = S, y0 = horiz ? 0 : f * 0.6, F = horiz ? f : f * 0.4, BOX = tint(PAINT[Math.floor(R() * 3)], R.r(0.72, 0.85)), ix = 1, W = w - 2, bv = Math.min(2.6, W * 0.08);
+  // topp: fasede kanter (lys NV, mørk SØ) rundt en innfelt plate
+  c.fillStyle = rgb(BOX, -0.05); c.fillRect(ix, y0, W, d);
+  c.fillStyle = rgb(BOX, 0.18 + 0.1 * LN); c.beginPath(); c.moveTo(ix, y0); c.lineTo(ix + W, y0); c.lineTo(ix + W - bv, y0 + bv * g); c.lineTo(ix + bv, y0 + bv * g); c.lineTo(ix + bv, y0 + d - bv * g); c.lineTo(ix, y0 + d); c.fill();
+  c.fillStyle = rgb(BOX, -0.38); c.beginPath(); c.moveTo(ix + W, y0); c.lineTo(ix + W, y0 + d); c.lineTo(ix, y0 + d); c.lineTo(ix + bv, y0 + d - bv * g); c.lineTo(ix + W - bv, y0 + d - bv * g); c.lineTo(ix + W - bv, y0 + bv * g); c.fill();
+  c.fillStyle = grad(c, ix, y0, ix + W, y0 + d, [[0, rgb(BOX, 0.06)], [1, rgb(BOX, -0.16)]]); c.fillRect(ix + bv, y0 + bv * g, W - bv * 2, d - bv * 2 * g);
+  // bolter i hjørnene (hode + skygge)
+  for (const [bx, by] of [[ix + bv * 1.6, y0 + bv * 1.6 * g], [ix + W - bv * 1.6, y0 + bv * 1.6 * g], [ix + bv * 1.6, y0 + d - bv * 1.6 * g], [ix + W - bv * 1.6, y0 + d - bv * 1.6 * g]]) { c.fillStyle = 'rgba(0,0,0,0.6)'; c.beginPath(); c.ellipse(bx + 0.5, by + 0.5 * g, 1.1, 1.1 * g, 0, 0, TAU); c.fill(); c.fillStyle = rgb(STEEL, 0.25); c.beginPath(); c.ellipse(bx, by, 0.9, 0.9 * g, 0, 0, TAU); c.fill(); }
+  // hevet ratt: spindelhus, kastet skygge, tykk felg med lys/mørk side, eiker, nav
+  const nW = horiz ? Math.max(1, Math.round(w / 40)) : Math.max(1, Math.round(S.dw / 40)), up = Math.min(F * 0.5, 6 * g);
   for (let i = 0; i < nW; i++) {
-    const cx = horiz ? ix + W * (i + 0.5) / nW : ix + W / 2, cy = horiz ? y0 + d / 2 : y0 + d * (i + 0.5) / nW, r = Math.min(horiz ? W / nW : W, horiz ? d / g : d / nW / g) * 0.32;
-    blot(c, cx + 1.5, cy + 1.5 * g, r * 1.3, '0,0,0', 0.5, g);
-    c.strokeStyle = rgb([70, 30, 22], 0.1); c.lineWidth = 1.6; c.beginPath(); c.ellipse(cx, cy, r, r * g, 0, 0, TAU); c.stroke();
-    c.strokeStyle = 'rgba(200,120,90,0.25)'; c.lineWidth = 0.5; c.beginPath(); c.ellipse(cx, cy, r, r * g, 0, Math.PI, Math.PI * 1.6); c.stroke();
-    c.lineWidth = 0.8; c.strokeStyle = rgb([70, 30, 22], -0.2); for (let s = 0; s < 3; s++) { const a = s * Math.PI / 3 + R() * 0.3; c.beginPath(); c.moveTo(cx - Math.cos(a) * r, cy - Math.sin(a) * r * g); c.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r * g); c.stroke(); }
-    c.fillStyle = rgb(STEEL, 0.1); c.beginPath(); c.ellipse(cx, cy, 1.4, 1.4 * g, 0, 0, TAU); c.fill();
+    const cx = horiz ? ix + W * (i + 0.5) / nW : ix + W / 2, cy0 = horiz ? y0 + d / 2 : y0 + d * (i + 0.5) / nW, r = Math.min(horiz ? W / nW : W, horiz ? d / g : d / nW / g) * 0.36, cy = cy0 - up;
+    blot(c, cx + 2.2, cy0 + 1.6 * g, r * 1.25, '0,0,0', 0.55, g);
+    c.fillStyle = grad(c, cx - 2, 0, cx + 2, 0, [[0, rgb(STEEL, 0.15)], [1, rgb(STEEL, -0.45)]]); c.fillRect(cx - 1.8, cy, 3.6, up + 0.5);   // spindel
+    const RIM = [96, 38, 26]; c.lineWidth = Math.max(1.4, r * 0.28);
+    c.strokeStyle = rgb(RIM, -0.45); c.beginPath(); c.ellipse(cx + 0.4, cy + 0.5, r, r * g, 0, 0, TAU); c.stroke();
+    c.strokeStyle = rgb(RIM, -0.05); c.beginPath(); c.ellipse(cx, cy, r, r * g, 0, 0, TAU); c.stroke();
+    c.lineWidth = Math.max(0.5, r * 0.09); c.strokeStyle = 'rgba(230,170,140,0.45)'; c.beginPath(); c.ellipse(cx, cy, r, r * g, 0, Math.PI * 1.05, Math.PI * 1.55); c.stroke();
+    c.lineWidth = Math.max(0.7, r * 0.12); c.strokeStyle = rgb(RIM, -0.3); for (let s = 0; s < 3; s++) { const an = s * Math.PI / 3 + R() * 0.3; c.beginPath(); c.moveTo(cx - Math.cos(an) * r, cy - Math.sin(an) * r * g); c.lineTo(cx + Math.cos(an) * r, cy + Math.sin(an) * r * g); c.stroke(); }
+    c.fillStyle = rgb(STEEL, 0.2); c.beginPath(); c.ellipse(cx, cy, r * 0.22, r * 0.22 * g, 0, 0, TAU); c.fill(); c.fillStyle = 'rgba(0,0,0,0.5)'; c.beginPath(); c.ellipse(cx + 0.3, cy + 0.2, r * 0.08, r * 0.08 * g, 0, 0, TAU); c.fill();
+    for (let k = 0; k < 4; k++) if (R() < 0.6) { c.fillStyle = 'rgba(70,40,22,0.6)'; const an = R() * TAU; c.fillRect(cx + Math.cos(an) * r - 0.6, cy + Math.sin(an) * r * g - 0.4, 1.4, 0.9); }
   }
-  for (const [bx, by] of [[ix + 2.5, y0 + 2], [ix + W - 3.5, y0 + 2], [ix + 2.5, y0 + d - 3], [ix + W - 3.5, y0 + d - 3]]) { c.fillStyle = 'rgba(15,15,15,0.8)'; c.fillRect(bx, by, 1.1, 1.1 * g + 0.3); }
-  c.save(); c.beginPath(); c.rect(ix, y0, W, d); c.clip(); speckle(c, R, ix, y0, W, d, Math.round(W * d / 8), [30, 28, 24], 0.12, 0.4); blot(c, ix + R() * W, y0 + R() * d, R.r(4, 9), '90,48,24', 0.35, 0.6); c.restore();
-  // front
-  const fy = y0 + d; c.fillStyle = grad(c, 0, fy, 0, fy + F, [[0, rgb(BOX, -0.25)], [1, rgb(BOX, -0.48)]]); c.fillRect(ix, fy, W, F);
-  c.fillStyle = 'rgba(0,0,0,0.45)'; c.fillRect(ix, fy, W, 0.6);
-  if (horiz) { for (let x = ix + 3; x < ix + W - 3; x += 2.2) { c.fillStyle = 'rgba(0,0,0,0.4)'; c.fillRect(x, fy + F * 0.25, 1, F * 0.3); } if (S.hz) hazard(c, ix + W * 0.62, fy + F * 0.62, W * 0.3, F * 0.2, 1.4); }
+  c.save(); c.beginPath(); c.rect(ix, y0, W, d); c.clip(); speckle(c, R, ix, y0, W, d, Math.round(W * d / 7), [30, 28, 24], 0.12, 0.4); blot(c, ix + R() * W, y0 + R() * d, R.r(4, 9), '90,48,24', 0.35, 0.6); blot(c, ix + R() * W, y0 + R() * d, R.r(5, 10), '14,12,10', 0.35, 0.6); c.restore();
+  // front: synlig flate med kantlist, dør/luker, hengsler, rustrenner og skitt nederst
+  const fy = y0 + d; c.fillStyle = grad(c, 0, fy, 0, fy + F, [[0, rgb(BOX, -0.2)], [1, rgb(BOX, -0.5)]]); c.fillRect(ix, fy, W, F);
+  c.fillStyle = rgb(BOX, 0.1); c.fillRect(ix, fy, W, 0.8); c.fillStyle = 'rgba(0,0,0,0.5)'; c.fillRect(ix, fy + 0.8, W, 0.5);
+  if (horiz) { const dw = Math.min(W * 0.4, 16); for (const dx of nW > 1 ? [ix + 3, ix + W - dw - 3] : [ix + (W - dw) / 2]) { c.strokeStyle = 'rgba(0,0,0,0.55)'; c.lineWidth = 0.7; c.strokeRect(dx, fy + F * 0.18, dw, F * 0.62); c.fillStyle = 'rgba(255,255,255,0.07)'; c.fillRect(dx, fy + F * 0.18, dw, 0.5); for (let x = dx + 2; x < dx + dw - 2; x += 2.2) { c.fillStyle = 'rgba(0,0,0,0.45)'; c.fillRect(x, fy + F * 0.3, 1, F * 0.18); } c.fillStyle = rgb(STEEL, 0.1); c.fillRect(dx + dw - 2.5, fy + F * 0.5, 1.4, F * 0.14); } if (S.hz) hazard(c, ix + 1, fy + F * 0.84, W - 2, F * 0.12, 1.4); }
   else if (S.hz) hazard(c, ix + 1.5, fy + F * 0.2, W - 3, F * 0.5, 1.2);
-  c.fillStyle = grad(c, 0, fy + F * 0.5, 0, fy + F, [[0, 'rgba(70,40,20,0)'], [1, 'rgba(70,40,20,0.55)']]); c.fillRect(ix, fy + F * 0.5, W, F * 0.5);
-  // rørstusser ut til sidene (flate, lave)
-  for (const sx of [-1, 1]) if (R() < 0.7) { const py = horiz ? fy - d * 0.35 : y0 + d * 0.5; const x0 = sx < 0 ? -3 : w - 1; pipeBand(c, R, x0, py, 4, Math.max(3, d * 0.3), STEEL, true, false); }
+  for (let q = 0; q < W / 5; q++) if (R() < 0.7) { c.fillStyle = `rgba(${R() < 0.7 ? '92,48,22' : '20,16,12'},${R.r(0.25, 0.5)})`; c.fillRect(ix + R() * W, fy + R.r(0, 0.3) * F, R.r(0.6, 1.4), F * R.r(0.3, 0.7)); }
+  c.fillStyle = grad(c, 0, fy + F * 0.5, 0, fy + F, [[0, 'rgba(60,38,20,0)'], [1, 'rgba(50,34,20,0.6)']]); c.fillRect(ix, fy + F * 0.5, W, F * 0.5);
+  for (const sx of [-1, 1]) if (R() < 0.7) { const py = horiz ? fy - d * 0.35 : y0 + d * 0.5; pipeBand(c, R, sx < 0 ? -3 : w - 1, py, 4, Math.max(3, d * 0.3), STEEL, true, false); }
   if (!horiz) { c.fillStyle = 'rgba(0,0,0,0.38)'; c.fillRect(w, y0 + 1, 3, d + F); }
 }
 function paintPlinth(c, R, S) {
-  const { w, d, f, g, horiz } = S, y0 = horiz ? 0 : f * 0.6, F = horiz ? f : f * 0.4, C = tint(CON, R.r(0.82, 0.96)), ch = Math.min(2.2, F * 0.15);
+  const { w, d, f, g, horiz } = S, y0 = horiz ? 0 : f * 0.6, F = horiz ? f : f * 0.4, C = tint([96, 97, 98], R.r(0.6, 0.68)), ch = Math.min(2.2, F * 0.15);
   c.fillStyle = grad(c, 0, y0, w, y0 + d, [[0, rgb(C, 0.02 + 0.05 * LW)], [1, rgb(C, -0.1)]]); c.fillRect(0, y0, w, d);
-  c.fillStyle = rgb(C, 0.12); c.fillRect(0, y0, w, 0.8); c.fillRect(0, y0, 0.8, d);   // lys fas nord/vest
+  c.fillStyle = rgb(C, 0.08); c.fillRect(0, y0, w, 0.7); c.fillRect(0, y0, 0.7, d);   // svak fas nord/vest
+  c.save(); c.beginPath(); c.rect(0, y0, w, d); c.clip(); for (let i = 0; i < 4; i++) blot(c, R() * w, y0 + R() * d, R.r(6, 16), R() < 0.5 ? '20,18,15' : '60,40,24', R.r(0.25, 0.45), 0.6); for (let i = 0; i < w / 10; i++) { c.fillStyle = 'rgba(30,26,22,0.25)'; c.fillRect(R() * w, y0 + d * R.r(0.5, 0.9), R.r(1, 3), d * R.r(0.1, 0.4)); } c.restore();
   // fuger: én seksjon per ~2 felt
   const n = Math.max(1, Math.round((horiz ? w : S.dw) / 64)); for (let j = 1; j < n; j++) { c.fillStyle = 'rgba(8,8,8,0.8)'; if (horiz) c.fillRect(j * w / n - 0.6, y0, 1.2, d + F); else c.fillRect(0, y0 + j * d / n - 0.6, w, 1.2); }
   // ankerbolter + rustne bunnplaterester (fundament for fjernet utstyr)

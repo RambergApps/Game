@@ -1,11 +1,13 @@
 // Pausemeny. Esc veksler world.paused. RESUME / SETTINGS / RESTART WAVE / QUIT TO MENU.
 // createPauseMenu(world, { input, onRestartWave, onQuit, confirm, canOpen, pauseOnBlur }) → { open, close, toggle, isOpen, destroy }
 import { openSettings } from './settingsScreen.js';
+import { openControls } from './controlsScreen.js';   // CONTROLS (Arena 27.10)
 import { injectStyle, pushKeys, el, uiSound, isUp, isDown, isOk, isBack, isLeft, isRight } from './style.js';
 
 const ITEMS = [
   { id: 'resume', label: 'Resume' },
   { id: 'settings', label: 'Settings' },
+  { id: 'controls', label: 'Controls' },
   { id: 'restart', label: 'Restart wave', confirm: { title: 'Restart wave?', text: 'Enemies and progress in this wave are reset. Upgrades are kept.', ok: 'Restart' } },
   { id: 'quit', label: 'Quit to menu', danger: true, confirm: { title: 'Quit to menu?', text: 'Progress in the current level will be lost.', ok: 'Quit' } },
 ];
@@ -92,6 +94,7 @@ export function createPauseMenu(world, opts = {}) {
     uiSound(world, 'uiClick');
     if (it.id === 'resume') return close();
     if (it.id === 'settings') return showSettings();
+    if (it.id === 'controls') { panel.style.display = 'none'; settings = openControls(root, { world, kicker: 'Paused', onBack: () => { settings = null; if (panel) panel.style.display = ''; } }); return; }
     const needConfirm = opts.confirm !== false && it.confirm;
     if (needConfirm) return confirmBox(it.confirm, () => run(it.id));
     run(it.id);

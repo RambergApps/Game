@@ -1,0 +1,859 @@
+{
+ "intro/0-0": {
+  "emo": "olevarslende fortelling",
+  "note": "Åpningen: setter alvoret. Langsom, med pause før «that bled».",
+  "parts": [
+   [
+    "Forty kilometres inland,",
+    0.97,
+    0.21
+   ],
+   [
+    "the Deepwell drill hit something",
+    0.96,
+    0.25
+   ],
+   [
+    "that bled.",
+    0.95,
+    0.0
+   ]
+  ],
+  "tail": 0.3
+ },
+ "intro/0-1": {
+  "emo": "tung, sliten fortelling",
+  "note": "Tre dager med flukt: tyngde, ikke hast.",
+  "parts": [
+   [
+    "Three days later,",
+    0.97,
+    0.18
+   ],
+   [
+    "Kessa Port is still evacuating.",
+    0.95,
+    0.0
+   ]
+  ],
+  "tail": 0.3
+ },
+ "intro/1-0": {
+  "emo": "kald nødmelding",
+  "note": "Innspilt sløyfe – flat, mekanisk, med «Repeat:» som egen frase.",
+  "parts": [
+   [
+    "All civilians to the piers.",
+    1,
+    0.24
+   ],
+   [
+    "Stay off open ground.",
+    0.97,
+    0.25
+   ],
+   [
+    "Repeat:",
+    0.97,
+    0.15
+   ],
+   [
+    "stay off open ground.",
+    0.97,
+    0.0
+   ]
+  ]
+ },
+ "intro/2-0": {
+  "emo": "kommando, saklig",
+  "note": "HALE briefer kort: tid og oppdrag, to setninger med tydelig pause.",
+  "parts": [
+   [
+    "Last ship loads in twenty.",
+    1,
+    0.21
+   ],
+   [
+    "Garrison Nine holds the yard.",
+    0.97,
+    0.0
+   ]
+  ],
+  "drive": 2
+ },
+ "intro/2-1": {
+  "emo": "stille besluttsomhet",
+  "note": "Warden svarer lavt og fast – ikke heroisk rop.",
+  "parts": [
+   [
+    "Then we hold the yard.",
+    1.23,
+    0.0
+   ]
+  ],
+  "pitch": 0.98
+ },
+ "intro/3-0": {
+  "emo": "uro, uhygge",
+  "note": "Noe er galt: pause før «from underneath».",
+  "parts": [
+   [
+    "The asphalt glows",
+    0.95,
+    0.25
+   ],
+   [
+    "from underneath.",
+    0.95,
+    0.0
+   ]
+  ],
+  "tail": 0.3
+ },
+ "intro/3-1": {
+  "emo": "hast, adrenalin",
+  "note": "Første kontakt – skarpt varsel, så raskere og anspent. Pust før, lett skjelving.",
+  "parts": [
+   [
+    "Contact!",
+    1.16,
+    0.14
+   ],
+   [
+    "They're coming up through the cracks!",
+    1.24,
+    0.0
+   ]
+  ],
+  "pitch": 1.05,
+  "drive": 7,
+  "trem": 0.12,
+  "breath": true
+ },
+ "yard-clear/0-0": {
+  "emo": "bittersøt lettelse",
+  "note": "Siste skip går – langsomt, med hale.",
+  "parts": [
+   [
+    "The last ship clears the breakwater.",
+    0.95,
+    0.0
+   ]
+  ],
+  "tail": 0.3
+ },
+ "yard-clear/0-1": {
+  "emo": "resignasjon, galgenhumor",
+  "note": "BRANDT stille: «Everyone but us» mørkere og langsommere.",
+  "parts": [
+   [
+    "That's everyone.",
+    0.97,
+    0.25
+   ],
+   [
+    "Everyone but us.",
+    0.95,
+    0.0
+   ]
+  ],
+  "pitch": 0.97,
+  "tail": 0.3,
+  "mix": [
+   [
+    "am_onyx",
+    0.25
+   ]
+  ]
+ },
+ "yard-clear/1-0": {
+  "emo": "hast, ordre fra HQ",
+  "note": "Ny trussel – driv i første del, kort pause.",
+  "parts": [
+   [
+    "Garrison Nine, the swarm is moving inland.",
+    1.05,
+    0.18
+   ],
+   [
+    "Toward the refinery.",
+    1,
+    0.0
+   ]
+  ],
+  "drive": 2
+ },
+ "yard-clear/1-1": {
+  "emo": "kald innsikt",
+  "note": "Warden forstår: andre setning langsommere og lavere.",
+  "parts": [
+   [
+    "They're not chasing people.",
+    1.21,
+    0.2
+   ],
+   [
+    "They're chasing heat.",
+    1.19,
+    0.0
+   ]
+  ],
+  "pitch": 0.98
+ },
+ "yard-clear/2-0": {
+  "emo": "truende",
+  "note": "Mål og fare: tall gis vekt.",
+  "parts": [
+   [
+    "Deepwell Refinery.",
+    0.95,
+    0.24
+   ],
+   [
+    "Eleven million litres of fuel.",
+    0.95,
+    0.0
+   ]
+  ],
+  "tail": 0.3
+ },
+ "yard-clear/2-1": {
+  "emo": "besluttsom trussel",
+  "note": "Lavt og fast.",
+  "parts": [
+   [
+    "Then that's where we stop them.",
+    1.07,
+    0.0
+   ]
+  ],
+  "pitch": 0.96,
+  "drive": 2
+ },
+ "refinery-clear/0-0": {
+  "emo": "etterspill",
+  "note": "Kampen er over, men kjernen brenner: pause, så langsomt.",
+  "parts": [
+   [
+    "The Kiln goes down.",
+    0.97,
+    0.25
+   ],
+   [
+    "Its core keeps burning for a full minute.",
+    0.95,
+    0.0
+   ]
+  ],
+  "tail": 0.3
+ },
+ "refinery-clear/0-1": {
+  "emo": "uro, dempet",
+  "note": "OKAFOR ser noe: «Warden.» – stopp – lavt.",
+  "parts": [
+   [
+    "Warden.",
+    0.95,
+    0.25
+   ],
+   [
+    "Look at the drill tower.",
+    0.95,
+    0.0
+   ]
+  ],
+  "trem": 0.06
+ },
+ "refinery-clear/1-0": {
+  "emo": "ærefrykt, gru",
+  "note": "Tre bilder, hver med pause.",
+  "parts": [
+   [
+    "Under the rig, the borehole.",
+    0.95,
+    0.24
+   ],
+   [
+    "Wide as a street.",
+    0.95,
+    0.24
+   ],
+   [
+    "Breathing heat.",
+    0.95,
+    0.0
+   ]
+  ],
+  "tail": 0.3
+ },
+ "refinery-clear/1-1": {
+  "emo": "skrekk, erkjennelse",
+  "note": "OKAFOR forstår hva de har gjort – stille, skjelvende, lang hale.",
+  "parts": [
+   [
+    "We didn't find them.",
+    0.95,
+    0.25
+   ],
+   [
+    "We drilled into their house.",
+    0.95,
+    0.0
+   ]
+  ],
+  "pitch": 0.97,
+  "trem": 0.1,
+  "tail": 0.3
+ },
+ "refinery-clear/2-0": {
+  "emo": "kald kommando",
+  "note": "HQ: kort, hard ordre.",
+  "parts": [
+   [
+    "Seal it.",
+    1,
+    0.18
+   ],
+   [
+    "Charges at the bottom of the shaft.",
+    1.02,
+    0.0
+   ]
+  ],
+  "drive": 3
+ },
+ "refinery-clear/2-1": {
+  "emo": "behersket",
+  "note": "Warden spør nøkternt.",
+  "parts": [
+   [
+    "How far down?",
+    1.23,
+    0.0
+   ]
+  ]
+ },
+ "refinery-clear/2-2": {
+  "emo": "alvor, vekt",
+  "note": "HALE: tung, langsom – de vet hva det betyr.",
+  "parts": [
+   [
+    "All the way.",
+    0.95,
+    0.0
+   ]
+  ],
+  "pitch": 0.95,
+  "tail": 0.3
+ },
+ "refinery-clear/3-0": {
+  "emo": "kommando, besluttsom",
+  "note": "Warden til troppen: navn, pause, beslutning.",
+  "parts": [
+   [
+    "Garrison Nine.",
+    1.16,
+    0.19
+   ],
+   [
+    "We're going down.",
+    1.16,
+    0.0
+   ]
+  ],
+  "drive": 3
+ },
+ "foundry-core/0-0": {
+  "emo": "tyngde",
+  "note": "Dybden: langsom.",
+  "parts": [
+   [
+    "The Deepwell.",
+    0.95,
+    0.25
+   ],
+   [
+    "Two kilometres down.",
+    0.95,
+    0.0
+   ]
+  ],
+  "tail": 0.3
+ },
+ "foundry-core/0-1": {
+  "emo": "alvor, offer",
+  "note": "OKAFOR: fakta, så «Someone stays» langsomt og mørkt.",
+  "parts": [
+   [
+    "Charge is set.",
+    0.97,
+    0.18
+   ],
+   [
+    "The fuse is manual.",
+    0.96,
+    0.25
+   ],
+   [
+    "Someone stays.",
+    0.95,
+    0.0
+   ]
+  ],
+  "pitch": 0.97,
+  "tail": 0.3
+ },
+ "foundry-core/1-0": {
+  "emo": "stille mot",
+  "note": "HALE melder seg: mykt, nesten for seg selv.",
+  "parts": [
+   [
+    "I'll do it.",
+    0.95,
+    0.0
+   ]
+  ],
+  "pitch": 0.97
+ },
+ "foundry-core/1-1": {
+  "emo": "hard ordre med følelse",
+  "note": "Warden: «No.» kort og hardt, så ordren, «That's an order» med trykk.",
+  "parts": [
+   [
+    "No.",
+    1.16,
+    0.2
+   ],
+   [
+    "Get them to the lift, Hale.",
+    1.12,
+    0.14
+   ],
+   [
+    "That's an order.",
+    1.1,
+    0.0
+   ]
+  ],
+  "drive": 5
+ },
+ "foundry-core/2-0": {
+  "emo": "spenning, fare",
+  "note": "Sjakten rister: pause før trusselen.",
+  "parts": [
+   [
+    "The shaft starts to shake.",
+    0.97,
+    0.24
+   ],
+   [
+    "Something big is climbing.",
+    0.95,
+    0.0
+   ]
+  ],
+  "tail": 0.3
+ },
+ "foundry-core/2-1": {
+  "emo": "panikk",
+  "note": "BRANDT roper: pust, korte rop, raskt, skjelving.",
+  "parts": [
+   [
+    "Contacts!",
+    1.12,
+    0.12
+   ],
+   [
+    "Every crack!",
+    1.15,
+    0.12
+   ],
+   [
+    "Hundreds!",
+    1.1,
+    0.0
+   ]
+  ],
+  "pitch": 1.06,
+  "drive": 8,
+  "trem": 0.15,
+  "breath": true,
+  "mix": [
+   [
+    "am_eric",
+    0.2
+   ]
+  ]
+ },
+ "foundry-core/3-0": {
+  "emo": "kamprop",
+  "note": "Warden: tid, så «Hold the core!» som rop.",
+  "parts": [
+   [
+    "Seventy-five seconds.",
+    1.14,
+    0.14
+   ],
+   [
+    "Hold the core!",
+    1.2,
+    0.0
+   ]
+  ],
+  "pitch": 1.03,
+  "drive": 7,
+  "breath": true
+ },
+ "ashmaw-rise/0-0": {
+  "emo": "hast",
+  "note": "Lunten brenner: litt raskere.",
+  "parts": [
+   [
+    "The fuse is lit.",
+    1,
+    0.18
+   ],
+   [
+    "The charge is counting down.",
+    1,
+    0.0
+   ]
+  ]
+ },
+ "ashmaw-rise/0-1": {
+  "emo": "hast, rop",
+  "note": "BRANDT roper over støy: pust, korte rop, «Now!» hardt.",
+  "parts": [
+   [
+    "Lift's loaded!",
+    1.12,
+    0.12
+   ],
+   [
+    "Warden, get on.",
+    1.12,
+    0.09
+   ],
+   [
+    "Now!",
+    1.05,
+    0.0
+   ]
+  ],
+  "pitch": 1.05,
+  "drive": 8,
+  "trem": 0.08,
+  "breath": true,
+  "mix": [
+   [
+    "am_eric",
+    0.2
+   ]
+  ]
+ },
+ "ashmaw-rise/1-0": {
+  "emo": "gru",
+  "note": "Monsteret vises: tre bilder, langsomt, pauser.",
+  "parts": [
+   [
+    "The floor of the well splits.",
+    0.95,
+    0.25
+   ],
+   [
+    "A black dome climbs out on short crab legs.",
+    0.95,
+    0.25
+   ],
+   [
+    "Eight vents, burning like furnaces.",
+    0.95,
+    0.0
+   ]
+  ],
+  "tail": 0.3
+ },
+ "ashmaw-rise/1-1": {
+  "emo": "frykt, hvisking",
+  "note": "OKAFOR: dempet, skjelvende.",
+  "parts": [
+   [
+    "That's the mother.",
+    0.95,
+    0.25
+   ],
+   [
+    "That's what they were keeping warm.",
+    0.95,
+    0.0
+   ]
+  ],
+  "pitch": 0.97,
+  "trem": 0.12,
+  "tail": 0.3
+ },
+ "ashmaw-rise/2-0": {
+  "emo": "frykt, hast",
+  "note": "HALE: raskere, bryter av før konsekvensen.",
+  "parts": [
+   [
+    "She's on top of the charge.",
+    1.08,
+    0.18
+   ],
+   [
+    "If she pulls it loose,",
+    1.08,
+    0.21
+   ],
+   [
+    "it was all for nothing.",
+    0.97,
+    0.0
+   ]
+  ],
+  "pitch": 1.03,
+  "drive": 5,
+  "trem": 0.1,
+  "breath": true
+ },
+ "ashmaw-rise/2-1": {
+  "emo": "kald trussel",
+  "note": "Warden: lavt, langsomt, ingen tvil.",
+  "parts": [
+   [
+    "Then she doesn't leave the shaft.",
+    1.07,
+    0.0
+   ]
+  ],
+  "pitch": 0.95,
+  "drive": 3
+ },
+ "ashmaw-rise/3-0": {
+  "emo": "navnet – trussel",
+  "note": "Tittelkort: dypt, langsomt, lang hale.",
+  "parts": [
+   [
+    "Ashmaw.",
+    0.95,
+    0.0
+   ]
+  ],
+  "pitch": 0.95,
+  "tail": 0.3
+ },
+ "ashmaw-rise/3-1": {
+  "emo": "offer, rolig besluttsomhet",
+  "note": "Warden blir igjen: mykt, langsomt, pause før «I've got her».",
+  "parts": [
+   [
+    "Take the lift up, Hale.",
+    1.12,
+    0.2
+   ],
+   [
+    "I've got her.",
+    1.12,
+    0.0
+   ]
+  ],
+  "pitch": 0.97,
+  "tail": 0.3
+ },
+ "ending/0-0": {
+  "emo": "triumf, etterspill",
+  "note": "Seier: pause etter «bursts», så rolig.",
+  "parts": [
+   [
+    "The last vent bursts.",
+    0.97,
+    0.25
+   ],
+   [
+    "Ashmaw sinks back into the well she came from.",
+    0.95,
+    0.0
+   ]
+  ],
+  "tail": 0.3
+ },
+ "ending/0-1": {
+  "emo": "utmattet trussel",
+  "note": "Warden, andpusten: pust før, lavt og langsomt.",
+  "parts": [
+   [
+    "Stay down.",
+    1.1,
+    0.0
+   ]
+  ],
+  "pitch": 0.95,
+  "breath": true
+ },
+ "ending/1-0": {
+  "emo": "sluttstøt",
+  "note": "Sprengningen: pause, så «and on her» etter et lite opphold.",
+  "parts": [
+   [
+    "The charge blows.",
+    0.97,
+    0.25
+   ],
+   [
+    "The Deepwell folds in on itself,",
+    0.95,
+    0.21
+   ],
+   [
+    "and on her.",
+    0.95,
+    0.0
+   ]
+  ],
+  "tail": 0.3
+ },
+ "ending/1-1": {
+  "emo": "lettelse, ro",
+  "note": "Tre stadier, hver langsommere.",
+  "parts": [
+   [
+    "Without the heat, the Cinderborn slow.",
+    0.95,
+    0.25
+   ],
+   [
+    "Then stop.",
+    0.95,
+    0.25
+   ],
+   [
+    "Then sleep.",
+    0.95,
+    0.0
+   ]
+  ],
+  "tail": 0.3
+ },
+ "ending/2-0": {
+  "emo": "lettelse, varme",
+  "note": "HALE: varmere, litt smil.",
+  "parts": [
+   [
+    "Lift's coming back down, Warden.",
+    0.97,
+    0.24
+   ],
+   [
+    "You coming up?",
+    0.96,
+    0.0
+   ]
+  ],
+  "pitch": 1.01
+ },
+ "ending/2-1": {
+  "emo": "utmattelse, lettelse",
+  "note": "Warden: pust, «Yeah.» – pause – lavt.",
+  "parts": [
+   [
+    "Yeah.",
+    1.1,
+    0.2
+   ],
+   [
+    "I'm coming up.",
+    1.1,
+    0.0
+   ]
+  ],
+  "pitch": 0.96,
+  "breath": true
+ },
+ "ending/3-0": {
+  "emo": "fred, sorg",
+  "note": "Daggry: tre bilder, langsomt, lang hale.",
+  "parts": [
+   [
+    "Kessa Yard.",
+    0.95,
+    0.25
+   ],
+   [
+    "Dawn.",
+    0.95,
+    0.25
+   ],
+   [
+    "Cold, for the first time in weeks.",
+    0.95,
+    0.0
+   ]
+  ],
+  "tail": 0.3
+ },
+ "ending/3-1": {
+  "emo": "stille sorg og lettelse",
+  "note": "Siste replikk: naturlig tempo, én frase med kort komma-pust; varme fra onyx-blanding, ikke senket tempo (v1.9).",
+  "parts": [
+   [
+    "All of us,",
+    1.0,
+    0.2
+   ],
+   [
+    "coming home.",
+    0.97,
+    0
+   ]
+  ],
+  "pitch": 1.0,
+  "tail": 0.25
+ },
+ "fallen/0-0": {
+  "emo": "kald melding",
+  "note": "Bare et radioblipp; «Signal lost.» ligger som svakt fragment under HALE i 0-1 (Storys 2,3 s-tak).",
+  "parts": [
+   [
+    "Signal lost.",
+    1.4,
+    0
+   ]
+  ],
+  "tail": 0,
+  "blip": 0.04
+ },
+ "fallen/0-1": {
+  "emo": "desperat rop",
+  "note": "Panisk rop, raskt og rått; «Signal lost.» som svakt radiofragment under starten.",
+  "parts": [
+   [
+    "Warden's down!",
+    2.0,
+    0.03
+   ],
+   [
+    "Get up, we hold this together!",
+    2.1,
+    0
+   ]
+  ],
+  "pitch": 1.06,
+  "drive": 9,
+  "trem": 0.1,
+  "breath": false,
+  "mix": [
+   [
+    "am_eric",
+    0.3
+   ]
+  ],
+  "under": {
+   "text": "Signal lost.",
+   "voice": "am_onyx",
+   "speed": 1.4,
+   "gain": -13
+  },
+  "tempo": 1.15
+ }
+}

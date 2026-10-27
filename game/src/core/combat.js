@@ -120,16 +120,36 @@ export function updateProjectiles(dt, world) {
   world.projectiles = world.projectiles.filter((p) => !p.dead);
 }
 
-function lowCoverProtecting(world, p, target) {
+// Lav dekning beskytter bare når den blokkerer linjen til HELE den synlige kroppen («de må ha en fri linje mot deg»):
+// sentrum + 7 punkter på sirkelkanten som vender mot skytteren må alle krysse en kvalifiserende dekning.
+// Kvalifiserende lav dekning: krysning >= SHOOTER_IGNORE fra munningen OG målets avstand vinkelrett til rektangelet
+// (nærmeste punkt, dvs. fra bakflaten) <= LOW_COVER_RANGE + r. Høy dekning teller også som blokk for et punkt.
+const LC_SAMPLES = [0, -1.4, -0.9, -0.45, 0.45, 0.9, 1.4].map(a => [Math.cos(a), Math.sin(a)]);
+export function lowCoverProtecting(world, p, target) {
+  const r = target.r || 14, reach = LOW_COVER_RANGE + r, near = [], high = [];
   for (const c of world.cover) {
+    if (c.type === 'high') { high.push(c); continue; }
     if (c.type !== 'low') continue;
-    const t = segmentRect(p.ox, p.oy, target.x, target.y, c);
-    if (t === null) continue;
-    const L = dist(p.ox, p.oy, target.x, target.y), along = t * L;
-    if (along < SHOOTER_IGNORE) continue;          // skytterens egen dekning
-    if (L - along <= LOW_COVER_RANGE + (target.r || 14)) return c; // målet ligger tett bak
+    const px = Math.max(c.x, Math.min(target.x, c.x + c.w)), py = Math.max(c.y, Math.min(target.y, c.y + c.h));
+    if (dist(target.x, target.y, px, py) <= reach) near.push(c);
   }
-  return null;
+  if (!near.length) return null;
+  const L0 = dist(p.ox, p.oy, target.x, target.y) || 1, ux = (p.ox - target.x) / L0, uy = (p.oy - target.y) / L0;
+  let hit = null;
+  const blocked = (sx, sy, first) => {
+    const L = dist(p.ox, p.oy, sx, sy);
+    for (const c of near) { const t = segmentRect(p.ox, p.oy, sx, sy, c); if (t !== null && t * L >= SHOOTER_IGNORE) { if (first) hit = c; return true; } }
+    if (first) return false;                         // sentrumslinjen må gå gjennom lav dekning
+    for (const c of high) { const t = segmentRect(p.ox, p.oy, sx, sy, c); if (t !== null && t * L >= SHOOTER_IGNORE) return true; }
+    return false;
+  };
+  if (!blocked(target.x, target.y, true)) return null;
+  const rr = r * 0.95;
+  for (let k = 1; k < LC_SAMPLES.length; k++) {
+    const [ca, sa] = LC_SAMPLES[k], dx = ux * ca - uy * sa, dy = ux * sa + uy * ca; // roter retning-mot-skytter
+    if (!blocked(target.x + dx * rr, target.y + dy * rr, false)) return null;
+  }
+  return hit;
 }
 
 function segCircle(ax, ay, bx, by, cx, cy, r) {

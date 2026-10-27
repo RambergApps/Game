@@ -16,6 +16,8 @@
 // Tilfeldig variasjon bruker Math.random med vilje – lyd skal ikke forbruke world.rng (determinisme i spillet).
 import { AudioEngine } from './engine.js';
 import { createMusic } from './music.js';
+import { createYardMusic } from './yard-music.js';
+import { createVoice } from './voice.js';
 import { SOUNDS } from './sfx.js';
 import { createCredits, createMenuMusic } from './stingers.js';
 import { createScene } from './scene.js';
@@ -25,6 +27,8 @@ import { lineOfSight } from '../core/geom.js';
 
 let ac = null, engine = null, music = null, world = null;
 let wantMusic = false, lastExternalUpdate = 0, driver = null;
+// v1.7: music = aktiv spillmusikk (yard-music.js i brett 1 «yard», ellers music.js). voice = cutscene-stemmer.
+let cinderMusic = null, yardMusic = null, musicId = null, voice = null, lastShotDuck = 0, calmT = 0;
 let waveBoost = 0, heat = 0, lastIntensity = -1, manualIntensity = null;
 // CINDER (v1.4.1): radio.js er skrevet om – announcer = nasjonal nødkringkasting (AM), command = militær feltradio,
 // warden = hjelmradio, caption = dempet. Alle Protocol-elementer (jingler, «on air», «signal lost») er fjernet.
@@ -39,7 +43,7 @@ let menuEventsSeen = false;
 let menuMus = null, wantMenu = false, scene = null, unlockedAt = 0, levelStarts = 0, lastUpgradeMs = -1e9, menuStartedAt = 0;
 const credVol = () => 0.75 * settings.music / 0.42; // rulleteksten følger musikkvolumet (0.42 = standard → 0.75)
 let heartbeatT = 0, footT = 0, gotFootstepEvent = false, lastPX = null, lastPY = null;
-const settings = { master: 0.8, music: 0.42, sfx: 1, muted: false };
+const settings = { master: 0.8, music: 0.42, sfx: 1, voice: 1, muted: false };
 // v1.4.1 Volum-API (se README.md): lagres i localStorage og leses inn ved lasting – virker før AudioContext finnes.
 export const VOLUME_KEY = 'breach.audio.volumes';
 const clamp01 = (v, old) => { const n = +v; return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : old; };
@@ -47,12 +51,12 @@ function loadVolumes() {
   try {
     const raw = typeof localStorage !== 'undefined' && localStorage.getItem(VOLUME_KEY); if (!raw) return;
     const o = JSON.parse(raw);
-    for (const k of ['master', 'music', 'sfx']) if (o && o[k] !== undefined) settings[k] = clamp01(o[k], settings[k]);
+    for (const k of ['master', 'music', 'sfx', 'voice']) if (o && o[k] !== undefined) settings[k] = clamp01(o[k], settings[k]);
     if (o && typeof o.muted === 'boolean') settings.muted = o.muted;
   } catch (_) { /* privat modus / ødelagt JSON: behold standard */ }
 }
 function saveVolumes() {
-  try { if (typeof localStorage !== 'undefined') localStorage.setItem(VOLUME_KEY, JSON.stringify({ master: settings.master, music: settings.music, sfx: settings.sfx, muted: settings.muted })); } catch (_) {}
+  try { if (typeof localStorage !== 'undefined') localStorage.setItem(VOLUME_KEY, JSON.stringify({ master: settings.master, music: settings.music, sfx: settings.sfx, voice: settings.voice, muted: settings.muted })); } catch (_) {}
 }
 loadVolumes();
 const offs = [];
@@ -147,7 +151,9 @@ export function setMasterVolume(v) { settings.master = clamp01(v, settings.maste
 export function setMusicVolume(v) { settings.music = clamp01(v, settings.music); engine?.setMusic(settings.music); if (credOut) credOut.gain.value = credVol(); saveVolumes(); return settings.music; }
 export function setSfxVolume(v) { settings.sfx = clamp01(v, settings.sfx); engine?.setSfx(settings.sfx); saveVolumes(); return settings.sfx; }
 /** → { master, music, sfx } (0..1) – også før opplåsing. muted leses med isMuted(). */
-export function getVolumes() { return { master: settings.master, music: settings.music, sfx: settings.sfx }; }
+export function getVolumes() { return { master: settings.master, music: settings.music, sfx: settings.sfx, voice: settings.voice }; }
+/** v1.7: stemmevolum i mellomsekvensene (0..1, ganges med sfx). */
+export function setVoiceVolume(v) { settings.voice = clamp01(v, settings.voice); engine?.setVoice(settings.voice); saveVolumes(); return settings.voice; }
 export function isMuted() { return settings.muted; }
 /** mute(true|false); uten argument = veksle (eldre bruk). Lagres. Returnerer ny tilstand. */
 export function mute(on) { settings.muted = on === undefined ? !settings.muted : !!on; engine?.mute(settings.muted); saveVolumes(); return settings.muted; }
@@ -216,7 +222,7 @@ export function menuStart() {
   stingerUntil = Math.max(stingerUntil, nowMs() + (wasMenu ? 1100 : 700)); // intro-kringkastingen starter etter stingeren
 }
 export function getState() {
-  return { ready: !!engine, state: ac?.state ?? 'none', intensity: music?.intensity ?? 0, voices: engine?.activeVoices() ?? 0, played: { ...played }, driver: !!driver, cutscene: cutscene?.id ?? null, fallenShort: !!cutscene?.short, level: curLevel, pendingLevelStart, radioBed: !!bed?.active, broadcast: BROADCAST_ENABLED, paused: !!engine?.paused, outputLatency: ac ? (ac.outputLatency || ac.baseLatency || 0) : 0, menuMusic: !!menuMus?.active, menuGain: menuMus ? +menuMus.output.gain.value.toFixed(4) : 0, menuEvents: menuEventsSeen, scene: scene?.id ?? null, ...settings };
+  return { ready: !!engine, state: ac?.state ?? 'none', intensity: music?.intensity ?? 0, voices: engine?.activeVoices() ?? 0, played: { ...played }, driver: !!driver, cutscene: cutscene?.id ?? null, fallenShort: !!cutscene?.short, level: curLevel, pendingLevelStart, radioBed: !!bed?.active, broadcast: BROADCAST_ENABLED, paused: !!engine?.paused, outputLatency: ac ? (ac.outputLatency || ac.baseLatency || 0) : 0, menuMusic: !!menuMus?.active, menuGain: menuMus ? +menuMus.output.gain.value.toFixed(4) : 0, menuEvents: menuEventsSeen, scene: scene?.id ?? null, musicId, ...settings, voiceState: voice?.state() ?? null };
 }
 export const SOUND_NAMES = Object.keys(SOUNDS);
 
@@ -229,7 +235,11 @@ export function unlock() {
     engine.occlusionTest = (x, y, lx, ly) => !!(world?.cover?.length) && !lineOfSight(world, x, y, lx, ly);
     bed = BROADCAST_ENABLED ? createBed(ac, engine.radio) : null;
     engine.setMaster(settings.master); engine.setMusic(settings.music); engine.setSfx(settings.sfx); engine.mute(settings.muted);
-    music = createMusic(ac, engine.music, engine.reverbSend);
+    engine.setVoice(settings.voice);
+    cinderMusic = createMusic(ac, engine.music, engine.reverbSend);
+    yardMusic = createYardMusic(ac, engine.music, engine.reverbSend);
+    music = musicId === 'yard' ? yardMusic : cinderMusic;
+    voice = createVoice(ac, engine.voice, { onSpeech: (on) => { engine.duckRadio(on); if (on) count('_voice'); } });
     scene = createScene(ac, engine.radio, engine.reverbSend);
     unlockedAt = nowMs();
     ensureMeter();
@@ -261,13 +271,14 @@ export function init(w) {
     offs.push(typeof off === 'function' ? off : () => ev.off?.(type, fn));
   };
 
-  on('arenaLoaded', () => startMusic());
+  on('arenaLoaded', (p) => { selectMusic(p.id); startMusic(); });
   on('shot', (p) => {
     const oid = weaponId(p?.weapon ?? p?.projectile?.weapon);
     if (ORGANIC_SHOT[oid]) { organicShot(p, oid); return; } // v1.4.1: spine/slag/acid – eksakt match først
     const s = weaponSound(p);
     if (dedupeShot(p, s)) return;
     play(s, pos(p));
+    musicDuck(4, 220, true);
     chamberFallback(p);
     if (p.team === 'enemy' || p.projectile?.team === 'enemy') heat += 0.025; else heat += 0.01;
   });
@@ -334,9 +345,10 @@ export function init(w) {
     if (isSac(p) || (p.grenade && sacs.has(p.grenade))) { play('acidBurst', pos(p)); if (p.grenade) sacs.delete(p.grenade); }
     else if (/acid|sac/.test(String(p.kind ?? ''))) play('acidBurst', pos(p));
     else play('explosion', { ...pos(p), kind: p.kind ?? 'frag', ...(p.kind === 'small' || (num(p.radius) !== undefined && p.radius < 50) ? { gain: 0.6 } : {}) }); // v1.5: kind velger lyd ('frag' = standard granat)
-    heat += 0.15;
+    heat += 0.15; musicDuck(8, 900);
   });
   // ---- CINDER (Historie låst 23.10): Cinderborn fra under bakken. Se cinder.js. ----
+  on('spawnWarn', (p) => musicDuck(6, 500));
   on('spawnWarn', (p) => play('spawnWarn', { ...pos(p), type: ctype({ type: p.type }, p.variant), warn: num(p.t) ?? num(p.duration) ?? 0.9 }));
   on('spawnRise', (p) => { play('spawnRise', { ...pos(p), type: ctype({ type: p.type ?? p.entity?.type, variant: p.entity?.variant }, p.variant) }); heat += 0.03; });
   on('telegraph', (p) => {
@@ -390,8 +402,8 @@ export function init(w) {
   on(CUTSCENE_EVENTS.start, (p) => cutsceneStart(p));
   on(CUTSCENE_EVENTS.line, (p) => cutsceneLine(p));
   on(CUTSCENE_EVENTS.end, (p) => cutsceneEnd(p));
-  on('waveStart', () => { play('waveStart', {}); waveBoost = Math.max(waveBoost, 0.85); });
-  on('waveEnd', () => { play('waveEnd', {}); waveBoost = Math.min(waveBoost, 0.15); heat = 0; });
+  on('waveStart', () => { play('waveStart', {}); musicDuck(6, 500); calmT = 0; waveBoost = Math.max(waveBoost, 0.85); });
+  on('waveEnd', () => { play('waveEnd', {}); waveBoost = Math.min(waveBoost, 0.15); heat = 0; calmT = 3; });
   // Nivåer: levelStart spilles når spillet faktisk går (etter evt. cutsceneBefore), ikke oppå kringkastingen.
   on('levelStart', (p) => {
     curLevel = p.level ?? p.id ?? world?.level?.n ?? curLevel; pendingLevelStart = true;
@@ -619,6 +631,7 @@ function radioAt() { return engine.ac.currentTime + Math.max(0, (stingerUntil - 
 
 function cutsceneStart(p) {
   if (!engine) return;
+  voice?.prepare(p.id);
   if (cutscene) { bed?.stop(engine.ac.currentTime, 0.1); scene?.stop(engine.ac.currentTime, 0.1); }
   // fallen: gjentatt død (samme nivå, eller innen 3 min) → kort variant
   let short = false;
@@ -641,17 +654,19 @@ function cutsceneLine(p) {
   if (!engine) return;
   if (!cutscene) cutsceneStart({ id: p.id }); // tålt: linje uten start
   cutscene.t = performance.now();
-  if (!BROADCAST_ENABLED) { if (p.panel !== undefined) cutscene.panel = p.panel; return; }
+  if (!BROADCAST_ENABLED) { if (p.panel !== undefined) cutscene.panel = p.panel; voice?.line(p); return; }
   const sp = SPEAKER_SOUND[p.speaker] ?? SPEAKER_SOUND.caption;
   bed?.setMode(sp);
   const newPanel = cutscene.panel !== null && p.panel !== undefined && p.panel !== cutscene.panel;
   if (p.panel !== undefined) { cutscene.panel = p.panel; scene?.panel(p.panel); }
   if (newPanel) play('radioPanel', {});
   if (sp.click) play(sp.click, { when: radioAt() + (newPanel ? 0.12 : 0) });
+  voice?.line(p, radioAt() + (newPanel ? 0.12 : 0));
 }
 function cutsceneEnd(p = {}) {
   if (!engine || !cutscene) return;
   const id = p.id ?? cutscene.id, short = cutscene.short; cutscene = null;
+  voice?.end(p);
   if (!p.quiet && BROADCAST_ENABLED) play('bcastEnd', { id, skipped: !!p.skipped, short, force: true });
   bed?.stop(engine.ac.currentTime + (p.skipped ? 0.02 : 0.25), p.skipped ? 0.12 : 0.5);
   scene?.stop(engine.ac.currentTime + (p.skipped ? 0.02 : 0.25), p.skipped ? 0.15 : 1.2);
@@ -678,11 +693,17 @@ function tick(dt) {
 
   // intensitet: bølgeløft (synker sakte) + kamp-«varme» (synker raskt) + gulv når fiender lever
   if (!world?.paused) { // intensiteten fryses i pause
-    waveBoost = Math.max(0, waveBoost - dt * 0.012);
+    // v1.7 Kessa Yard: etter waveEnd faller intensiteten mot ~0,1 på ca. 3 s (calmT); ellers som før
+    if (musicId === 'yard' && calmT > 0) { calmT -= dt; waveBoost = Math.max(0, waveBoost - dt * 0.05); heat = Math.max(0, heat - dt * 0.3); }
+    else waveBoost = Math.max(0, waveBoost - dt * 0.012);
     heat = Math.max(0, Math.min(0.6, heat) - dt * heat * 0.25);
   }
   const alive = Array.isArray(world?.enemies) ? world.enemies.some((e) => e && !e.dead) : false;
   let target = Math.min(1, waveBoost + heat + (alive ? 0.2 : 0));
+  if (musicId === 'yard') { // gulv 0,25 + 0,1 per levende fiende; uten fiender ~0,1
+    const n = alive ? world.enemies.filter((e) => e && !e.dead).length : 0;
+    target = Math.min(1, Math.max(n ? 0.25 + 0.1 * n : 0.1, calmT > 0 ? Math.min(waveBoost + heat, 0.1 + calmT / 3 * 0.75) : waveBoost + heat));
+  }
   if (bossActive) target = 1; // v1.4.1 midlertidig boss: maks til bossEnd
   if (p?.dead) target = 0.05;
   if (manualIntensity !== null) target = manualIntensity;
@@ -714,3 +735,27 @@ export function update(dt, w) {
 }
 
 export function draw(ctx, w, camera) { /* lyd tegner ingenting */ }
+
+// ---------------- v1.7: valg av spillmusikk og sidechain ----------------
+/** arenaLoaded → 'yard' (brett 1) bruker yard-music.js, andre brett music.js. Bytter med kort kryssfade. */
+function selectMusic(id) {
+  const want = id === 'yard' ? 'yard' : 'cinder';
+  if (want === musicId) return;
+  musicId = want;
+  if (!engine) return; // unlock() velger når AudioContext finnes
+  const next = want === 'yard' ? yardMusic : cinderMusic;
+  if (music && music !== next) music.fadeOut(1.2);
+  music = next; lastIntensity = -1;
+}
+/** Sidechain på aktiv musikk (bare yard-music har duck). Skudd: maks én duck per 150 ms. */
+function musicDuck(db, ms, isShot = false) {
+  if (!engine || !music?.duck || wantMenu) return;
+  if (isShot) { const t = nowMs(); if (t - lastShotDuck < 150) return; lastShotDuck = t; }
+  music.duck(engine.ac.currentTime, db, ms);
+}
+/** Testverktøy (v1.7): MediaStream av ferdig miks (etter klipperen) – for opptak i headless (tools/voice/clip.cjs). */
+export function _tap() {
+  if (!engine) return null;
+  if (!engine._tapDest) { engine._tapDest = engine.ac.createMediaStreamDestination(); engine.clip.output.connect(engine._tapDest); }
+  return engine._tapDest.stream;
+}

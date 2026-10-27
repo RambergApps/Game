@@ -33,7 +33,7 @@ export function setState(P, name, data = {}) {
 function moveDir(I) { return I.ml ? { x: I.mx, y: I.my } : null; }
 function aimDir(P) { return { x: Math.cos(P.aim), y: Math.sin(P.aim) }; }
 function collide(P) { resolveCircleVsCover(P.world, P.p, T.collisionRadius); }
-function coverInfo(P) { const L = P.cov.line; if (!L) return null; const ci = P.cov.corner; return { nx: L.nx, ny: L.ny, type: L.type, atCorner: !!ci?.at, edgeDir: ci?.at ? ci.side : 0 }; }
+function coverInfo(P) { const L = P.cov.line; if (!L) return null; const ci = P.cov.corner; return { nx: L.nx, ny: L.ny, type: L.type, kind: coverAt(L, P.cov.along)?.kind, atCorner: !!ci?.at, edgeDir: ci?.at ? ci.side : 0 }; }
 export function isReloading(P) { const L = P.p.loadout; return !!L?.reload; }
 
 /** Felles gange/løp. mul skalerer maksfart. */
@@ -87,8 +87,16 @@ function hardStop(P, L, vin) {
   fx.debris?.(P.world, fxp.x, fxp.y, out, Math.round(T.impactDebris * k));
   emit(P, 'coverImpact', { speed: vin, nx: L.nx, ny: L.ny, type: L.type, cover: coverAt(L, P.cov.along) });
 }
+/** 27.10: exposed-flagg + hendelser. Hendelsene sendes bare ved faktisk endring. */
+export function setExposed(P, on) {
+  const C = P.cov, L = C?.line; if (!C || !!C.exposed === on) { P.p.exposed = !!(C && C.exposed); return; }
+  C.exposed = on; P.p.exposed = on;
+  const o = L ? { type: L.type, nx: L.nx, ny: L.ny } : {};
+  if (on) emit(P, 'coverRise', { ...o, cover: L ? coverAt(L, C.along) : null }); else emit(P, 'coverDuck', o);
+}
 export function leaveCover(P, withExit = true) {
   if (!P.cov.line) return;
+  setExposed(P, false);
   const L = P.cov.line; P.cov.line = null;
   emit(P, 'coverExit', { type: L.type, nx: L.nx, ny: L.ny });
   if (withExit) { setState(P, 'exitCover', { nx: L.nx, ny: L.ny }); P.rig.play('exitCover', { nx: L.nx, ny: L.ny }); }
@@ -130,6 +138,7 @@ export function startStagger(P, fromX, fromY, k = 1) {
 }
 export function startDeath(P) {
   if (P.cov.line) leaveCover(P, false);
+  if (P.cov?.exposed) setExposed(P, false);
   setState(P, 'death'); P.rig.play('death'); P.p.vx = P.p.vy = 0;
 }
 
@@ -199,6 +208,9 @@ const UPD = {
     const pk = want === 'popUp' || want === 'lean' ? 1 : 0;
     C.peek += clamp(pk - C.peek, -dt / (pk ? T.popDownTime : T.popDownTime), dt / (want === 'lean' ? T.leanOutTime : T.popUpTime));
     C.blind += clamp((want === 'blind' ? 1 : 0) - C.blind, -dt / T.blindRaise, dt / T.blindRaise);
+    // 27.10: hodet over kanten (lav dekning) → coverRise / coverDuck + p.exposed (avtalt med Effekter). Blindfire teller ikke.
+    if (!high) { if (!C.exposed && want === 'popUp' && C.peek >= T.riseExposePeek) setExposed(P, true); else if (C.exposed && C.peek <= T.duckHidePeek) setExposed(P, false); }
+    else if (C.exposed) setExposed(P, false);
     const leanT = want === 'lean' ? C.corner.side : 0; C.lean += clamp(leanT - C.lean, -dt / T.leanInTime, dt / T.leanOutTime);
     // gli langs flaten (ikke mens man sikter)
     const vt = I.mx * L.tx + I.my * L.ty, vn = I.mx * L.nx + I.my * L.ny;
@@ -260,8 +272,8 @@ function applyPosture(P) {
   else if (n === 'vault') r = R.vault;
   else if (n === 'melee') r = R.melee;
   else if (n === 'move' || n === 'exitCover') r = P.sprinting ? R.run : Math.hypot(p.vx, p.vy) > 20 ? R.move : R.stand;
-  else if (n === 'cover') { posture = C.sub; r = R[C.sub] ?? R.hidden; chance = T.coverHitChance[C.sub]; }
-  p.r = r; p.posture = posture; p.inCover = n === 'cover'; p.blindfire = n === 'cover' && C.sub === 'blind';
+  else if (n === 'cover') { posture = C.sub; r = R[C.sub] ?? R.hidden; chance = T.coverHitChance[C.sub === 'lean' ? 'lean' : C.exposed ? 'popUp' : C.sub === 'popUp' ? 'hidden' : C.sub]; }   // 27.10: treffbar (popUp-sjanse) nøyaktig mens hodet er over kanten (exposed)
+  p.r = r; p.posture = posture; p.inCover = n === 'cover'; p.exposed = n === 'cover' && !!C?.exposed; p.blindfire = n === 'cover' && C.sub === 'blind';
   if (chance === undefined) delete p.coverHitChance; else p.coverHitChance = chance;
 }
 
@@ -273,7 +285,7 @@ export function driveRig(P) {
   if (n === 'move' || n === 'exitCover') { d.mode = P.sprinting ? 'run' : spd > 25 ? 'walk' : 'idle'; d.aimBlend = aimPose || (P.intent?.fire ? 0.8 : 0); if (spd > 25) d.moveAngle = Math.atan2(p.vy, p.vx); }
   else if (n === 'roll') { d.mode = 'roll'; d.moveAngle = s.a; }
   else if (n === 'slide') { d.mode = s.dash && (s.remain ?? 999) > T.dashSlideDist ? 'dash' : 'slide'; d.moveAngle = Math.atan2(p.vy, p.vx); d.cover = { nx: s.line.nx, ny: s.line.ny, type: s.line.type }; }
-  else if (n === 'cover') { d.mode = 'cover'; d.cover = coverInfo(P); d.peek = C.peek; d.blind = C.blind; d.aimBlend = C.peek; d.exposed = C.sub !== 'hidden'; if (C.gliding) d.moveAngle = Math.atan2(p.vy, p.vx); }
+  else if (n === 'cover') { d.mode = 'cover'; d.cover = coverInfo(P); d.peek = C.peek; d.blind = C.blind; d.aimBlend = C.peek; d.exposed = !!C.exposed; if (C.gliding) d.moveAngle = Math.atan2(p.vy, p.vx); }
   else if (n === 'vault') { d.mode = 'vault'; d.moveAngle = Math.atan2(p.vy, p.vx); }
   else if (n === 'stagger') d.mode = 'stagger';
   else if (n === 'melee') { d.mode = spd > 25 ? 'walk' : 'idle'; d.faceAngle = s.angle; d.aimAngle = s.angle; }

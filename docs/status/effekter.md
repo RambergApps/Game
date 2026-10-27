@@ -1,29 +1,29 @@
-**Står stille – brett 2 på vent til Alexander har spilt demoen**
-- 14:4x Brett 2 (Deepwell Refinery) førsteutkast levert, IKKE koblet inn: src/effects/refinery.js + refinery-test.html. Bilder: reviews/img/raffineri-ark.png, raffineri-test-warden.png. Cover 0,45 ms/bilde (7 stk), fakkelliv 0,015 ms. Svakheter: arket overlapper, fundamenter for lyse, ikke iterert (stoppet).
-# Effekter – status 27.10 (v4)
-- Barrierer: én seksjon per ca. 2 felt, smal topp, skrå fot, kald betong og ingen lyse kanter foran.
-- Kasser: mørkt tre og paller.
-- Målt geometri ved zoom 2: front 39 px (forventet 39,3) og topp 37 px (forventet 36,7).
-Gulv og lys (src/effects/ground.js, med floor.js som alias). Arena kaller den allerede med fallback.
-- Bake ved innlasting: gulvet tar 0,3 ms og lysene 4,4 ms. Per frame: 0 ms ekstra, bare drawImage på 0,08 ms.
-Bilder (reviews/img):
-- lavt-cover-55-spill.png: zoom 2.3 i spillet
-- lavt-cover-55-oversikt.png: zoom 1
-- lavt-cover-55-sammenlign.png: målbildet, zoom 2.3 og oversikten, 4782×940
-Dokumenter:
-- reviews/diffs/arena-floor-hook.diff (allerede innført hos Arena)
-- arena-gulv-lys-forslag.md
-- arena-render-lowcover.diff
-Gjenstår og avvik:
-- Målbildet har varmere og rikere lys samt containervegger.
-- Vårt gulv er mørkere og mer nøytralt. Sekkene er litt mindre.
-- I testkopien ble mørk-varianten overflødig, fordi vårt gulv nå er mørkt.
-v4 (13:2x):
-- Lyset er gyllent natriumgult, radius r·0,78 (ca. +40 %), med lys kjerne og myk avtoning. Pyttene nær lampene har varm refleks.
-- Gulvet er skifergrå asfalt (#2a2e33) med mer tekstur. De gule linjene har alpha 0,85.
-- Barrierene har lysere øvre kant og lysere skrå fot. Sekkene er 10 % større.
-- Kostnad: gulv- og lysbakingen tar under 0,5 ms ved innlasting. Per frame koster det bare drawImage, 0,09 ms.
-- Gjenstår: lyset er fortsatt svakere og mindre gyllent enn i målbildet, fordi Arenas lightmap demper. Pytterefleksen er svak. Containervegger mangler.
-Lyskart + tunnel (13:3x):
-Lys 13:4x: kjerne 255,135,50, i·1,35 (maks 1,5), kaldere ytre stopp. Mål/vår: asfalt 25,22,21/25,22,22 · kant 72,55,43/96,74,54 · kjerne 162,110,66/140,111,83. Videre iterering stoppet.
-Kanter 13:5x: drawEdge i ground.js (quay/water/platform). Kantstein, varselstripe, flate pullerter, kaivegg under gulvnivå. Arena har kroken; ingen dybdesortering. Bilder: kant-kai-warden.png, kant-ark.png.
+Står stille – silhuettkant v2 + sprekklekkasje verifisert, klar for Arena
+Står stille – venter på Arena (NS-skygge) og nye oppdrag fra Breach.
+- Støvtak: maks ca. 40 partikler, skala 1/(n+1) innen 0,3 s og 0,5 s nedkjøling per dekning. 6 samtidige gir 48 partikler (ikke 180).
+- NS-barrierer v5 (cover.js paintNSBarrierV5): 2–3 lave jersey-blokker med 68 % bredde. Feilen med svart strek er rettet.
+- Raffineri brett 2, v2: refinery.js og refinery-test.html. Ikke koblet inn; brett 2 venter på Alexander.
+- Tidligere: lavt cover ved 55°, gulv og lys (ground.js), kai- og vannkanter, liv i scenen.
+
+## Pågår
+- Ingenting.
+
+## Neste
+- Ekte før/etter-bilde av NS-barrierer i spillet når Arena har lagt inn skyggediffen.
+- Hvis de fortsatt ser ut som plater: Arena kutter dem til 1 rute i dataene, etter Breachs beslutning.
+
+## Blokkert av
+- Arena: reviews/diffs/arena-ns-skygge.diff mot arena/render.js drawShadows, kommer etter startglimt, livpåfyll og bånd.
+- Brett 2: venter på at Alexander har spilt demoen.
+- Tunnel: på vent.
+
+## Siste bilder (reviews/img)
+- warden-reiser-seg.mp4 og .png (zoom 2,25, sekker og mur, ekte hendelser)
+- reise-stov-tak.png
+- ns-barrierer-v5-skygge.png (forhåndsvisning)
+- raffineri-ark-v2.png og raffineri-test-warden-v2.png
+- 27.10 sent 2: paintNSBarrierV5 – stykker < ~1,4 rute (0,75×1) = én blokk (før: to klemte). Før/etter i spill: reviews/img/ns-barrierer-spill-for-etter.png (_tools/ns-spill.mjs).
+- Silhuett bak høy dekning: tegnes i shared/depth.js (Arena) – drawCoverToned + drawSilhouettes. Forslag reviews/diffs/arena-silhuett.diff (ikke anvendt), bilde reviews/img/silhuett-for-etter.png.
+- Silhuettkant: reviews/diffs/arena-silhuett-kant.diff (depth.js, ikke anvendt) + reviews/img/silhuett-kant-for-etter.png. Lekkasjen (b) var VFX-grus (spawnWarn/spawnRise) i over-laget – fikset i bind.js/index.js (hidden → under-lag).
+- 27.10 sent 3: sprekk/oppbrudd bak container verifisert i spill (0 over-lag-partikler i takflaten) – reviews/img/sprekk-bak-container.png. Kant-diff utvidet: helt dekket kropp → ingen utskjæring, kaldt omriss 0,25.
+- 27.10 17:xx Fragment over tak = fiendens egen kropp (flanker-pigger) gjennom 30–46 % uttoning i shared/depth.js drawCoverToned (ikke VFX: vfx/dekaler/overlays av → uendret). Forslag reviews/diffs/arena-silhuett-fragment.diff (eier Arena): høy dekning → alltid deep, takleppe beholdt. Før/etter reviews/img/silhuett-fragment-for-etter.png. Verktøy _tools/fragment.mjs.

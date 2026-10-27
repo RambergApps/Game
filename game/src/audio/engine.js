@@ -25,7 +25,10 @@ export class AudioEngine {
 
     this.sfx = ac.createGain(); this.sfx.gain.value = this._sfx; this.sfx.connect(this.master);
     // radio-buss (mellomsekvens-kringkasting): følger sfx-volumet, men dukkes ikke av pause
-    this.radio = ac.createGain(); this.radio.gain.value = this._sfx; this.radio.connect(this.master);
+    this.radio = ac.createGain(); this.radio.gain.value = this._sfx;
+    // v1.7: radioDuck senker radiostøy/scene-ambiens mens en stemme snakker; voice = cutscene-stemmer (sfx × voice-volum)
+    this.radioDuck = ac.createGain(); this.radioDuck.gain.value = 1; this.radio.connect(this.radioDuck); this.radioDuck.connect(this.master);
+    this._voice = 1; this.voice = ac.createGain(); this.voice.gain.value = this._sfx * this._voice; this.voice.connect(this.master);
     // ui-buss (nivå-stingere, oppgradering): som radio – følger sfx-volum, dukkes ikke
     this.ui = ac.createGain(); this.ui.gain.value = this._sfx; this.ui.connect(this.master);
     this.music = ac.createGain(); this.music.gain.value = this._music;
@@ -52,7 +55,10 @@ export class AudioEngine {
 
   setMaster(v) { this._master = clamp(v, 0, 1); this._applyMaster(); }
   setMusic(v) { this._music = clamp(v, 0, 1); this.music.gain.setTargetAtTime(this._music, this.ac.currentTime, 0.05); }
-  setSfx(v) { this._sfx = clamp(v, 0, 1); this.radio?.gain.setTargetAtTime(this._sfx, this.ac.currentTime, 0.05); this.ui?.gain.setTargetAtTime(this._sfx, this.ac.currentTime, 0.05); this.sfx.gain.setTargetAtTime(this.paused ? this._sfx * 0.6 : this._sfx, this.ac.currentTime, 0.05); }
+  setSfx(v) { this._sfx = clamp(v, 0, 1); this.voice?.gain.setTargetAtTime(this._sfx * this._voice, this.ac.currentTime, 0.05); this.radio?.gain.setTargetAtTime(this._sfx, this.ac.currentTime, 0.05); this.ui?.gain.setTargetAtTime(this._sfx, this.ac.currentTime, 0.05); this.sfx.gain.setTargetAtTime(this.paused ? this._sfx * 0.6 : this._sfx, this.ac.currentTime, 0.05); }
+  setVoice(v) { this._voice = clamp(v, 0, 1); this.voice.gain.setTargetAtTime(this._sfx * this._voice, this.ac.currentTime, 0.05); }
+  /** v1.7: radiostøy ned (dB) mens en stemme snakker; on=false → tilbake. */
+  duckRadio(on, db = 9) { const g = this.radioDuck.gain, t = this.ac.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.setTargetAtTime(on ? Math.pow(10, -db / 20) : 1, t, on ? 0.04 : 0.25); }
   mute(on = !this.muted) { this.muted = !!on; this._applyMaster(); return this.muted; }
   _applyMaster() { this.master.gain.setTargetAtTime(this.muted ? 0 : this._master, this.ac.currentTime, 0.03); }
 

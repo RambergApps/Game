@@ -21,6 +21,7 @@ export const CREDITS = [
   { kind: 'role', text: 'Enemy design' }, { kind: 'name', text: AI('Enemy Design') },
   { kind: 'role', text: 'Weapons' }, { kind: 'name', text: AI('Weapons') },
   { kind: 'role', text: 'Audio' }, { kind: 'name', text: AI('Audio') },
+  { kind: 'small', text: 'Voices: Kokoro-82M (Apache-2.0)' },
   { kind: 'role', text: 'Effects' }, { kind: 'name', text: AI('Effects') },
   { kind: 'role', text: 'Cutscene art' }, { kind: 'name', text: AI('Cutscene Art') },
   { kind: 'role', text: 'Levels & story' }, { kind: 'name', text: AI('Levels & Story') },

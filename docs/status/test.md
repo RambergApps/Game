@@ -1,27 +1,28 @@
-# Status – Breach Test og spillfølelse
-Oppdatert: 2026-10-27 14:05
+# Status: Test og spillfølelse
+Oppdatert: 2026-10-27 15:21 (Europe/Oslo)
 
-## Nå
-- Fiende-AI 55°: reviews/qa-2026-10-27-fiende-ai-55.md
-  - JA for onscreen.js: 0 av 15 treff fra utenfor bildet.
-  - A2 delvis: stillstand over 4 s finnes fortsatt i 1-2.
-  - Cover mot åpen: 9 % mot 27 % fiendetreff, ingen flokking.
-- Ytelsesreferanse: reviews/ytelse-2026-10-27-referanse.md
-  - DPR 1: 60 FPS låst i 1-1 til 1-5 (55° og view=34).
-  - DPR 2: 29–35 FPS, p99 opptil 67 ms.
-  - Heap 21–30 MB.
-- Vinkel 55°: reviews/qa-2026-10-27-vinkel-55.md – NEI (betinget).
-  - Kamera og ytelse er gode.
-  - Skudd fra fiender utenfor bildet: 3 av 3 treff på Warden i 1-1.
-  - Bryst-treff ikke avgjort.
-- Brysthøyden i testfilene er rettet til 27·PROJ.zScale.
-- Warden C runde 2: JA for gange og strafe. Dødstid 2,0 s.
-Filer: shots/test/qa/vinkel-55/, shots/test/qa/warden-c/runde2/.
+## Siste oppgave: Yard v2 QA og samlet demo-gjennomspilling
+- **Dom: JA til demo.** Ingen blokkerende feil, 0 konsollfeil, nådde yard-clear og brett 2.
+- **Kode testet:** kjøring startet 14:49:51. Nyeste src var 14:48:26. Munningsfiks (weapon.js/states.js) 14:47:46, Hunker v3b 14:42.
+- **Rapporter:** reviews/qa-2026-10-27-yard-v2.md og reviews/ytelse-2026-10-27-yard-v2.md.
+- **Klipp:** shots/test/qa/yard-v2/klipp-demo-1-5.mp4, klipp-pir-vann.mp4, klipp-vann-dekning.mp4, pluss tilhørende ark-*.png.
 
-## Neste
-- Fiende-AI 55° i 1-3 til 1-5 (Lurcher, Spitter, Kiln), cover mot åpen
-- Ny ytelsesmåling når yard-v2 er inne (tests/ytelse-ref.mjs)
-- Ren bryst-test ved 55° (fiende i åpent terreng)
-- Ny Kessa Yard
-- Fiende-AIs passivitetsfiks
-- Ny fiende Hunker
+## Åpne funn
+- N–S-barrierer v4 ser for høye ut (Effekter).
+- Svart bånd under piren (Arena).
+- Hunker er ikke med i brett 1, så munning og cover er ikke testet i demoen (Breach/Fiende-AI).
+- Silhuettregelen er ikke bevist (Test).
+- JS-heap +9 MB fra 1-3 mot referansen.
+
+## Testfiler endret i denne runden
+- tests/spill-brett1.mjs: 96-flokk, skudd per fiende, --video, minne-sampler.
+- Nye: tests/yard-v2-vann.mjs, tests/yard-v2-probe.mjs, tests/yard-v2-vann-bev.mjs, tests/hunker-munning.mjs.
+
+## 16:41 Cover-lekk (Breach-oppdrag)
+- Rapport: reviews/test-2026-10-27-cover-lekk.md. Bilder: shots/test/qa/cover-lekk/kart-*.png
+- 0.1-rullen virker. (b)-lekk: skrå vinkler (60–80°) gir 100 % treff fordi 59 px måles langs linjen.
+- Andre kilder: popUp/lean 0.6 (1.8 s eksponert i snitt), granater ignorerer lavt cover (~16 % av skaden). Fiks er foreslått (Core/Warden), ikke implementert.
+
+## 17:33 Samlet kontroll snapshot 16:50
+- Rapport: reviews/qa-2026-10-27-samlet-1650.md. Totalt NEI (betinget). Grunn: bot klarer ikke 1-5 (33 dødsfall), og kasser/mur er ikke visuelt verifisert.
+- JA: Hunker ikke i brett 1, dukket 0.107, CONTROLS, stemme/hopp, CHAPTER 02 nådd, 0 feil, DPR1 60 fps.

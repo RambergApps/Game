@@ -49,3 +49,10 @@ drawEdgeTank(ctx, L, {x,y,r,height?,label?}), drawPipeRack(ctx, L, {x0,x1,y,heig
 refineryLightStyle(l), refineryLightmapPool(ctx, L, l, alphaMul), refineryAmbient(L), drawRefineryGlow(ctx, L), drawFlareLife(ctx, L, t, view)
 // lys-kind: 'flare' (oransje), 'mercury' (grønnlig), ellers natrium
 ```
+- v2 (27.10): ventilkasser fasede med hevet ratt; fundamenter mørk betong; arket `?mode=sheet` har nummererte rader; lyskart-mocken klippes til scenen.
+
+## Warden over dekning – `coverpose.js` (27.10)
+Adapter: lytter på `coverRise`/`coverDuck` (kontrakt med Warden-design) og `p.exposed`. Til hendelsene finnes: stigende kant på `p.posture === 'popUp'|'lean'` i lav dekning (`st.tickPose` i update). `SOURCE.mode = 'auto'|'events'|'posture'`.
+- `coverRise` → `spawn('coverRise')`: kort kaldt kantblink, betongstøv og grus fra topplata på begge sider av kroppen (høy dekning: ingenting).
+- `hit` på spilleren med `isExposed(target)` → `spawn('exposedHit')`: hvit-oransje blaff og harde gnister på brystplata (z 34). Dukket: bare vanlig dempet treff/dekningstreff.
+- Klipp: `node game/src/effects/_tools/rise-clip.mjs` → `reviews/img/warden-reiser-seg.mp4/.png`.

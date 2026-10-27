@@ -1,31 +1,24 @@
-# Status – Story og brett (oppdatert 2026-10-27 14:41)
+# Status – Story og brett (oppdatert 2026-10-27 17:19)
 Eier: game/src/levels/ og game/src/story/. Historie: CINDER (låst). All spilltekst på engelsk.
 
 ## Ferdig
-- Henge-tast-feil (26.10) FIKSET: keyup/mouseup slippes gjennom i cards/player/credits, input.reset() ved pause/kort; 11/11 grønt (tests/results/overgang-1-2-ekte*.json). upgradeOffer {offer} sendes før openCards().
-- 26.10 15:34: BUILD satt manuelt (oppdater ved hver levering), startLevel kaller input.reset(). Ammokasse i yard er Arenas fil (arena/yard.js l.104) – forslag [8.6,20.6] sendt via Breach.
-- intro-01 linje 1–2 endret av Breach (Alexanders valg) – ikke endre tilbake.
-- levels/data.js: 3 nivåer (Kessa Yard 5, Deepwell Refinery 6, The Deepwell 6+boss 3-7). Balanse Kessa Yard 26.10: 1-4 maxAlive 6→5, 1-5 topp med 17 fiender, maks 7.
-- levels/index.js: restartWave(world,{cause}) VERIFISERT fra ekte pausemeny midt i 1-3 (samme bølge, felt ryddet, oppgraderinger beholdt, full HP/ammo, startpunkt, restart-hendelse, ikke pauset). false under mellomsekvens/kortvalg.
-- Død→kontroll målt: 1. død 3,2 s (kald/varm), Esc 1,6 s, 2. død 1,0 s (mål < 4 s nådd).
-- Alle 24 malte paneler aktive og HTTP 200 (sjekket på nytt 15:00, panel-sheet.cjs), 1920×1080, < 400 kB. fallen-01 forhåndslastes.
-- Effekters shadowBlur-differ inne (hud.js, cards.js); rg shadowBlur i levels = 0.
-- story/: cutscenes.js, player.js, credits.js, fonts/ (Barlow Condensed, OFL). test.html har restart-knapp.
-- Rapport: reviews/brett1-demo-2026-10-26.md. Docs: NIVAER-OG-STORY.md oppdatert.
-
-- Regresjon 15:00: smoke, pause-chain, probe-overgang-1-2 grønne. Test bekreftet tastefiks i headed Chrome 19/19 (reviews/test-2026-10-26-overgang-1-2.md). Testskript-kopier: reviews/story-tools/.
+- Brett 1 (Kessa Yard, 5 bølger), restartWave, død→kontroll < 4 s, kort 3-velg-1, 24 malte paneler, tastefiks (keyup/mouseup + input.reset()). Hunker ikke i brett 1.
+- Stemmer: player.js leser manifest-dur ved kjøring (ingen hardkodede varigheter). cutsceneLine + cutsceneText én gang per linje. Kokoro-kreditt.
+- «All of us. Coming home.» i ending. fallen: maxDuration 2,3, uttoning 0,25 (urørt).
+- 2026-10-27 17:19 timing v2 (Breach): hale 0,3→0,1 s, pust ≥0,2 s ved talerbytte, stemmestart speiler voice.js (max(0,16, delay)) – samtidig med typing, panelFade 0,45→0,35, swipe 0,55→0,45. Ingen kutt.
+- check-voice-timing v2 (kjenner maxDuration): 0 brudd. Med/uten stemme: intro 36,6/16,3 (2,24×), yard-clear 25,9/12,8 (2,02×), refinery-clear 32,6/15,5 (2,10×), foundry-core 30,1/13,6 (2,21×), ashmaw-rise 37,1/16,8 (2,21×), ending 39,5/16,8 (2,35×).
+- 1,6× IKKE nådd: summen av stemme-dur alene er > 1,6× tekstlengden (f.eks. intro 31 s stemme mot 16,3 s). Krever kortere opptak, overlapp eller kortere textDelay (må speiles i manifest.delay hos Lyd).
+- fallen 2,53 s (time-fallen.cjs) → død→kontroll ≈ 3,5 s. Klipp: /workspace/intro-voice-clip-v2.mp4 (25 s, lyd mikset fra manifest). run.mjs OK, reg-smoke OK.
 
 ## Pågår
-- Ingenting. Refinery v2-plan levert 14:42. ALEXANDER: vent med å bygge brett 2 til han har spilt demoen – ikke rør refinery-v2 før Breach sier fra.
+- Ingenting. Venter på Breach.
 
 ## Neste
-- Når docs/BOSS.md/spawnBoss kommer fra Fiende-AI: tilpass 3-7.
-- Vurder at startLevel avbryter en aktiv mellomsekvens (CONTINUE/LEVEL SELECT).
-- Balanse brett 2–3 med samme metode (auto-drap, rask/middels).
+- Refinery v2 (Hunker 2-3..2-6) – VENT til Alexander sier ja. Åpent: min. cover-hopp 2,2 ruter i yard v2.
+- Ny Warden-stemme: kjør check-voice-timing på nytt.
 
 ## Blokkert av
-- Fiende-AI: spawnBoss + docs/BOSS.md.
-- tools/core-test.cjs er utdatert (forventer fiende ved start). Eier: Core/Test.
+- Alexander (brett 2), Fiende-AI (spawnBoss/BOSS.md).
 
-## Siste skjermbilder
-- /tmp/shots/all-painted-sheet.jpg, /tmp/shots/shadowblur-before-after.jpg, /tmp/shots/foundry-core-painted-sheet.jpg, /tmp/shots/yard-clear-fallen-painted-sheet.jpg, /tmp/shots/restart-menu-after.png
+## Siste skjermbilde
+- /workspace/intro-voice-clip-v2.mp4

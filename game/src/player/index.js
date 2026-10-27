@@ -142,6 +142,7 @@ export function update(dt, world) {
 
 function health(dt, world) {
   const p = P.p, prev = P.lastHp;
+  if (!p.dead && p.hp < prev - 1e-6) P.lastHitT = world.time;   // all skade (også splash/DoT uten 'hit') nullstiller regen-forsinkelsen
   if (!p.dead && p.hp < p.maxHp && world.time - P.lastHitT >= T.regenDelay) {
     P.regenT += dt; const rate = T.regenPerSec * Math.min(1, P.regenT / T.regenRamp);
     p.hp = Math.min(p.maxHp, p.hp + rate * dt);

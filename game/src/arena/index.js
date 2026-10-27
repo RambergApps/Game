@@ -65,24 +65,11 @@ export function entryOf(def) {
   return { x: def.playerSpawn.x - w / 2, y: def.playerSpawn.y - h / 2, w, h };
 }
 // v2 (Breach 27.10 14:10): åpning i plattformens sørkant ved trappen (render.js drawPlatform tegner trappen 64–16 px fra øst).
-// Ledge-biter som krysser trappespennet deles; åpningen er 2 ruter (Kiln r 22 = 44 px + klaring). Biter < 0,75 rute droppes.
-// Story: sør-ledge (32, 14.375, 7×0.625) → (32, 14.375, 4.75×0.625); åpning x 36.75–38.75 (rest 0,25 droppes).
-export function stairGapOf(def) { const p = def.zones?.platform; if (def.variant !== 'v2' || !p) return null; const c = p.x + p.w - 1.25; return { x0: c - 1, x1: c + 1, y: p.y + p.h }; }
-function stairGap(def) {
-  const g = stairGapOf(def); if (!g) return def.objects;
-  const out = [];
-  for (const o of def.objects) {
-    const [kind, x, y, w, h, opts] = o;
-    if (kind !== 'ledge' || w <= h || Math.abs(y + h / 2 - g.y) > 1 || x >= g.x1 || x + w <= g.x0) { out.push(o); continue; }
-    if (g.x0 - x >= 0.75) out.push([kind, x, y, g.x0 - x, h, opts]);
-    if (x + w - g.x1 >= 0.75) out.push([kind, g.x1, y, x + w - g.x1, h, opts]);
-  }
-  return out;
-}
+// Trappeåpningen ligger nå i Storys data (sør-ledge 32–36,75; åpning x 36,75–39 ved trappen) – ingen splitting her.
 function buildLevel(def, view = '34') {
   const ent = entryOf(def);
   const T = TILE, v34 = view === '34';
-  const objects = stairGap(def).map(([kind, x, y, w, h, opts = {}], id) => {
+  const objects = def.objects.map(([kind, x, y, w, h, opts = {}], id) => {
     const height = v34 ? heightOf(kind) : 0;
     const elev = v34 ? Math.round(height * PROJ.zScale) : (opts.elev || ELEV[kind] || (kind === 'ledge' ? ELEV.barrier : 0));
     const seed = hash(id + 1);
@@ -314,6 +301,7 @@ export function draw(ctx, world, camera) {
   if (v.x0 > 0.5 || v.y0 > 0.5 || v.x1 < L.width - 0.5 || v.y1 < L.height - 0.5 || !camera?.screenToWorld) {
     ctx.fillStyle = '#0b0c0d'; ctx.fillRect(-2000, -2000, L.width + 4000, L.height + 4000);
   }
+  { const yb = camera?.screenToWorld ? camera.screenToWorld(0, ctx.canvas.height).y : 0; if (yb > L.height + 0.5) drawOpenSea(ctx, L, yb); }
   drawLayer(ctx, s, 'floor', v);
   drawFloorDynamic(ctx, L, s.fx); // animerte gulvdekaler: alltid i bunnlaget
   { const lf = s.life || (s.life = { ms: 0, n: 0, acc: 0 }); lf.n++; lf.ms = lf.acc / lf.n; }
@@ -323,6 +311,35 @@ export function draw(ctx, world, camera) {
   s.depthLast = isSorted(world); world._depthDrawn = false; s.view = v;
   if (!(L.view === '34' && s.depthLast)) drawAmmoCrates(ctx, world.arena?.ammoCrates, L.view === '34' ? Math.round(AMMO_HEIGHT() * PROJ.zScale) : 5, s.fx.t);
   ctx.restore();
+}
+
+// Åpent hav sør for brettet (27.10, QA: svart bånd under pirtuppen med følgekamera). Bare der vann når sørkanten:
+// havflaten fortsetter (samme tone som vannet nederst, mørkner utover), og land/pir som når kanten får kaifront + kantlist.
+function drawOpenSea(ctx, L, yb) {
+  const sea = L._sea || (L._sea = (() => {
+    const ws = L.objects.filter((o) => o.kind === 'water' && o.y + o.h >= L.height - 1).sort((a, b) => a.x - b.x);
+    if (!ws.length) return { ws };
+    const land = []; let x = 0;
+    for (const w of ws) { if (w.x > x + 1) land.push([x, w.x]); x = Math.max(x, w.x + w.w); }
+    if (x < L.width - 1) land.push([x, L.width]);
+    let q = ((L.seed || 1) + 99) >>> 0; const r = () => { q = (q * 1664525 + 1013904223) >>> 0; return q / 4294967296; }, lines = [];
+    for (let i = 0; i < 140; i++) lines.push([r() * (L.width + 800) - 400, L.height + 6 + Math.pow(r(), 1.6) * 520, 8 + r() * 22, 0.05 + r() * 0.09]);
+    return { ws, land, lines };
+  })());
+  if (!sea.ws.length) return;
+  const y0 = L.height, H = Math.max(40, yb - y0 + 40);
+  const g = ctx.createLinearGradient(0, y0, 0, y0 + Math.max(H, 360));
+  g.addColorStop(0, '#11191b'); g.addColorStop(0.5, '#0e1517'); g.addColorStop(1, '#0a0f10');
+  ctx.fillStyle = g; ctx.fillRect(-2000, y0, L.width + 4000, H);
+  ctx.lineWidth = 1.2;
+  for (const [x, y, l, a] of sea.lines) { if (y > y0 + H) continue; ctx.strokeStyle = `rgba(150,175,165,${a})`; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + l, y); ctx.stroke(); }
+  const drop = L.view === '34' ? Math.round(10 * PROJ.zScale) : 6;
+  for (const [a, b] of sea.land) {   // pir/land som når kanten: kaifront ned i vannet + mørk refleks
+    const f = ctx.createLinearGradient(0, y0, 0, y0 + drop); f.addColorStop(0, '#2c3033'); f.addColorStop(1, '#14191c');
+    ctx.fillStyle = f; ctx.fillRect(a, y0 + 3, b - a, drop);
+    ctx.fillStyle = '#a9a796'; ctx.fillRect(a, y0, b - a, 3);
+    ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(a + 2, y0 + 3 + drop, b - a - 4, 10);
+  }
 }
 
 // ---------------------------------------------------------------- dybdesortering (shared/depth.js)
@@ -558,11 +575,11 @@ function occlusion(world, s) {
 function drawSilhouettes(ctx, list) {
   ctx.save();
   for (const h of list) {
-    const col = h.team === 'player' ? '57,198,255' : '255,110,60';
+    const col = h.team === 'player' ? '120,200,235' : '165,185,200'; // kald, avmettet som shared/depth.js GHOST (Arena-silhuett 27.10)
     ctx.beginPath();
     const top = h.y - h.Hs + h.r;
     ctx.arc(h.x, top, h.r, Math.PI, 0); ctx.lineTo(h.x + h.r, h.y); ctx.ellipse(h.x, h.y, h.r, h.r * 0.45, 0, 0, Math.PI); ctx.closePath();
-    ctx.globalAlpha = 0.7; ctx.setLineDash([3, 2]); ctx.lineWidth = 1; ctx.strokeStyle = `rgba(${col},0.8)`; ctx.stroke(); // tynt omriss, uten fyll
+    ctx.globalAlpha = 0.4; ctx.setLineDash([3, 2]); ctx.lineWidth = 1; ctx.strokeStyle = `rgba(${col},0.8)`; ctx.stroke(); // tynt omriss, uten fyll
   }
   ctx.restore();
 }

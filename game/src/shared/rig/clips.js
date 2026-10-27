@@ -51,7 +51,7 @@ export const hurt = {
 export const stagger = { duration: 0.38, sample(t, opts = {}) { const k = t < 60 ? seg(t, 0, 60) : 1 - easeOut3(seg(t, 60, 380)); return { twist: 18 * Math.PI / 180 * k * (opts.side || 1), push: 4 * k, flash: t < 60 ? 1 - t / 60 : 0, weaponDown: k }; } };
 
 /** Død: fall 0–450 (easeIn), glid/settle til 1100. Visiret slukker over 400 ms. */
-export const death = { duration: 1.1, sample(t) { const k = clamp(t / 450, 0, 1); return { fall: k * k, visor: 1 - seg(t, 0, 400), height: lerp(1, .55, k * k) }; } };
+export const death = { duration: 1.1, sample(t) { const k = clamp(t / 450, 0, 1); return { fall: k * k, visor: 1 - seg(t, 0, 400), height: lerp(1, .55, k * k), u: clamp(t / 1000, 0, 1) }; } };   // u: paintedC-dødsanim (segne 0–400, fall 380–680, krølle 620–950, holdt)
 
 export const fire = { duration: 0.1, sample() { return {}; } };
 export const exitCover = { duration: 0.16, sample(t) { return { pop: 1 - seg(t, 0, 160) }; } };

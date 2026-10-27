@@ -11,9 +11,9 @@ const cv = document.getElementById('c'), ctx = cv.getContext('2d'), out = { errs
 try { await loadPaintedC(); } catch (e) { out.errs.push('warden: ' + e); }
 function off(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
 function light(L, z, ox, oy, scene) {   // multipliser scenen med mock-lyskartet, deretter glød
-  const lm = off(cv.width, cv.height), lx = lm.getContext('2d'); lx.fillStyle = RF.refineryAmbient(L); lx.fillRect(0, 0, lm.width, lm.height);
+  const lm = off(cv.width, cv.height), clipW = Math.min(cv.width, ox + L.width * z), clipH = Math.min(cv.height, oy + L.height * z * G), lx = lm.getContext('2d'); lx.fillStyle = RF.refineryAmbient(L); lx.fillRect(0, 0, lm.width, lm.height);
   lx.setTransform(z, 0, 0, z * G, ox, oy); lx.globalCompositeOperation = 'lighter'; for (const l of L.lights) RF.refineryLightmapPool(lx, L, l, 0.75 * 0.55 / 1);
-  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'multiply'; ctx.drawImage(lm, 0, 0);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.beginPath(); ctx.rect(Math.max(0, ox), Math.max(0, oy), clipW - Math.max(0, ox), clipH - Math.max(0, oy)); ctx.clip(); ctx.globalCompositeOperation = 'multiply'; ctx.drawImage(lm, 0, 0);
   ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.8; ctx.drawImage(cv, 0, 0); ctx.restore();
   ctx.setTransform(z, 0, 0, z * G, ox, oy); RF.drawRefineryGlow(ctx, L); RF.drawFlareLife(ctx, L, 1.3, null);
 }
@@ -21,11 +21,11 @@ function warden(x, y, aim, z) { try { drawWardenC(ctx, { x, y, aim, legs: 'paint
 function label(t, x, y) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.font = '13px sans-serif'; ctx.fillStyle = '#d8d8d0'; ctx.fillText(t, x, y); ctx.restore(); }
 
 if (mode === 'scene') {
-  const z = PROJ.zoom, Wt = 22, Ht = 22;
+  const z = PROJ.zoom, Wt = 23, Ht = 25;
   const L = { width: Wt * T, height: Ht * T, tile: T, seed: 4, play: { x: 0, y: 6 * T, w: Wt * T, h: (Ht - 6) * T },
     grates: [{ x: 9 * T, y: 13.5 * T, w: 2 * T, h: 2 * T }, { x: 15 * T, y: 7 * T, w: 5 * T, h: 1.5 * T }], trenches: [{ x: 1 * T, y: 14 * T, w: 17 * T, h: 1 * T }],
     paint: { lanes: [[[1, 12.4], [20, 12.4]]] },
-    lights: [{ x: 7, y: 8, r: 5, i: 1, kind: 'mercury' }, { x: 17, y: 13, r: 5, i: 1, kind: 'mercury' }, { x: 6, y: 18.5, r: 5, i: 1 }, { x: 19, y: 3, r: 7, i: 1, kind: 'flare', stack: 140 }] };
+    lights: [{ x: 7, y: 8, r: 5, i: 1, kind: 'mercury' }, { x: 17, y: 13, r: 5, i: 1, kind: 'mercury' }, { x: 6, y: 18.5, r: 5, i: 1 }, { x: 20.5, y: 5.6, r: 7, i: 1, kind: 'flare', stack: 120 }] };
   const covers = [['pipes', 3, 9, 4, 1], ['pipes', 14, 9, 1, 2], ['valve', 10, 9, 1, 1], ['valve', 18, 10, 1, 2], ['plinth', 3, 18, 3, 1], ['plinth', 13, 17, 1, 2], ['pipes', 16, 17, 3, 1]]
     .map(([type, x, y, w, h], i) => ({ type, id: 100 + i, x: x * T, y: y * T, w: w * T, h: h * T, height: PROJ.heights.low }));
   const ox = 0, oy = 0;
@@ -33,13 +33,15 @@ if (mode === 'scene') {
   RF.bakeRefineryFloor(ctx, L);
   for (const tr of L.trenches) { RF.drawTrenchEdge(ctx, L, { kind: 'rail', side: 's', x0: tr.x, y0: tr.y, x1: tr.x + tr.w, y1: tr.y }); RF.drawTrenchEdge(ctx, L, { kind: 'trench', side: 'n', x0: tr.x, y0: tr.y + tr.h, x1: tr.x + tr.w, y1: tr.y + tr.h }); }
   RF.drawGrate(ctx, null, L.grates[0]);
-  out.tanks = [RF.drawEdgeTank(ctx, L, { x: 2.5 * T, y: 3.6 * T, r: 52, height: 150 }), RF.drawEdgeTank(ctx, L, { x: 7 * T, y: 3.4 * T, r: 40, height: 120, label: 'DW-07' }), RF.drawPipeRack(ctx, L, { x0: 9.5 * T, x1: 22 * T, y: 5.6 * T }), RF.drawFlareStack(ctx, L, L.lights[3])];
+  out.tanks = [RF.drawEdgeTank(ctx, L, { x: 2.5 * T, y: 3.6 * T, r: 52, height: 150 }), RF.drawEdgeTank(ctx, L, { x: 7 * T, y: 3.4 * T, r: 40, height: 120, label: 'DW-07' }), RF.drawPipeRack(ctx, L, { x0: 9.5 * T, x1: 19.5 * T, y: 5.6 * T }), RF.drawFlareStack(ctx, L, L.lights[3])];
   out.inPlayRejected = RF.drawEdgeTank(ctx, L, { x: 10 * T, y: 12 * T, r: 40 }) === false;
   // sortert: cover + Warden (A sør for rørbunten, B på rekkverkskanten nord for grøfta)
   const actors = [{ x: 5 * T, y: 10.75 * T, aim: -Math.PI / 2 }, { x: 12.5 * T, y: 13.7 * T, aim: 0.3 }];
   const list = [...covers.map((o) => ({ k: o.y + o.h, o })), ...actors.map((a) => ({ k: a.y, a }))].sort((a, b) => a.k - b.k);
   for (const it of list) { ctx.setTransform(z, 0, 0, z * G, ox, oy); if (it.o) RF.drawRefineryCover(ctx, it.o, { PROJ }); else warden(it.a.x, it.a.y, it.a.aim, z); }
   light(L, z, ox, oy);
+  const px = (wx, wy) => Array.from(ctx.getImageData(Math.round(wx * z), Math.round(wy * z * G), 1, 1).data).slice(0, 3), Lf = PROJ.heights.low * PROJ.zScale;
+  out.rgb = { plinthEW_top: px(4.2 * T, 18.5 * T - Lf), plinthNS_top: px(13.5 * T, 18 * T - Lf * 0.4), valve_top: px(10.2 * T, 9.3 * T - Lf), floor_nearSodium: px(7.5 * T, 20 * T) };
   // ytelse: 400 bilder med alle 7 cover (sprites varme), synk via getImageData
   ctx.setTransform(z, 0, 0, z * G, ox, oy); const bc = off(1600, 1000), bx = bc.getContext('2d'); bx.setTransform(z, 0, 0, z * G, 0, 0);
   for (const o of covers) RF.drawRefineryCover(bx, o, { PROJ });
@@ -48,27 +50,26 @@ if (mode === 'scene') {
   const t2 = performance.now(); const fc = off(Wt * T * 2, Ht * T * 2), fx = fc.getContext('2d'); fx.scale(2, 2); RF.bakeRefineryFloor(fx, L); fx.getImageData(0, 0, 1, 1); out.floorBakeMs = +(performance.now() - t2).toFixed(1);
   out.cache = RF._refineryCacheStats(); out.zoom = z;
 } else {
-  // ARK: zoom 1.6. Venstre: cover Ø–V og N–S, 2 varianter. Høyre: gulvprøver, grøft/rekkverk, kantstykker, lys.
-  const z = 1.6, L = { width: 1000, height: 1100, tile: T, seed: 9, lights: [] };
-  ctx.fillStyle = '#0b0b0b'; ctx.fillRect(0, 0, 1600, 1000);
+  // ARK v2: zoom 1.4, tydelige rader. Rad 1–3: cover (Ø–V og N–S, to seeds). Høyre: gulv/grøft. Nederst: kantstykker (egen sone) og lys.
+  const z = 1.4, L = { width: 1600 / z, height: 1000 / (z * G), tile: T, seed: 9, lights: [] }, ROW = 3.4 * T;
   ctx.setTransform(z, 0, 0, z * G, 0, 0); RF.bakeRefineryFloor(ctx, L);
-  const kinds = ['pipes', 'valve', 'plinth'], sizes = { pipes: [[4, 1], [2, 1], [1, 2], [1, 3]], valve: [[1, 1], [2, 1], [1, 2]], plinth: [[3, 1], [2, 1], [1, 2], [1, 3]] };
-  kinds.forEach((k, r) => { let x = 14; const y = 40 + r * 5.2 * T; sizes[k].forEach(([w, h], i) => { for (let v = 0; v < 2; v++) { const o = { type: k, id: 7 + r * 20 + i * 2 + v, x, y, w: w * T, h: h * T, height: PROJ.heights.low }; RF.drawRefineryCover(ctx, o, { PROJ }); x += w * T + 12; } });
-    label(k + '  (E–W 4×1/2×1/3×1, N–S 1×2/1×3, two seeds each)', 14, (y - 30) * z * G + 4); });
-  // gulvprøver og grøft (høyre)
-  const X0 = 520; RF.drawGrate(ctx, null, { x: X0, y: 30, w: 4 * T, h: 2 * T }); RF.drawGrate(ctx, null, { x: X0 + 4.5 * T, y: 30, w: 2 * T, h: 3 * T });
-  const tr = { x: X0, y: 5 * T, w: 13 * T, h: T }; RF.drawTrench(ctx, null, tr); RF.drawTrenchEdge(ctx, L, { kind: 'rail', side: 's', x0: tr.x, y0: tr.y, x1: tr.x + tr.w, y1: tr.y }); RF.drawTrenchEdge(ctx, L, { kind: 'trench', side: 'n', x0: tr.x, y0: tr.y + T, x1: tr.x + tr.w, y1: tr.y + T });
-  const trv = { x: X0 + 13.5 * T, y: 0.5 * T, w: T, h: 6 * T }; RF.drawTrench(ctx, null, trv); RF.drawTrenchEdge(ctx, L, { kind: 'rail', side: 'e', x0: trv.x, y0: trv.y, x1: trv.x, y1: trv.y + trv.h });
-  label('floor: oil-stained concrete · grates · pipe trench + flat rail edge (E–W and N–S)', X0 * z, 18);
-  // kantstykker
-  RF.drawEdgeTank(ctx, L, { x: X0 + 1.8 * T, y: 13.5 * T, r: 50, height: 140 }); RF.drawEdgeTank(ctx, L, { x: X0 + 5.2 * T, y: 13.3 * T, r: 36, height: 110, label: 'DW-07' });
-  RF.drawPipeRack(ctx, L, { x0: X0 + 7.5 * T, x1: X0 + 15 * T, y: 13.8 * T });
-  const fl = { x: (X0 + 15.5 * T) / T, y: 13.8, r: 6, i: 1, kind: 'flare', stack: 130 }; RF.drawFlareStack(ctx, L, fl);
-  label('edge only: storage tanks · pipe rack · flare stack', X0 * z, 8.6 * T * z * G);
-  // lys: grønnlig kvikksølv og oransje fakkel på samme betong
-  L.lights = [{ x: (X0 + 3 * T) / T, y: 19.5, r: 4, i: 1, kind: 'mercury' }, { x: (X0 + 9 * T) / T, y: 19.5, r: 4, i: 1 }, fl, { x: (X0 + 15.5 * T) / T, y: 19, r: 4, i: 1, kind: 'flare' }];
+  const band = (y0, y1, t) => { ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(0, y0, L.width, y1 - y0); ctx.fillStyle = 'rgba(200,190,150,0.25)'; ctx.fillRect(0, y0, L.width, 1.2); label(t, 10, y0 * z * G + 15); };
+  const kinds = ['pipes', 'valve', 'plinth'], sizes = { pipes: [[4, 1], [2, 1], [1, 2], [1, 3]], valve: [[1, 1], [2, 1], [1, 2]], plinth: [[3, 1], [2, 1], [1, 2], [1, 3]] }, LF = PROJ.heights.low * PROJ.zScale;
+  kinds.forEach((k, r) => { const yb = 10 + r * (ROW + 1.4 * T); band(yb, yb + ROW + 1.2 * T, `${r + 1}. ${k}  –  E–W | N–S, two seeds each (low cover, PROJ.heights.low)`); let x = 14; const y = yb + LF + 26;
+    sizes[k].forEach(([w, h], i) => { for (let v = 0; v < 2; v++) { const o = { type: k, id: 7 + r * 20 + i * 2 + v, x, y, w: w * T, h: h * T, height: PROJ.heights.low }; RF.drawRefineryCover(ctx, o, { PROJ }); x += w * T + 18; } x += 10; }); });
+  const X0 = 26 * T, Y0 = 10; band(Y0, 0, ''); label('4. floor: grates · oil-stained concrete · trench + flat rail edge', X0 * z, Y0 * z * G + 15);
+  RF.drawGrate(ctx, null, { x: X0, y: Y0 + 30, w: 4 * T, h: 2 * T }); RF.drawGrate(ctx, null, { x: X0 + 4.6 * T, y: Y0 + 30, w: 2 * T, h: 3 * T });
+  const tr = { x: X0, y: Y0 + 5 * T, w: 7 * T, h: T }; RF.drawTrench(ctx, null, tr); RF.drawTrenchEdge(ctx, L, { kind: 'rail', side: 's', x0: tr.x, y0: tr.y, x1: tr.x + tr.w, y1: tr.y }); RF.drawTrenchEdge(ctx, L, { kind: 'trench', side: 'n', x0: tr.x, y0: tr.y + T, x1: tr.x + tr.w, y1: tr.y + T });
+  const trv = { x: X0 + 8 * T, y: Y0 + 30, w: T, h: 6 * T }; RF.drawTrench(ctx, null, trv); RF.drawTrenchEdge(ctx, L, { kind: 'rail', side: 'e', x0: trv.x, y0: trv.y, x1: trv.x, y1: trv.y + trv.h });
+  const yE = 10 + 3 * (ROW + 1.4 * T) + 10; band(yE, L.height, '5. edge only (outside play area): storage tanks · pipe rack · flare stack        6. light: mercury (green) · sodium · flare (orange)');
+  const base = L.height - 30, tl = 120;
+  RF.drawEdgeTank(ctx, L, { x: 2.2 * T, y: base - 40, r: 44, height: tl }); RF.drawEdgeTank(ctx, L, { x: 5.6 * T, y: base - 30, r: 32, height: tl * 0.8, label: 'DW-07' });
+  RF.drawPipeRack(ctx, L, { x0: 8 * T, x1: 15 * T, y: base - 4 });
+  const fl = { x: 17, y: base / T, r: 6, i: 1, kind: 'flare', stack: 110 }; RF.drawFlareStack(ctx, L, fl);
+  // lysprøver på samme betong (høyre del av nederste sone)
+  L.lights = [{ x: 22, y: (base - 70) / T, r: 3.2, i: 1, kind: 'mercury' }, { x: 27, y: (base - 70) / T, r: 3.2, i: 1 }, fl, { x: 32.5, y: (base - 70) / T, r: 3.4, i: 1, kind: 'flare' }];
   light(L, z, 0, 0);
-  label('light: mercury (green) · sodium · flare (orange) – mock lightmap', X0 * z, 16.6 * T * z * G);
+  label('mercury', 22 * T * z - 22, (base - 20) * z * G); label('sodium', 27 * T * z - 20, (base - 20) * z * G); label('flare', 32.5 * T * z - 14, (base - 20) * z * G);
 }
 out.ok = true; window.__done = out;
 </script></body></html>

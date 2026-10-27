@@ -198,3 +198,29 @@ Iterasjoner (selvkritikk):
 
 Gjenværende svakheter: rekvisittene (kitinpukkel, våpen) er bare forenklede plassholdere, ichor kan virke litt prikkete på avstand, trykkfronten er fortsatt en tydelig sirkel ved 0,30 s.
 Reproduser: `cd game && python3 -m http.server 8765`, deretter `node src/effects/_tools/shot.cjs` (fra `/workspace/breach`).
+
+## Warden over dekning (27.10, `effects/coverpose.js`)
+- Kilde: kontrakten med Warden-design (`coverRise {entity,x,y,type,nx,ny,cover}`, `coverDuck`, `p.exposed`). Til hendelsene sendes: reserve på stigende kant av `p.posture === 'popUp'|'lean'` i lav dekning. `SOURCE.mode = 'auto'|'events'|'posture'`.
+- `coverRise`: varm kantlist (7 glødpunkter, 0,35 s) på toppkanten, tett lyst betongstøv (16) og grus (14) kastet langs normalen mot fienden, 0,4–0,6 s. Ingenting på høy dekning.
+- Mens eksponert: svak kald glans på hjelm/skuldre + tynn bakkehalo mot fienden (`exposedCue`, 2 glødpartikler hvert 0,14 s, fader av seg selv ved dukk).
+- Treff oppreist (`hit` + `isExposed`): `exposedHit`, hvit-oransje blaff og harde gnister på brystplata. Dukket: bare vanlig dempet dekningstreff.
+- Kost (målt i klippet, zoom 2,25, boksen): VFX tegning 0,41 ms mot 0,16 ms når ingenting skjer, update 0,08 mot 0,03 ms (inkl. treffgnistene). Eksponert-markøren alene ≈ 6 partikler.
+- Klipp: `node game/src/effects/_tools/rise-clip.mjs`.
+
+## NS-barrierer v5 (27.10, `cover.js` paintNSBarrierV5)
+Rekke av 2–3 korte, lave jersey-blokker med gulv imellom, smal (68 % av ruta), front bare 28 % av løftet, tverrprofil fot–flanke–rygg, egen jersey-trapes i sørenden, gul/svart stripe på én ende (seed). v4 kan vises med `globalThis.__BREACH_NSV = 4` (bare for før/etter-bilder). Bilde: `node game/src/effects/_tools/ns-shot.mjs` → reviews/img/ns-barrierer-v5.png.
+
+## Støvtak for reisestøv (27.10)
+`coverpose.js` `DUST`: maks ~40 levende reisestøv-partikler (16 puffer + 14 korn = 30 per full reising), skala 1/(n+1) når n reisinger skjedde siste 0,3 s, 0,5 s nedkjøling per dekning (cover.id), gulv 0,13 (≈4 korn + kantlist) så hver reising synes. Én reising = uendret (skala 1). `T.coverRise` tar `o.scale`. Test: `_tools/rise-cap.mjs`.
+
+## Ekte hendelser fra player/state.js (27.10, sent)
+Kilden er nå `coverRise`/`coverDuck` fra state.js (peek 0,6 / 0,3, alltid i par; `p.exposed` mellom). I `auto` tier positur-reserven så snart `p.exposed` er boolsk (ellers ga første reising dobbel effekt før første hendelse var sett). Kontroll i `_tools/rise-clip.mjs` (sandsekker id 27 + mur/ledge id 21): 3 coverRise = 3 håndtert = 3 effekt-spawns, 3 coverDuck. Støv/kantblink sitter på kanten også med hode 71 px og 4,5 px lean – ingen forskyvning langs (nx,ny) nødvendig. Gnister/markør følger `target.exposed` (6 treff oppreist → exposedHit, 0 dukket).
+
+## NS-barrierer 0,75×1 og silhuett (27.10 sent)
+`paintNSBarrierV5`: `n = dw < 44 ? 1 : max(2, round(dw/30))` – Arenas 1-rutes stykker males som én lav jersey-blokk (skrå fot, grå betong, stripe etter frø). Silhuettforslag til Arena (shared/depth.js): bak høy dekning skjæres bare ~30 % ut (svakere jo dypere), stiplet omriss kaldt/avmettet med alfa 0,25/0,4. Ingen shadowBlur.
+
+## Sprekk/oppbrudd bak høy dekning (27.10)
+`spawnWarn`/`spawnRise` sender nå `hidden: pointHidden(...)`; skjult `rise` flyttes til under-laget i spawnImpl, og `crack`-emitteren (e.hid) flytter sine løpende glør/grus likt. Før lå lys grus i over-laget oppå containertaket.
+
+### Fragment over containertak (27.10)
+Ikke en effekt: lys pigg-flekk er fiendens kropp sett gjennom uttoningen i depth.js drawCoverToned. VFX, dekal-krok og enemies.draw-overlays av ga identisk bilde; bare å flytte fienden fjernet den. Forslag: høy dekning gir alltid deep (ingen uttoning), takleppen tegnes fortsatt. Diff: reviews/diffs/arena-silhuett-fragment.diff.

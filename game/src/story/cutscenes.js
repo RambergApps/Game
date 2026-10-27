@@ -156,15 +156,16 @@ export const CUTSCENES = {
       ] }),
       P('ending-04', 'dawnYard', { transition: 'fade', textDelay: 1.4, cam: { from: [1.0, 0.5, 0.5], to: [1.1, 0.5, 0.45], dur: 10 }, lines: [
         { speaker: 'caption', text: 'Kessa Yard. Dawn. Cold, for the first time in weeks.' },
-        { speaker: 'warden', text: 'All of us. Going home.' },
+        { speaker: 'warden', text: 'All of us. Coming home.' },   // Alexander 27.10 (var «Going home.»)
       ] }),
     ],
   },
   // Død: kort og rask (bevisst ett panel – spilleren skal raskt tilbake i bølgen).
   fallen: {
     id: 'fallen', chapter: '×', title: 'Down', autoEndAfter: 2,
+    maxDuration: 2.3,   // Breach 27.10: harde tak (2,3 s → død → kontroll < 4 s) – unntak fra «aldri kutt stemmen», så død → kontroll holdes kort
     // Kort og selvgående: død → kontroll < 4 s (mål fra Breach). 1,0 s fall + 2,0 s + 0,45 s uttoning ≈ 3,5 s.
-    timing: { fadeIn: 0.35, fadeOut: 0.45, cps: 60, autoAdvance: 0.35 },
+    timing: { fadeIn: 0.35, fadeOut: 0.25, cps: 60, autoAdvance: 0.35 },   // uttoning 0,25 s (Breach 27.10)
     trigger: 'Første gang spilleren dør i økta (senere: bare banneret WARDEN DOWN). Går videre selv etter 2 s.', when: 'First player death per session (later: WARDEN DOWN banner only). Auto-ends after 2 s idle.',
     panels: [
       P('fallen-01', 'fallen', { lines: [

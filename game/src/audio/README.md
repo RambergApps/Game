@@ -155,3 +155,17 @@ ved hver slider-endring (verifisert live 26.10). Ingen endring trengs hos Våpen
 
 ## Menymusikk (v1.6)
 `createMenuMusic` i `stingers.js`, styrt i `index.js`: `menuOpen` → fade inn 1,5 s (ved låst lyd: starter ved første klikk/tast hvis menyen fortsatt er åpen; spillmusikken tones ut). `menuStart` → fade ut 0,72 s + startstinger. `menuClose` → fade ut 0,7 s, kampmusikken tas opp igjen. QUIT (`menuOpen {boot:false}`) starter den på nytt.
+
+## v1.7 – stemmer i mellomsekvensene og Kessa Yard-musikk
+- **voice.js**: forhåndsgenererte stemmer (Kokoro-82M, se `tools/voice/README.md`) i `game/assets/voice/<scene>/<panel>-<linje>.ogg` + `manifest.json`.
+  - `cutsceneStart` laster scenens filer (fetch + decodeAudioData, relative stier).
+  - `cutsceneLine` spiller `<panel>-<linje i panelet>` 160 ms etter radio-klikket, og forrige replikk tones ut på 80 ms.
+  - Ved `cutsceneEnd` med skipped tones stemmen ut på 120 ms. Uten skip får siste replikk klinge ferdig (gjelder også fallen).
+  - Mangler en fil, blir det stille, uten feil.
+- Buss: `engine.voice` (sfx × voice-volum) direkte til master, utenom pause-dempingen. Radiostøy og scene-ambiens (`engine.radioDuck`) dukkes −9 dB mens det snakkes.
+- Nytt API (bakoverkompatibelt): `setVoiceVolume(v)`. `getVolumes()` gir nå også `voice`, og det lagres i `breach.audio.volumes`. `getState().voiceState` = { scene, loaded, speaking, played, missing }.
+- **yard-music.js**: spillmusikk for brett 1 (`arenaLoaded` med id `'yard'`). Andre brett bruker music.js, og byttet skjer med fadeOut på 1,2 s.
+  - Intensitet: gulv 0,25 + 0,1 per levende fiende. Etter waveEnd synker den mot 0,1 på cirka 3 s.
+  - Sidechain: `shot` −4 dB (maks én gang per 150 ms), `explosion` −8 dB, `waveStart` og `spawnWarn` −6 dB.
+  - Følger musikkvolum, mute, pause og menyovergangen fra v1.6 (samme musikkbuss).
+- `_tap()`: MediaStream av ferdig miks, til testopptak (tools/voice/clip.cjs).

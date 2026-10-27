@@ -22,10 +22,10 @@
 
 import { DISPLAY_NAMES } from '../enemies/stats.js';
 
-export const ENEMY_TYPES = ['grunt', 'flanker', 'heavy', 'grenadier'];
+export const ENEMY_TYPES = ['grunt', 'flanker', 'heavy', 'grenadier', 'hunker'];
 
 /** Trusselvekt per fiendetype – brukes kun til å måle vanskelighetskurven. */
-export const THREAT = { grunt: 1, flanker: 1.5, heavy: 3, grenadier: 2 };
+export const THREAT = { grunt: 1, flanker: 1.5, heavy: 3, grenadier: 2, hunker: 1.8 };   // hunker 27.10: 120 hp + ryggskjold. Kun brett 2 (Alexander 27.10), ikke i brett 1.
 
 // variant (valgfri): 'alpha' = mini-boss (Kiln Alpha). Se VARIANTS.
 const g = (type, count, spawn, delay = 0, interval = 1.2, variant) => ({ type, count, spawn, delay, interval, ...(variant ? { variant } : {}) });

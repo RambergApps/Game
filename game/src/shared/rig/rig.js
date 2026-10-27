@@ -217,7 +217,7 @@ export function createRig(defIn, opts = {}) {
       // ---- stil-uavhengig hode
       x: S.x, y: S.y, skin, mode: D.mode, moveAngle: Math.atan2(S.mvy, S.mvx), moveSpeed: S.spd, aimAngle: S.aim,
       hipAngle: S.hip, torsoAngle: K.ta, headAngle: K.ta, phase: S.phase, amp: S.amp, height: S.h.x,
-      posture: { aim: S.aimB, sprint: S.sprint, kneel: S.kneel, slide: S.slideB, roll: S.rollB, cover: S.coverIdleB, peek: S.peek, blind: S.blindB, melee: S.meleeB },
+      posture: { aim: S.aimB, sprint: S.sprint, kneel: S.kneel, slide: S.slideB, roll: S.rollB, cover: S.coverIdleB, peek: S.peek, blind: S.blindB, melee: S.meleeB, peekRaw: D.peek || 0, blindRaw: D.blind || 0 },   // 27.10: rå (udempet) peek/blind for rask reis/dukk bak lav dekning
       cover: D.cover, exposed: D.exposed, clip: { roll: K.roll, melee: K.mel, impact: K.imp, hurt: K.hurt, death: K.death, vault: sample('vault') },
       flash: K.hurt ? K.hurt.flash : 0, alpha: 1, ghosts, aim: S.aim,
       contact: def.readability.contact, rim: def.readability.rim, shadowLift: (roll ? roll.shadowLift : 1) * (sample('vault')?.shadowLift || 1),

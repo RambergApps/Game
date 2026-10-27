@@ -10,7 +10,7 @@ import { VW, VH } from './art.js';
 
 const FONT = '"Barlow Condensed", "Bahnschrift SemiCondensed", "Arial Narrow", "Roboto Condensed", sans-serif';
 const C = { text: '#d9d4c7', dim: 'rgba(217,212,199,0.38)', radio: '#ffb347', warden: '#39c6ff', ui: 'rgba(200,210,220,0.45)', bar: '#000' };
-const DEF = { cps: 38, fadeIn: 0.7, fadeOut: 0.8, panelFade: 0.45, swipe: 0.55, autoAdvance: 0, parent: null, zIndex: 50 };
+const DEF = { cps: 38, fadeIn: 0.7, fadeOut: 0.8, panelFade: 0.35, swipe: 0.45, autoAdvance: 0, parent: null, zIndex: 50 };
 const ease = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
 
 /** Felles tasthint i alle sekvenser (mellomsekvenser, død, rulletekst). Space er rull i spillet. */
@@ -59,6 +59,15 @@ export const storyEvents = (() => {
     emit(t, d) { for (const f of m.get(t) || []) { try { f(d); } catch (err) { console.error(err); } } },
   };
 })();
+// Stemme-manifest (Lyd v1.7): brukes bare til å vente på at siste replikk er ferdig før autoEnd. Feiltolerant, lastes én gang.
+const VOICE_START = 0.16, VOICE_TAIL = 0.1, VOICE_BREATH = 0.2, NO_VOICE_MIN = 3.3;   // v2 27.10 (Breach): hale 0,1 s, pust ~0,2 s ved talerbytte
+let voiceManifest = null, voiceManifestP = null;
+export function loadVoiceManifest() {
+  if (!voiceManifestP) voiceManifestP = fetch(new URL('../../assets/voice/manifest.json', import.meta.url))
+    .then((r) => (r.ok ? r.json() : null)).catch(() => null).then((m) => (voiceManifest = m?.scenes || null));
+  return voiceManifestP;
+}
+try { loadVoiceManifest(); } catch { /* ikke-nettleser */ }
 export function bindWorld(world) { boundWorld = world || null; }
 export function emit(o, type, data) {
   const w = o.world || boundWorld || (typeof window !== 'undefined' ? window.BREACH?.world : null);
@@ -105,6 +114,7 @@ async function play(id, o) {
   const cs = CUTSCENES[id];
   if (!cs) { console.warn(`[story] ukjent mellomsekvens '${id}'`); return { id, skipped: true, missing: true }; }
   await loadFont();
+  await Promise.race([loadVoiceManifest(), new Promise((r) => setTimeout(r, 1500))]); // stemme-tider leses ved kjøretid
   active = true;
   const parent = o.parent || document.body;
   const cv = document.createElement('canvas');
@@ -132,11 +142,26 @@ async function play(id, o) {
   let resolveDone; const done = new Promise((r) => (resolveDone = r));
   const cur = () => panels[pi].lines[li];
   let lineIndex = -1;
-  const lineShown = () => { lineIndex++; emit(o, 'cutsceneLine', { id, index: lineIndex, speaker: cur().speaker, panel: pi }); };
+  const delayOf = (p) => (li === 0 ? p.textDelay || 0 : 0);
+  // stemmen spilles i sanntid, så vi måler i veggklokke (dt klemmes til 0,1 s og ville sakke ved lav FPS)
+  const t0 = performance.now(); let sceneT = 0, voiceUntil = 0, lineVoiceEnd = 0;
+  const lineShown = () => {
+    lineIndex++;
+    const L = cur(), lineId = `${pi}-${li}`;
+    const ev = { id, index: lineIndex, speaker: L.speaker, panel: pi, line: li, lineId, text: L.text, who: L.who ?? null };
+    emit(o, 'cutsceneLine', ev);   // Lyd (voice.js) lytter på denne
+    emit(o, 'cutsceneText', ev);   // samme innhold, eget navn for logg/test
+    const v = voiceManifest?.[id]?.[lineId];
+    // samme regel som audio/voice.js: stemmen starter ved cutsceneLine + max(0,16, delay) – samtidig med typingen etter textDelay
+    const start = sceneT + Math.max(VOICE_START, Math.min(1.5, +v?.delay || 0));
+    const nx = panels[pi].lines[li + 1], who = (x) => x.who || x.speaker;
+    const gap = nx && who(nx) !== who(L) ? Math.max(VOICE_TAIL, VOICE_BREATH - VOICE_START) : VOICE_TAIL;   // pust mellom ulike talere
+    lineVoiceEnd = v ? start + v.dur + gap : 0;   // auto-videre kommer aldri før replikken er ferdig
+    voiceUntil = Math.max(voiceUntil, v ? lineVoiceEnd : NO_VOICE_MIN);
+  };
   emit(o, 'cutsceneStart', { id });
   lineShown();
 
-  const delayOf = (p) => (li === 0 ? p.textDelay || 0 : 0);
   const transIn = (i) => panels[i]?.transition || 'fade';
   function advance() {
     if (phase !== 'show' && phase !== 'in') return;
@@ -150,6 +175,7 @@ async function play(id, o) {
   // går videre av seg selv etter autoEndAfter s uten inndata (f.eks. «fallen»: 3 s)
   const autoEnd = o.autoEndAfter ?? cs.autoEndAfter ?? 0;
   let idleT = 0, autoEnded = false;
+  const maxDur = o.maxDuration ?? cs.maxDuration ?? 0;   // >0: sekvensen avsluttes senest her, også midt i en replikk (kun «fallen»)
   const onKey = (e) => {
     idleT = 0;
     if (e.code === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); skip(); }
@@ -191,12 +217,16 @@ async function play(id, o) {
     // logikk
     if (phase === 'in' && phaseT >= o.fadeIn) { phase = 'show'; phaseT = 0; }
     idleT += dt;
-    if (autoEnd > 0 && idleT >= autoEnd && phase !== 'out') { autoEnded = true; phase = 'out'; phaseT = 0; }
+    sceneT = (performance.now() - t0) / 1000;
+    if (autoEnd > 0 && idleT >= autoEnd && sceneT >= voiceUntil && (o.autoAdvance <= 0 || (pi === panels.length - 1 && li === panels[pi].lines.length - 1)) && phase !== 'out') { autoEnded = true; phase = 'out'; phaseT = 0; }
+    if (maxDur > 0 && sceneT >= maxDur && phase !== 'out') { autoEnded = true; phase = 'out'; phaseT = 0; }
     const waiting = panelT < delayOf(panels[pi]);
     if ((phase === 'show' || phase === 'in') && !lineDone && !waiting) {
       chars = Math.min(cur().text.length, chars + o.cps * dt);
       if (chars >= cur().text.length) { lineDone = true; sinceDone = 0; }
-    } else if (lineDone) { sinceDone += dt; if (o.autoAdvance > 0 && phase === 'show' && sinceDone >= o.autoAdvance) advance(); }
+    } else if (lineDone) { sinceDone += dt; const last = pi === panels.length - 1 && li === panels[pi].lines.length - 1;
+      // alle linjer: auto-videre venter på replikkens dur + hale (manifest); siste linje også på voiceUntil
+      if (o.autoAdvance > 0 && phase === 'show' && sinceDone >= o.autoAdvance && sceneT >= lineVoiceEnd && (!last || sceneT >= voiceUntil)) advance(); }
     const outDur = transIn(pi + 1) === 'cut' ? 0 : transIn(pi + 1) === 'swipe' ? o.swipe : o.panelFade;
     if (phase === 'out-panel' && phaseT >= outDur) { pi++; li = 0; chars = 0; lineDone = false; panelT = 0; phase = 'in'; phaseT = 0; lineShown(); o.onLine?.(cur(), pi, 0); }
     if (phase === 'out' && phaseT >= o.fadeOut) { cleanup(); return; }

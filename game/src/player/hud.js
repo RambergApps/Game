@@ -21,7 +21,13 @@ export function drawHpBar(ctx, world, p, P) {
   if (shown > frac) { ctx.fillStyle = 'rgba(255,120,90,.55)'; ctx.fillRect(x + w * frac, y, w * (shown - frac), h); }
   const col = frac < T.omenSymbolBelow ? '#ff5a45' : frac < 0.6 ? '#ffb347' : '#cfe9f5';
   ctx.fillStyle = col; ctx.fillRect(x, y, w * frac, h);
-  if (P.health === 'regen') { const k = (world.time * 1.6) % 1; const g = ctx.createLinearGradient(x + w * frac * (k - .2), 0, x + w * frac * k, 0); g.addColorStop(0, 'rgba(57,198,255,0)'); g.addColorStop(1, 'rgba(57,198,255,.6)'); ctx.fillStyle = g; ctx.fillRect(x, y, w * frac, h); }
+  if (P.health === 'regen') {   // påfylling: pulserende blå glød rundt baren, løpende glans og lysende fyllkant
+    const pu = 0.5 + 0.5 * Math.sin(world.time * 5);
+    ctx.save(); ctx.shadowColor = 'rgba(57,198,255,.9)'; ctx.shadowBlur = (4 + 8 * pu) * s;
+    ctx.strokeStyle = `rgba(57,198,255,${0.4 + 0.45 * pu})`; ctx.lineWidth = 1.5 * s; ctx.strokeRect(x - 2 * s, y - 2 * s, w + 4 * s, h + 4 * s); ctx.restore();
+    const k = (world.time * 1.6) % 1; const g = ctx.createLinearGradient(x + w * frac * (k - .2), 0, x + w * frac * k, 0); g.addColorStop(0, 'rgba(57,198,255,0)'); g.addColorStop(1, 'rgba(57,198,255,.6)'); ctx.fillStyle = g; ctx.fillRect(x, y, w * frac, h);
+    ctx.fillStyle = `rgba(200,240,255,${0.75 + 0.25 * pu})`; ctx.fillRect(x + w * frac - 1.5 * s, y - 2 * s, 3 * s, h + 4 * s);
+  }
   ctx.fillStyle = 'rgba(0,0,0,.35)'; for (let i = 1; i < 10; i++) ctx.fillRect(x + w * i / 10 - 0.5, y, 1, h);
   ctx.restore();
 }

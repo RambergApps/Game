@@ -23,7 +23,7 @@ export const TUNING = {
   // hopp / exit
   swatTime: 0.30, swatMaxGap: 96, vaultTime: 0.40, vaultCancelAt: 0.33, vaultMaxDepth: 48, exitCoverTime: 0.16, exitCoverSpeed: 70,
   // peek
-  popUpTime: 0.14, popDownTime: 0.12, leanOutTime: 0.16, leanInTime: 0.14, leanOffset: 20, leanHipTwist: 17 * D,
+  popUpTime: 0.14, riseExposePeek: 0.6, duckHidePeek: 0.5, popDownTime: 0.07, leanOutTime: 0.16, leanInTime: 0.14, leanOffset: 20, leanHipTwist: 17 * D,
   blindRaise: 0.10, blindHold: 0.30, coverAimArc: 80 * D, aimBackExit: 100 * D, hiddenHeight: 0.86, hiddenHeightHigh: 0.88,
   // granat (bare kroppstiming – selve kastet eies av weapons)
   grenadeWindup: 0.22, grenadeRelease: 0.26, grenadeRecovery: 0.24,
@@ -35,6 +35,10 @@ export const TUNING = {
   blindArmor: 0.5, staggerDmg: 25, staggerTime: 0.38, staggerCancelAt: 0.26, staggerKnock: 140, explosionStaggerR: 64,
   flinchTime: 0.12, hitFlash: 0.06,
   // helse
-  maxHp: 100, regenDelay: 3.0, regenPerSec: 34, regenRamp: 0.25, healthEventInterval: 0.25, deathTime: 1.1,
+  maxHp: 100, regenDelay: 4.5, regenPerSec: 18, regenRamp: 0.25, healthEventInterval: 0.25, deathTime: 1.1,
   omenVignetteStart: 0.75, omenSymbolBelow: 0.35,
 };
+
+// URL-flagg for regen-sammenligning (Test): ?regenDelay=N&regenRate=N overstyrer regenDelay / regenPerSec.
+try { const q = new URLSearchParams(location.search), d = parseFloat(q.get('regenDelay')), r = parseFloat(q.get('regenRate'));
+  if (d >= 0) TUNING.regenDelay = d; if (r > 0) TUNING.regenPerSec = r; } catch (e) { /* ikke nettleser */ }

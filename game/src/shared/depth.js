@@ -25,8 +25,8 @@ const stats = { items: 0, cover: 0, actors: 0, hidden: 0, missing: 0, frame: 0 }
 
 function slot() {
   let it = pool[n];
-  if (!it) { it = pool[n] = { kind: 0, ref: null, key: 0, seq: 0, x0: 0, y0: 0, x1: 0, y1: 0, area: 0, team: '', crouch: false, hs: 0, elev: 0, fade: [], nf: 0, toned: false }; }
-  it.seq = n; it.nf = 0; it.toned = false; order[n] = it; n++;
+  if (!it) { it = pool[n] = { kind: 0, ref: null, key: 0, seq: 0, x0: 0, y0: 0, x1: 0, y1: 0, area: 0, team: '', crouch: false, hs: 0, elev: 0, fade: [], nf: 0, lip: [], nl: 0, toned: false }; }
+  it.seq = n; it.nf = 0; it.nl = 0; it.toned = false; order[n] = it; n++;
   return it;
 }
 function cmp(a, b) { return (a.key - b.key) || (a.kind - b.kind) || (a.seq - b.seq); }
@@ -87,7 +87,7 @@ export function drawSorted(ctx, world, camera, opts = {}) {
   if (opts.silhouettes !== false && nCover) {
     for (let i = 0; i < n; i++) {
       const it = order[i]; if (it.kind !== ACTOR) continue;
-      let cov = 0, any = false;
+      let cov = 0, any = false; it.deep = false;
       // Breach 27.10 14:09: helt dukket fiende (cover 1, peek 0 – alle typer) får ikke silhuett bak LAV dekning; bare høy (container/vegg) teller.
       // Warden (team 'player') beholder dagens regel.
       const duck = it.team !== 'player' && isDucked(it.ref);
@@ -98,6 +98,8 @@ export function drawSorted(ctx, world, camera, opts = {}) {
         // terskel: høy dekning, eller skjult andel av aktørhøyden > HIDE_THRESHOLD (lav 24 / stående 48 = 0,5 → nei)
         if (c.elev < HIGH_ELEV && (duck || Math.min(1, c.elev / it.hs) <= HIDE_THRESHOLD)) continue;
         cov += w * h;
+        // Arena-silhuett-kant 27.10: kroppen helt innenfor takflaten på høy dekning → ingen utskjæring (taket helt dekkende), bare kaldt omriss
+        if (c.elev >= HIGH_ELEV) { it.deep = true; if (c.nl < 8) c.lip[c.nl++] = it; continue; }
         if (c.nf < 8) { c.fade[c.nf++] = it; any = true; }
       }
       if (cov / it.area > lim) { hidden[nh++] = it; it.toned = canTone && any; }
@@ -113,6 +115,7 @@ export function drawSorted(ctx, world, camera, opts = {}) {
     if (it.kind === COVER) {
       if (it.nf && canTone) drawCoverToned(ctx, it, world, camera, drawCover);
       else drawCover(ctx, it.ref, world, camera);
+      if (it.nl) drawRoofLip(ctx, it, it.lip, it.nl);
       // varme dekaler (VFX): rett etter objektet, bare når VFX har flagget det
       if (it.ref.pendDecals) world.arena?.drawPendingDecals?.(ctx, it.ref, world);
       if (it.ref.hotDecals) { const hook = world.arena?.onCoverDraw; if (hook) { ctx.save(); try { hook(ctx, it.ref, world); } catch (e) { /* VFX-feil skal ikke stoppe tegningen */ } ctx.restore(); } }
@@ -127,7 +130,7 @@ export function drawSorted(ctx, world, camera, opts = {}) {
     ctx.restore();
   }
   if (nh) drawSilhouettes(ctx, nh);
-  for (let i = 0; i < n; i++) { const it = order[i]; if (it.nf) { for (let k = 0; k < it.nf; k++) it.fade[k] = null; it.nf = 0; } }
+  for (let i = 0; i < n; i++) { const it = order[i]; if (it.nf) { for (let k = 0; k < it.nf; k++) it.fade[k] = null; it.nf = 0; } if (it.nl) { for (let k = 0; k < it.nl; k++) it.lip[k] = null; it.nl = 0; } }
   world._depthDrawn = true; // arena.drawTop hopper da over dekning som allerede er tegnet (bare tak/overhead igjen)
   stats.items = n; stats.cover = nCover; stats.actors = n - nCover; stats.hidden = nh; stats.missing = missing; stats.frame = ++frame;
   return stats;
@@ -173,12 +176,27 @@ function drawCoverToned(ctx, it, world, camera, drawCover) {
   for (let k = 0; k < it.nf; k++) {
     const a = it.fade[k], r = (a.x1 - a.x0) / 2, ax = a.ref.x, ay = a.ref.y;
     const rx = r * 1.9 + 8, ry = a.hs * 0.5 + r + 8, cy = ay - a.hs * 0.5;
+    // Arena-silhuett 27.10: bak HØY dekning skjæres bare ~1/3 ut (fienden ~30 %, taket forblir tak), svakere jo dypere bak.
+    sctx.globalAlpha = it.elev >= HIGH_ELEV ? Math.max(0.3, 0.55 - Math.max(0, o.y - ay) / 160) : 1;
     sctx.drawImage(fadeImg, ax - rx, cy - ry, rx * 2, ry * 2);
   }
+  sctx.globalAlpha = 1;
   sctx.restore();
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.drawImage(scratch, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0);
   ctx.restore();
+}
+// Arena-silhuett-kant 27.10: takets nordkant tegnes OVER skjulte aktører (mørk kontaktlinje + 2 px lys takleppe), så taket
+// leses foran; krysser kroppen kanten, får siden over kanten en kort mørk spalte. 3–4 fillRect per skjult aktør, ingen shadowBlur.
+function drawRoofLip(ctx, it, L, nL) {
+  const o = it.ref, ey = o.y - it.elev;
+  for (let k = 0; k < nL; k++) {
+    const a = L[k], lx0 = Math.max(o.x, a.x0 - 6), lw = Math.min(o.x + o.w, a.x1 + 6) - lx0; if (lw <= 0) continue;
+    if (a.y0 < ey) { ctx.fillStyle = 'rgba(0,0,0,0.42)'; ctx.fillRect(lx0, ey - 3, lw, 3); }   // spalte/skygge på aktørsiden
+    ctx.fillStyle = 'rgba(6,8,10,0.92)'; ctx.fillRect(lx0, ey - 0.6, lw, 1.3);                  // kontaktlinje
+    ctx.fillStyle = 'rgba(190,205,215,0.34)'; ctx.fillRect(lx0, ey + 0.7, lw, 1.1);             // takleppe, lys
+    ctx.fillStyle = 'rgba(190,205,215,0.14)'; ctx.fillRect(lx0, ey + 1.8, lw, 1.4);
+  }
 }
 
 // Reserve når modulen ikke har drawActor ennå: enkel stående kapsel i lagfarge (krasjer aldri).
@@ -196,17 +214,17 @@ function isDucked(a) {
   return !!a.spot && (a.state === 'inCover' || a.state === 'suppressed');
 }
 const COL = { player: ['rgba(57,198,255,0.22)', 'rgba(57,198,255,0.8)'], enemy: ['rgba(255,110,60,0.22)', 'rgba(255,110,60,0.8)'] };
+const GHOST = { player: 'rgba(120,200,235,0.8)', enemy: 'rgba(165,185,200,0.8)' };   // skjult: kald, avmettet (Arena-silhuett 27.10)
 const DASH = [3, 2], NODASH = [];
 function drawSilhouettes(ctx, k) {
   ctx.save();
   ctx.setLineDash(DASH); ctx.lineWidth = 1; // tynt omriss uten fyll (Karakter/Test 13:55)
   for (let i = 0; i < k; i++) {
     const it = hidden[i], a = it.ref, r = (it.x1 - it.x0) / 2, top = it.y0 + r;
-    ctx.globalAlpha = it.toned ? 0.3 : 0.7; // tonet: bare et svakt supplement
-    const col = COL[it.team] || COL.enemy;
+    ctx.globalAlpha = it.toned || it.deep ? 0.25 : 0.4; // tonet: bare et svakt supplement (Arena-silhuett 27.10: lavere, kald)
     ctx.beginPath();
     ctx.arc(a.x, top, r, Math.PI, 0); ctx.lineTo(a.x + r, a.y); ctx.ellipse(a.x, a.y, r, r * 0.45, 0, 0, Math.PI); ctx.closePath();
-    ctx.strokeStyle = col[1]; ctx.stroke();
+    ctx.strokeStyle = GHOST[it.team] || GHOST.enemy; ctx.stroke();
   }
   ctx.setLineDash(NODASH);
   ctx.restore();

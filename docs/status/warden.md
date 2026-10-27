@@ -1,25 +1,36 @@
-# Warden C – status (Breach Warden-design/animasjon)
-Oppdatert 2026-10-27 14:22.
+# Warden – status (Breach Warden-design og animasjon) – 27.10 15:58
 
 ## Ferdig
-- Standard nå: TILT 55, følgekamera med zoom 2,25 (Breach). 0 sidefeil, 11/11 brysttreff.
-- img/c5 = c4 + bakt kjølig kantlys (ca. 3 px, sterkest opp/venstre på overkropp, jevnt på bein) og lysere hjelm (+22 %) og skuldre (+16 %). Ingen ctx.filter/shadowBlur, null ekstra kostnad i kjøring.
-- styles/paintedC.js laster c5. c4/c3 ligger igjen som tilbakefall.
-- DPR-diff: player/forslag/core-main-dpr.diff (mot main.js før 13:28). Testet i kopi (/tmp/gdpr): DPR 1 og 2 gir 11/11. Bakbuffer 2560 ved CSS 1280, mus = CSS-px, resize 1000×600 → 2000. 0 feil.
-- c4: rygg/sekk N/NW/NE i gunmetal, 55°-hjelmtopp (godkjent).
-- main.js 13:40 (Breach-godkjent): DPR leses på nytt i resize(), og det lyttes på matchMedia(resolution). Maks 2 og ?dpr=1 er beholdt. Test: 1→1,5 + resize gir bakbuffer 1500, 3 gir 2560 (kappet), ?dpr=1 holder 1x. 11/11 ved DPR 1 og 2, 0 feil. Backup: /workspace/wt/main.js.bk-1337.
-- 14:16: Fiende-AIs player-cover-vann.diff er gjennomgått og lagt inn (1 linje i player/cover.js; bare high/low gir dekningslinjer). tests/run.mjs: OK, 10/10. Headless yard v2: dekning mot vann 6 → 0 (av 16 punkter). Lav dekning uendret: 141/156 før og etter. Backup: /workspace/wt/cover.js.bk-1416.
+- Dødsanim v1 (8 retninger, 1,1 s, holdt til respawn) + v2 sluttpose: beina samlet,
+  parallelle, knær trukket opp (ikke rag doll). shots/warden-C-dod-v2.mp4 / -v2-for-etter.png
+- Del 2 – reis over lav dekning (Warden C):
+  - Dukket: overkroppen bøyd ned/fram (mur/barrier kryper 1,45× dypere), rifla nede.
+  - popUp: står helt opp, hele figuren flyttes 4,5 px mot kanten (henger sammen, ingen brudd).
+  - Rask overgang på rå peek (0,14 s opp / 0,12 s ned). Blindfire: dukket, bare rifla opp.
+  - Brudd-feilen (kropp/bein kuttet) var vår egen: overkroppen ble løftet/forskjøvet uten
+    beina. Fikset i paintedC, ingen endring/diff i depth.js nødvendig.
+  - Hendelser coverRise {entity,x,y,type,nx,ny,cover} ved peek ≥0,6 og coverDuck {…} ved
+    peek ≤0,3; p.exposed true mellom dem. False ved coverExit, rull, død (coverDuck sendes).
+  - Treffsjanse følger exposed: popUp 0,6 kun når exposed, ellers 0,1 (core/combat.js urørt).
+- Treff (300 fiendekuler gjennom core per positur): sandsekk dukket 28 / oppe 174 / blind 98;
+  mur dukket 36 / oppe 191 / blind 87.
+- Hode over kanten bak dekning (skjerm-px, zoom 2,25): sekk/kasse 27→71, mur 15→71.
+- Filer: player/state.js, player/tuning.js, shared/rig/rig.js (peekRaw/blindRaw),
+  rig/styles/paintedC.js, rig/paintedC/paintedC.js, rig/clips.js. Kopier: /workspace/wt/bk-*.
+- tests/run.mjs: OK (10 sider, 0 feil).
 
-## Pågår (filer)
-- game/src/shared/rig/paintedC/img/c5/*, /workspace/wt/paint/contrast.py
+## Pågår / neste
+- Ingenting. Venter på Breach.
 
-## Neste
-- 8×-kunst senere.
+## Svakheter
+- Dukket = sammenpresset malt overkropp, ikke ommalt huk. Ingen armer separat.
+- Ekte grunt-AI skjøt nesten ikke i klippet; treffall er målt med kuler via core.
 
-## Blokkert av
-- Ingenting.
+## Siste skjermbilder
+- shots/warden-C-cover-hel.png, warden-C-cover-for-etter.png, warden-C-cover-reis.mp4
 
-## Siste skjermbilde
-- shots/warden-C-kontrast-for-etter.png (zoom 2,25, standardoppsett)
-- Ytelse: 739 figurer på 230 ms ≈ 0,31 ms/figur. p50 9,4 ms per bilde (headless).
-- Backup: /workspace/wt/bk-kontrast-1327
+## 17:20 Dukk raskere ved slipp av sikte
+- Årsak til 1.8/6.25 s: logikken dukket allerede på ~0.10 s; bot-en i spill-brett1 holder høyre mus mens den har mål (setMouse), så Test målte siktetid. Lean teller 0.6 kun mens sub==='lean' (slutter straks ved slipp).
+- tuning: popDownTime 0.12→0.07, duckHidePeek 0.3→0.5. coverHitChance/popUpTime/blindfire urørt.
+- Før: exposed=false 0.100 s, coverDuck 0.083, visuelt nede 0.133. Etter: 0.050 / 0.033 / 0.083 (alle tre scenarioer, sandbag+barrier, maks=snitt).
+- shots/warden-C-dukk-raskt.png/.mp4. Backup: /workspace/wt/bk-dukk-1650/

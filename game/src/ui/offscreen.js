@@ -16,12 +16,14 @@ function rgbOf(type) {
   return c;
 }
 /** HUD-panelenes rektangler nederst (skjerm-px). Gjenbrukt objekt. */
-const _rects = { wx0: 0, wx1: 0, wTop: 0, hx1: 0, hTop: 0 };
+const _rects = { wx0: 0, wx1: 0, wTop: 0, hx1: 0, hTop: 0, ox1: 0, oBot: 0 };
 export function hudRects(W, H, world) {
   const u = Math.min(1.5, Math.max(0.62, Math.min(W / 1600, H / 900)));
   // alltid reload-størrelsen (bredere 396 px reload-bar, topp H−139), så pilene ikke hopper når man lader om
   _rects.wx0 = W / 2 - 198 - 6; _rects.wx1 = W / 2 + 198 + 6; _rects.wTop = H - 18 - 74 - 30 - 17;
   _rects.hx1 = 320 * u; _rects.hTop = H - 74 * u;
+  // objektivpanelet øverst til venstre (levels/hud.js drawObjective: bakplate 0..460u × 0..116u, teksten ≈ 0..360u)
+  _rects.ox1 = 360 * u; _rects.oBot = 116 * u;
   return _rects;
 }
 
@@ -35,7 +37,7 @@ export function createOffscreenIndicator(world) {
     const R = hudRects(W, H, world);
     const pz = lifted ? PROJ.toScreen(p.x, p.y, O.z) : p;
     const ps = camera.worldToScreen(pz.x, pz.y);
-    const cx = Math.min(W - m, Math.max(m, ps.x)), cy = Math.min(R.wTop - O.pad, Math.max(m, ps.y));
+    const cx = Math.min(W - m, Math.max(m, ps.x)), cy = Math.min(R.wTop - O.pad, Math.max(R.oBot + O.pad, ps.y));
     ctx.save(); ctx.lineJoin = 'round';
     for (let i = 0; i < list.length; i++) {
       const e = list[i]; if (!e || e.dead || !Number.isFinite(e.x)) continue;
@@ -44,10 +46,11 @@ export function createOffscreenIndicator(world) {
       if (s.x > -rr && s.x < W + rr && s.y > -rr && s.y < H + rr * 0.5) continue;   // synlig (eller nesten)
       const dx = s.x - cx, dy = s.y - cy, len = Math.hypot(dx, dy) || 1, kx = dx / len, ky = dy / len;
       // indre ramme: bunnen avhenger av hvilket panel strålen treffer
-      const t = (bottom) => Math.min(kx > 0 ? (W - m - cx) / kx : kx < 0 ? (m - cx) / kx : 1e9, ky > 0 ? (bottom - cy) / ky : ky < 0 ? (m - cy) / ky : 1e9);
+      const t = (bottom, top = m) => Math.min(kx > 0 ? (W - m - cx) / kx : kx < 0 ? (m - cx) / kx : 1e9, ky > 0 ? (bottom - cy) / ky : ky < 0 ? (top - cy) / ky : 1e9);
       let k = t(H - m), x = cx + kx * k, y = cy + ky * k;
       if (y > R.wTop - O.pad && x > R.wx0 && x < R.wx1) { k = t(R.wTop - O.pad); x = cx + kx * k; y = cy + ky * k; }
       if (y > R.hTop - O.pad && x < R.hx1) { k = t(R.hTop - O.pad); x = cx + kx * k; y = cy + ky * k; }
+      if (y < R.oBot + O.pad && x < R.ox1) { k = t(H - m, R.oBot + O.pad); x = cx + kx * k; y = cy + ky * k; }
       const d = Math.hypot(e.x - p.x, e.y - p.y), f = Math.min(1, Math.max(0, (d - O.near) / (O.far - O.near)));
       const a = 1 - (1 - O.alphaMin) * f, sz = O.size + (O.sizeFar - O.size) * f;
       ctx.setTransform(1, 0, 0, 1, x, y); ctx.rotate(Math.atan2(ky, kx));

@@ -29,6 +29,9 @@ const exe = path.join(base, fs.readdirSync(base).find((d) => d.startsWith('chrom
   await p.evaluate(() => { BREACH.world.timeScale = 1; });
   info.push(await place([['grunt', -900, 500], ['flanker', -400, 500], ['heavy', -120, 520], ['grenadier', 0, 600], ['grunt', 150, 520], ['flanker', 450, 500], ['heavy', 900, 500]]));
   await freeze(); await p.waitForTimeout(400); await p.screenshot({ path: `${OUT}/21-offscreen-south.png` });
+  await p.evaluate(() => { BREACH.world.timeScale = 1; });
+  info.push(await place([['grunt', -700, -500], ['flanker', -500, -600], ['grenadier', -900, -200], ['heavy', -300, -700], ['grunt', -1000, -50]]));
+  await freeze(); await p.waitForTimeout(400); await p.screenshot({ path: `${OUT}/21-offscreen-objective.png` });
   const stat = await p.evaluate(() => ({ cam: [BREACH.camera.x | 0, BREACH.camera.y | 0], pl: [BREACH.world.player.x | 0, BREACH.world.player.y | 0], set: BREACH.ui?.settings?.offscreenEnemies ?? BREACH.world.ui?.getSettings().offscreenEnemies }));
   console.log(JSON.stringify({ errs, info, stat })); await b.close();
 })();

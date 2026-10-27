@@ -1,28 +1,31 @@
 # Status – Lyd og musikk (Breach Lyd)
-Oppdatert: 2026-10-26 15:45 – STANDBY etter v1.6 (meldt til Breach)
+Oppdatert: 2026-10-27 17:05 – v1.9 ferdig; Warden-variant venter på valg
 
 ## Ferdig
-- Lydsystem i game/src/audio (index, engine, sfx, synth, mech, stingers, cinder, music, radio). Koblet i main.js via mods.audio. Vi rører ikke main.js.
-- v1–v1.4: våpen, reload, granat, blokkert treff, nivålyder, CINDER-fiender, underjordisk taiko-musikk.
-- v1.4.1–v1.5: CINDER-radio (announcer/command/warden), sekvensåpninger, upgradeOffer/upgrade, organiske skudd, Kiln Alpha, restart, midlertidig boss, rulletekst, demoflyt verifisert.
-  - Volum-API (localStorage 'breach.audio.volumes'). src/audio/README.md med API og treff-/død-timing for Effekter.
-- v1.6: menymusikk (stingers.js createMenuMusic) på menuOpen/Start/Close med fade; _meter() på klipperutgang (RMS/topp), played._total. Headless trenger ?menu=1.
-- Verifisert: render uten klipping, lang 0/0 på audio-sidene, røyktest uten konsollfeil (intro-radio per speaker og Spitter-kast live).
-- Review: reviews/lyd-2026-10-23.md (seksjon v1.6).
+- Lydsystem i game/src/audio (index, engine, sfx, synth, mech, stingers, cinder, music, radio, scene). Koblet via mods.audio.
+- v1–v1.6: våpen, reload, granat, CINDER-fiender og -radio, menymusikk, volum-API, _meter. Detaljer: reviews/lyd-2026-10-23.md.
+- v1.7: voice.js med stemmer i alle 7 cutscener (46 replikker, Kokoro-82M «Stemme A», forteller inkludert).
+  - Filer: game/assets/voice/<scene>/<panel>-<linje>.ogg + manifest.json (684 KB).
+  - Generator: src/audio/tools/voice/gen.py + README (modellfilene ligger i /workspace/tts, ikke i repoet).
+  - setVoiceVolume og voice i getVolumes; radiostøyen dukkes under tale.
+- v1.7: yard-music.js er spillmusikk i brett 1 (arenaLoaded 'yard'), music.js i andre brett. Sidechain på shot, explosion, waveStart og spawnWarn.
+- Verifisert v1.7: smoke.cjs, lang.mjs og run.mjs grønne, 0 konsollfeil, topp −2,5 dBFS. Musikk 13,5 dB under skuddtopper.
+- Klipp: reviews/stemme-musikk-2026-10-27/demo-klipp.mp4 (+ .ogg). Utredning: reviews/stemme-2026-10-27.md.
+
+- v1.8/v1.9: regi per replikk i tools/voice/direction.json, myket opp i v1.9. Sluttreplikken er «Coming home», og fallen er ≤ 2,2 s. Alt grønt, 0 timing-brudd. Se reviews/stemme-regi-2026-10-27/.
 
 ## Pågår
-- Ingenting. Standby til Breach melder fra.
+- Warden-stemme: 3 varianter i reviews/stemme-regi-2026-10-27/warden-varianter.mp3 venter på Alexanders valg. Musikknivåer er urørt.
 
 ## Neste
-- Spilt kamp-test av bulletImpact (demo.cjs dreper automatisk). Flere explosion-varianter når Våpen får nye kind.
-- Dykk ved levelStart brett 2 (−66 dB ~0,3 s).
-- Ashmaw-lyder mot docs/BOSS.md: bossPhase, weakPointHit, bossStagger og coverBreak. Plan står i review. Erstatter da de midlertidige bosslydene.
+- Lyttetest (Test/Alexander): stemmer, rop og musikk i rolig vs kamp (nivået er nesten likt; mulig mindre skudd-duck).
+- Spilt kamp-test av bulletImpact. Dykk ved levelStart brett 2 (−66 dB ~0,3 s).
+- Ashmaw-lyder mot docs/BOSS.md (bossPhase, weakPointHit, bossStagger, coverBreak).
 - grenadeBounce `surface` når Våpen sender det.
 
 ## Blokkert av
-- Ashmaw/BOSS.md: kommer etter demoen, ikke start.
-- Story og brett skal sende upgradeOffer fra offerUpgrade() (lytter finnes).
-- Lyttetest tas av Test i full kjøring. Barb og «Signal lost.» beholdes til da.
+- Forslag til Breach: fallen-varighet og autoAdvance mot stemmelengde, stemmeslider i settings, kreditering av Kokoro.
+- Ashmaw/BOSS.md: etter demoen. upgradeOffer fra Story (lytter finnes).
 
 ## Siste skjermbilde
-- reviews/lyd-2026-10-23/v16-meny.png (hovedmeny med menymusikk, v1.6)
+- reviews/stemme-musikk-2026-10-27/skjerm-kamp.png (kamp i Kessa Yard med ny musikk, v1.7)

@@ -1,4 +1,4 @@
-# Status: Våpen og pausemeny (Breach Våpen)
+# Vapen – status (2026-10-27 16:51)
 Oppdatert: 2026-10-27 13:20. Mål: demo av brett 1. Rot: /workspace/breach/game.
 
 ## Ferdig
@@ -26,4 +26,4 @@ Oppdatert: 2026-10-27 13:20. Mål: demo av brett 1. Rot: /workspace/breach/game.
 - Bossangrep og videre pausemeny venter til etter demoen.
 
 ## Siste skjermbilde
-- src/ui/shots/21-offscreen-8dir.png, 21-offscreen-south.png; src/ui/shots/20-dmgdir-*.png; src/weapons/shots/demo/decals.png.
+- S-12 kloss hold: pickBody+bodySweep (weapons/index.js), TUNING.pointBlank; Lurcher hip 0.48→0.99, aim 0.04→0.97 pellets. Se weapons/tools/pointblank.md. Rifle/M-4-sjekk gjenstår.

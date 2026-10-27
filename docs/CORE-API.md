@@ -34,6 +34,8 @@ Alt kan importeres fra `src/core/index.js`. Kjør: `cd game && python3 -m http.s
 - `window.BREACH.PROJ` er eksponert (main.js) for tester.
 - Zoom (27.10 Arena): `PROJ.zoom` = faktisk startzoom (2,25; legacy 1,5; `?zoom=N` overstyrer), `PROJ.baseZoom` = verdien uten overstyring. `core/camera.js` eksporterer `DEFAULT_ZOOM` (= PROJ.zoom). Ved `?camfollow=0` regner kameraet egen zoom (hele brettet) – les da `camera.zoom`.
 - DPR (27.10): main.js bruker bakbuffer innerWidth·dpr (dpr = min(devicePixelRatio, 2), `?dpr=1` slår av), men `canvas.width/height`, `ctx.setTransform/getTransform`, `camera.width/height`, mus og `screenToWorld` er i CSS-px. `window.BREACH.DPR`.
+- Regen (27.10): `?regenDelay=N&regenRate=N` overstyrer `TUNING.regenDelay` / `regenPerSec` (player/tuning.js; standard 4.5 s og 18 hp/s). All skade (også splash/DoT uten `hit`-hendelse) nullstiller forsinkelsen. Mens livet fylles viser HP-baren (player/hud.js) REGENERATING, pulserende blå glød og lysende fyllkant.
+- Oppstart (27.10): `#boot-black` i index.html dekker til menyen er oppe; PLAY legger `#bm-black` under menyen til intro-cutscenen er helt inntonet.
 
 ## geom.js
 - `lineOfSight(world, ax, ay, bx, by) → bool` – kun **high** cover blokkerer.

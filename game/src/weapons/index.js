@@ -43,6 +43,7 @@ import { updateCrates, drawCrates } from './crates.js';
 import { startMelee, updateMelee, meleeState, canMelee, meleeStats } from './melee.js';
 import { assistAim } from './aimassist.js';
 import { muzzleZ, bodyHitZ, coverHeight } from './view34.js';
+import { PROJ } from '../shared/projection.js';
 
 export { meleeState, canMelee, meleeStats };
 export { WEAPONS, ENEMY_WEAPONS, GRENADE, PLAYER_LOADOUT, TUNING, falloffMult, spawnGrenade, predictGrenade, explode, drawHud, drawReticle, drawGrenadeArc };
@@ -201,6 +202,50 @@ export function getMuzzleDraw(e, angle = e.aim ?? 0) {
   return getMuzzle(e, angle);
 }
 
+// ------------------------------------------------------------------ kloss hold (27.10)
+/**
+ * Kroppen under trådkorset (spilleren, view '34'). input.mouse.worldX/Y er bakkepunktet (z = 0) under markøren; den samme
+ * skjermpikselen ligger over bakkepunktet (mx, my + z·zScale) i høyde z. En fiende er «under markøren» når den loddrette
+ * strålen treffer kroppssylinderen (radius r, høyde e.height): z* = clamp((ey − my)/zScale, 0, h), avstand ≤ r.
+ * Fremste (største y) vinner. → { x, y, z, target } | null. Uten treff: vanlig sikte i brysthøyde (PROJ.aimHeight).
+ * Årsak (pointblank.md): Lurcher (h 16, bryst 9) og Husk (h 37, bryst 21) er lavere enn 27, så markøren på kroppen ga et
+ * bakkepunkt (27 − zBryst)·tan(55°) ≈ 9–26 px foran fienden. Mot øst/vest bommet hagla sidelengs, og haglene ble tegnet
+ * i z ≈ 27 – over ryggen på fienden.
+ */
+export function pickBody(world, e) {
+  if (!e || world.view !== '34' || e !== world.player) return null;
+  const mo = world.input?.mouse; if (!mo || !Number.isFinite(mo.worldX)) return null;
+  const Z = PROJ.zScale, mx = mo.worldX, my = mo.worldY, pad = TUNING.pointBlank?.pickPad ?? 2;
+  let best = null;
+  for (const t of world.enemies) {
+    if (!t || t.dead || t.hidden) continue;
+    const r = (t.r || 14) + pad, dx = mx - t.x; if (Math.abs(dx) > r) continue;
+    const h = Number.isFinite(t.height) ? t.height : PROJ.heights.actor, z = Math.max(0, Math.min(h, (t.y - my) / Z)), dy = my + z * Z - t.y;
+    if (dx * dx + dy * dy > r * r) continue;
+    if (Math.hypot(t.x - e.x, t.y - e.y) > (TUNING.pointBlank?.range ?? 100)) continue;   // bare kloss hold; middels/lang avstand uendret
+    // markøren på kroppen → sikt på kroppens midtpunkt (bakke) i kroppshøyde; tåler kamera-/markørdrift på kloss hold og offset-munning
+    if (!best || t.y > best.target.y) best = { x: t.x, y: t.y, z: Math.max(4, Math.min(z, h * 0.85)), target: t };
+  }
+  return best;
+}
+/**
+ * Fiende som står mellom kroppen (skytterens senter) og munningen: kula skal starte i kroppen, ellers starter den forbi
+ * fienden. Ikke gjennom høy dekning/vegg mellom kropp og munning (da starter den i munningen som før, og veggen tar den
+ * ikke – samme som i dag). → { x, y } (punkt litt ut fra senteret) | null.
+ */
+export function bodySweep(world, e, m) {
+  if (TUNING.pointBlank?.sweep === false) return null;
+  const list = (e.team || 'player') === 'player' ? world.enemies : (world.player ? [world.player] : []);
+  for (const c of world.cover) if (c.type === 'high' && segmentRect(e.x, e.y, m.x, m.y, c, 0) !== null) return null;
+  const ax = e.x, ay = e.y, bx = m.x, by = m.y, dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy; if (L2 < 1) return null;
+  for (const t of list) {
+    if (!t || t.dead || t === e) continue;
+    const k = Math.max(0, Math.min(1, ((t.x - ax) * dx + (t.y - ay) * dy) / L2)), qx = ax + dx * k - t.x, qy = ay + dy * k - t.y, r = (t.r || 14) + 1;
+    if (qx * qx + qy * qy <= r * r) { const f = Math.min(1, ((e.r || 12) * 0.5) / Math.sqrt(L2)); return { x: ax + dx * f, y: ay + dy * f }; }
+  }
+  return null;
+}
+
 // ------------------------------------------------------------------ skyting
 /** Skyt hvis mulig. Kall hvert steg mens avtrekkeren holdes. → { fired:boolean, reason? } */
 export function tryFire(world, e, opts = {}) {
@@ -226,8 +271,15 @@ function fireNow(world, e, L, d, slot, opts) {
   const R = world.rng, aim0 = opts.aimAngle ?? e.aim ?? 0;
   // Sikteassistanse (innstilling fra src/ui): bare spilleren, ikke blindskudd. opts.aimAssist overstyrer (tall 0..1 eller false).
   const assist = opts.aimAssist ?? world.settings?.aimAssist ?? 0;
-  const aim = (e.team || 'player') === 'player' && assist && !opts.blind ? assistAim(world, e, aim0, assist, d.range) : aim0;
-  const m = opts.muzzle || getMuzzle(e, aim), mz = Number.isFinite(opts.muzzleZ) ? opts.muzzleZ : Number.isFinite(m.z) ? m.z : muzzleZ(world, e, d);
+  // 27.10 kloss hold: spilleren i trekvart sikter på KROPPEN under trådkorset (pickBody), ikke et punkt i brysthøyde 27.
+  const pick = !opts.muzzle && opts.cursorPick !== false && TUNING.pointBlank?.pick !== false ? pickBody(world, e) : null;
+  let aim = pick ? aim0 : (e.team || 'player') === 'player' && assist && !opts.blind ? assistAim(world, e, aim0, assist, d.range) : aim0;
+  let m = opts.muzzle || getMuzzle(e, aim);
+  if (pick) { const dm = Math.hypot(m.x - e.x, m.y - e.y), dp = Math.hypot(pick.x - e.x, pick.y - e.y);
+    aim = dp > dm + 4 ? Math.atan2(pick.y - m.y, pick.x - m.x) : Math.atan2(pick.y - e.y, pick.x - e.x); }
+  const sw = opts.muzzle ? null : bodySweep(world, e, m);   // fiende mellom kropp og munning → kula starter i kroppen
+  if (sw) { m = { ...m, x: sw.x, y: sw.y }; if (pick) aim = Math.atan2(pick.y - m.y, pick.x - m.x); }   // ny start → sikt på nytt mot kroppen
+  const mz = Number.isFinite(opts.muzzleZ) ? opts.muzzleZ : Number.isFinite(m.z) ? m.z : muzzleZ(world, e, d);
   const team = e.team || 'player', steady = isSteady(L, d) && moveFrac(L, opts) < 0.05;
   const charge = d.steady && P0(L, opts) === 'aim' && moveFrac(L, opts) < 0.05 ? chargeOf(L, d) : 0;
   const spread = (opts.spreadRad ?? getSpread(world, e, opts) * DEG), tri = () => R() + R() - 1;   // AI kan gi egen spredning (rad)
@@ -240,7 +292,7 @@ function fireNow(world, e, L, d, slot, opts) {
   const aimP = (p, ang) => { p.angle = ang; p.vx = Math.cos(ang) * p.speed; p.vy = Math.sin(ang) * p.speed; return p; };
   const col = opts.color || (team === 'player' || d.enemy ? d.color : '#ffb347'), own = TUNING.fx?.ownBullets !== false;
   // Rev. 6: z = løpshøyde (konstant under flukten). own: core drawProjectiles har ingen z → kula tegnes av fx.drawTracers (p.tint).
-  const common = { speed: d.projectileSpeed, team, owner: e, radius: d.radius, range: d.range, color: own ? 'rgba(0,0,0,0)' : col, tint: col, z: mz, kind: 'bullet',
+  const common = { speed: d.projectileSpeed, team, owner: e, radius: d.radius, range: d.range, color: own ? 'rgba(0,0,0,0)' : col, tint: col, z: mz, kind: 'bullet', ...(pick ? { zAim: pick.z } : {}),
     weapon: d.id, pellets: d.pellets, shotId, wfx, baseDmg: base0, dmgAt, steady, charge, falloff: d.falloff, ...(opts.projectile || {}) };
   const P = postureOf({ aiming: L.aiming, ...opts });
   let angles = [base];

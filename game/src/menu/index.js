@@ -16,6 +16,7 @@ const ITEMS = [
   { id: 'play', label: 'Play' },
   { id: 'levels', label: 'Level select', disabled: true, lock: 'LOCKED' },
   { id: 'settings', label: 'Settings' },
+  { id: 'controls', label: 'Controls' },
   { id: 'credits', label: 'Credits' },
 ];
 const CREDITS = [['Arena', 'Kessa Yard, Deepwell'], ['Character', 'The Warden'], ['Enemy AI', 'The Cinderborn'], ['Weapons & UI', 'Arsenal, settings'],
@@ -34,8 +35,9 @@ export function attach(breach) {
   }
   B.menu = { open: openMainMenu, close: closeMainMenu, isOpen: isMainMenuOpen };
   const p = q();
-  if (p.get('skipmenu') === '1' || (navigator.webdriver && p.get('menu') !== '1')) return;
-  openMainMenu(B.world, { boot: true });
+  const boot = () => document.getElementById('boot-black')?.remove();   // svart fra første bilde (index.html) til menyen dekker
+  if (p.get('skipmenu') === '1' || (navigator.webdriver && p.get('menu') !== '1')) return boot();
+  openMainMenu(B.world, { boot: true }); boot();
 }
 
 export function isMainMenuOpen() { return !!root; }
@@ -120,10 +122,27 @@ function activate(i) {
   uiSound(B?.world, 'uiClick');
   if (it.id === 'play') return play();
   if (it.id === 'settings') return openSettingsScreen();
+  if (it.id === 'controls') return openControlsScreen();
   if (it.id === 'credits') return openCredits();
 }
 
+// Svart dekke under menyen (z 39) fra PLAY til intro-cutscenen er helt inntonet (z 50, opacity 1) –
+// ingen arena-frame mellom meny og første mellomsekvens. Fjernes også hvis ingen cutscene kommer (maks 8 s).
+function blackUntilCutscene() {
+  const c = document.createElement('div'); c.id = 'bm-black';
+  Object.assign(c.style, { position: 'fixed', inset: '0', background: '#000', zIndex: '39', pointerEvents: 'none' });
+  document.body.appendChild(c);
+  const t0 = performance.now(); let seen = false;
+  const tick = () => {
+    const cv = document.querySelector('canvas.breach-cutscene'), dt = performance.now() - t0;
+    if (cv) seen = true;
+    if ((cv && cv.style.opacity === '1') || (seen && !cv) || dt > 8000 || (dt > 1500 && !cv && B?.world && !B.world.paused)) return c.remove();
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
 function play() {
+  blackUntilCutscene();
   busy = true; menuEmit(B?.world, 'menuStart', { level: 1 }); bg?.flare(0.7); if (logoState) logoState.flareT = performance.now();
   setTimeout(() => btns[sel]?.classList.remove('bm-down'), 80);
   setTimeout(() => root?.classList.add('bm-out'), 260);
@@ -149,6 +168,17 @@ async function openSettingsScreen() {
   if (!root) return;
   if (!api?.openSettings) { toast('SETTINGS NOT AVAILABLE YET'); return; }
   const s = api.openSettings(document.body, { world: B?.world, kicker: 'Main menu', scrim: true, onBack: () => { const k = activeSubs.indexOf(s); if (k >= 0) activeSubs.splice(k, 1); } });
+  if (s?.el) s.el.style.zIndex = '60';
+  activeSubs.push(s);
+}
+async function openControlsScreen() {
+  busy = true;
+  let api = null;
+  try { api = await import('../ui/controlsScreen.js'); } catch (e) { api = null; }
+  busy = false;
+  if (!root) return;
+  if (!api?.openControls) { toast('CONTROLS NOT AVAILABLE YET'); return; }
+  const s = api.openControls(document.body, { world: B?.world, kicker: 'Main menu', scrim: true, onBack: () => { const k = activeSubs.indexOf(s); if (k >= 0) activeSubs.splice(k, 1); } });
   if (s?.el) s.el.style.zIndex = '60';
   activeSubs.push(s);
 }

@@ -451,6 +451,8 @@ function drawProps(ctx, L, rng) {
 }
 
 // ---------------------------------------------------------------- skygger
+// Nord–sør-barrierer (kind barrier, h > w) males som smal, lav jersey-rekke (effects/cover.js v5): skyggen følger 68 % av bredden.
+function nsShadowRect(o) { if (o.kind !== 'barrier' || !(o.h > o.w)) return o; const w = o.w * 0.68; return { x: o.x + (o.w - w) / 2, y: o.y, w, h: o.h }; }
 function drawShadows(ctx, L) {
   const W = L.width, H = L.height;
   const sc = makeCanvas(W * RES, H * RES), s = sc.getContext('2d'); s.scale(RES, RES);
@@ -474,9 +476,10 @@ function drawShadows(ctx, L) {
       continue;
     }
     s.globalAlpha = o.type === 'high' ? 1 : 0.8;
+    const r = nsShadowRect(o); if (r !== o) { dx *= 0.28; dy *= 0.28; }   // NS-barriere v5: smal, lav jersey (Effekter 27.10)
     s.beginPath();
-    s.moveTo(o.x, o.y); s.lineTo(o.x + o.w, o.y); s.lineTo(o.x + o.w + dx, o.y + dy);
-    s.lineTo(o.x + o.w + dx, o.y + o.h + dy); s.lineTo(o.x + dx, o.y + o.h + dy); s.lineTo(o.x, o.y + o.h);
+    s.moveTo(r.x, r.y); s.lineTo(r.x + r.w, r.y); s.lineTo(r.x + r.w + dx, r.y + dy);
+    s.lineTo(r.x + r.w + dx, r.y + r.h + dy); s.lineTo(r.x + dx, r.y + r.h + dy); s.lineTo(r.x, r.y + r.h);
     s.closePath(); s.fill();
   }
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -488,7 +491,8 @@ function drawShadows(ctx, L) {
   for (const o of L.objects) {
     if (o.overhead) continue;
     if (o.kind === 'tank') { const R = Math.min(o.w, o.h) / 2 + 1; a.beginPath(); a.arc(o.x + o.w / 2, o.y + o.h / 2 + 1, R, 0, Math.PI * 2); a.fill(); continue; }
-    a.fillRect(o.x - 3, o.y - 2, o.w + 6, o.h + 5);
+    const r = nsShadowRect(o), p = r === o ? 3 : 1;
+    a.fillRect(r.x - p, r.y - 2, r.w + p * 2, r.h + (r === o ? 5 : 3));
   }
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.filter = `blur(${3 * RES}px)`; ctx.globalAlpha = 0.7; ctx.drawImage(ac, 0, 0);
@@ -1308,7 +1312,7 @@ function drawPlatform(ctx, L) {
   ctx.strokeStyle = 'rgba(210,190,90,0.55)'; ctx.lineWidth = 2;
   { const gx0 = p.x + p.w - 72, gx1 = gx0 + 64, x0 = p.x + 1, y0 = p.y + 1, x1 = p.x + p.w - 1, y1 = p.y + p.h - 1; // sørkanten brutt ved trappen
     ctx.beginPath(); ctx.moveTo(gx0, y1); ctx.lineTo(x0, y1); ctx.lineTo(x0, y0); ctx.lineTo(x1, y0); ctx.lineTo(x1, y1); ctx.lineTo(gx1, y1); ctx.stroke(); }
-  const gx0 = p.x + p.w - 72, gx1 = gx0 + 64; // åpning ved trappen (index.js stairGap, 2 ruter)
+  const gx0 = p.x + p.w - 72, gx1 = gx0 + 64; // åpning ved trappen (Storys sør-ledge slutter ved x 36,75)
   if (!edgeDone(L, 'platform', 's', p.x + p.w / 2, p.y + p.h)) { ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(p.x, p.y + p.h, gx0 - p.x, 5); ctx.fillRect(gx1, p.y + p.h, p.x + p.w - gx1, 5); }           // kantens skyggelinje (lav front)
   if (r && r.w) {
     ctx.fillStyle = 'rgba(120,125,128,0.35)'; ctx.fillRect(r.x, r.y, r.w, r.h);

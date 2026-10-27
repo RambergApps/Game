@@ -222,7 +222,7 @@ export function drawRifle(ctx, look, origin, a, zoom = 1) {
  */
 export function drawWardenC(ctx, o) {
   setIG(ctx);
-  const { x = 0, y = 0, aim = 0, phase = null, legs = 'proc', look, zoom = 1, kneel = 0, gunZ = 0, alpha = 1, up: UP = null, lie = 0 } = o;
+  const { x = 0, y = 0, aim = 0, phase = null, legs = 'proc', look, zoom = 1, kneel = 0, gunZ = 0, alpha = 1, up: UP = null, lie = 0, curl = 0, curlSide = 1, drop = null, dropLook = null, hunch = 0, lean = null, rise = 0 } = o;
   const move = o.move ?? aim;
   const fw = { x: Math.cos(move), y: Math.sin(move) }, rt = { x: -fw.y, y: fw.x };
   const G = gait(phase, kneel);
@@ -247,6 +247,16 @@ export function drawWardenC(ctx, o) {
     const a0 = { x: x + sx * 1.6 - fw.x * (4 + LT + LS), y: y + sy * 1.6 - fw.y * (4 + LT + LS), z: 2.2 };
     j.hip = L(j.hip, h0); j.knee = L(j.knee, k0); j.ank = L(j.ank, a0);
     j.toe = L(j.toe, { x: a0.x - fw.x * 1.5, y: a0.y - fw.y * 1.5, z: 6 }); j.heel = L(j.heel, { x: a0.x - fw.x * 0.5, y: a0.y - fw.y * 0.5, z: 0.5 });
+    if (curl > 0) {   // 27.10 r2: fosterstilling – lårene trekkes opp mot brystet (magesiden), leggene brettes tilbake
+      const C = (a, b) => ({ x: a.x + (b.x - a.x) * curl, y: a.y + (b.y - a.y) * curl, z: a.z + (b.z - a.z) * curl });
+      // v2 (27.10): beina samlet og kontrollert – like former, parallelle, knærne trukket opp, øvre bein litt høyere/forskjøvet (ikke rag doll)
+      const bx = rt.x * curlSide, by = rt.y * curlSide, top = j.side === curlSide, o = top ? 0 : -2.6, zz = top ? 5 : 2.4;
+      const h1 = { x: x - fw.x * 1 + bx * o, y: y - fw.y * 1 + by * o, z: zz };
+      const k1 = { x: h1.x + bx * LT * 0.85 + fw.x * LT * 0.4, y: h1.y + by * LT * 0.85 + fw.y * LT * 0.4, z: zz + 0.5 };
+      const a1 = { x: k1.x - fw.x * LS * 0.85 - bx * 1.0, y: k1.y - fw.y * LS * 0.85 - by * 1.0, z: zz };
+      j.hip = C(j.hip, h1); j.knee = C(j.knee, k1); j.ank = C(j.ank, a1);
+      j.toe = C(j.toe, { x: a1.x - fw.x * 3.2, y: a1.y - fw.y * 3.2, z: zz }); j.heel = C(j.heel, { x: a1.x + fw.x * 0.6, y: a1.y + fw.y * 0.6, z: zz - 0.5 });
+    }
   }
   // nær/fjern bein: større skjerm-y (nærmere kamera) tegnes sist
   const order = [0, 1].sort((a, b) => (J[a].hip.y - J[b].hip.y) || (a - b));
@@ -254,11 +264,17 @@ export function drawWardenC(ctx, o) {
   // kontaktskygge
   ctx.save(); ctx.translate(x + 2, y + 1); ctx.scale(1, 0.5); { const sg = ctx.createRadialGradient(0, 0, 0, 0, 0, 12.5); sg.addColorStop(0, 'rgba(0,0,0,0.42)'); sg.addColorStop(0.7, 'rgba(0,0,0,0.3)'); sg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = sg; } ctx.beginPath(); ctx.arc(0, 0, 12.5, 0, Math.PI * 2); ctx.fill(); ctx.restore();   // r2: gradient i stedet for blur-filter
   ctx.filter = 'none';
+  if (dropLook && drop != null && drop > 0) {   // 27.10 r2: død – rifla glipper og faller ned ved siden av ham
+    const g0 = gripOf(x, y, aim, -6), ga = (Math.cos(aim) >= 0 ? 0 : Math.PI) + 0.35 * curlSide * drop, gx = x + rt.x * curlSide * 13 * drop - fw.x * 2, gy = y + rt.y * curlSide * 13 * drop - fw.y * 2;
+    const go = { x: g0.x + (gx - g0.x) * drop, y: g0.y + (gy - g0.y) * drop, z: g0.z + (1 - g0.z) * drop * drop }, gs = scr(go);
+    ctx.save(); ctx.translate(gs.x, gs.y); ctx.scale(1, 1 - 0.6 * drop); ctx.translate(-gs.x, -gs.y);   // ligger på siden: magasin/grep flates ut
+    drawRifle(ctx, dropLook, go, ga, zoom); ctx.restore();
+  }
   const front = Math.sin(aim) > -0.35;    // rifla foran overkroppen (sikter ikke bort fra kamera)
   const grip = gripOf(x, y, aim, bob + gunZ);
   J.forEach((j, i) => { j.dark = i === order[0] && Math.abs(J[0].hip.y - J[1].hip.y) > 0.5; });
-  drawLeg(ctx, J[order[0]], fw, J[order[0]].dark);
-  drawLeg(ctx, J[order[1]], fw, false);
+  const legsOver = curl > 0.45;   // 27.10 r2: krøllet – knærne ligger på magesiden (mot kamera) og tegnes over overkroppen
+  if (!legsOver) { drawLeg(ctx, J[order[0]], fw, J[order[0]].dark); drawLeg(ctx, J[order[1]], fw, false); }
   if (look && !front) drawRifle(ctx, look, grip, aim, zoom);
   const u = IMG['upper_' + DIRS[dirIndex(aim)]];
   const belt = scr({ x, y, z: G.hipZ - 4.2 + 3.2 * Math.max(0, Math.sin(aim)) * (1 - kneel) });   // 2026-10-27: S/SW/SE – overkroppen litt opp så beina ses
@@ -267,10 +283,16 @@ export function drawWardenC(ctx, o) {
     const cx = belt.x + (UP.dx || 0), yS = IG * KZ * (1 - lie) + lie * Math.max(1, 0.45 * IG * KZ), cy = belt.y + lie * (G.hipZ - 6) * ZS - u.ay * sc * 0.45 * yS + (UP.dy || 0);   // 27.10 (55°): liggende overkropp ligger i bakkeplanet (ingen 1/g-strekk, belte nær bakken)
     ctx.save(); ctx.translate(cx, cy); ctx.scale(1, yS); ctx.rotate(UP.rot || 0); ctx.scale(1, UP.sy ?? 1);
     ctx.drawImage(u.img, -u.ax * sc * KX, -u.ay * sc * 0.55, u.w * sc * KX, u.h * sc); ctx.restore();
-  } else ctx.drawImage(u.img, belt.x - u.ax * sc * KX, belt.y - u.ay * sc * IG * KZ, u.w * sc * KX, u.h * sc * IG * KZ);
+  } else if (hunch > 0 || lean) {   // 27.10: dukket bak lav dekning – overkroppen bøyd fram og ned (hjelmen så vidt over kanten), reist: lener seg over kanten
+    const lx = lean ? lean.x : 0, ly = lean ? lean.y : 0, hy = IG * KZ * (1 - 0.3 * hunch), bx = belt.x + lx, by = belt.y + ly + (hunch * 4 - rise) * ZS;
+    ctx.drawImage(u.img, bx - u.ax * sc * KX, by - u.ay * sc * hy, u.w * sc * KX, u.h * sc * hy);
+    TOP.y = by - u.ay * sc * hy; TOP.h = u.h * sc * hy; TOP.x = bx;   // mål: hjelmtopp (ctx-rom) for «piksler over kanten»
+  } else { ctx.drawImage(u.img, belt.x - u.ax * sc * KX, belt.y - u.ay * sc * IG * KZ, u.w * sc * KX, u.h * sc * IG * KZ); TOP.y = belt.y - u.ay * sc * IG * KZ; TOP.h = u.h * sc * IG * KZ; TOP.x = belt.x; }
+  if (legsOver) { drawLeg(ctx, J[order[0]], fw, J[order[0]].dark); drawLeg(ctx, J[order[1]], fw, false); }
   if (look && front) drawRifle(ctx, look, grip, aim, zoom);
   ctx.globalAlpha = 1;
   return { muzzle: (() => { const m = look?.points?.muzzle; if (!m) return null; const c = Math.cos(aim), s = Math.sin(aim); return { x: grip.x + m.x * c - m.y * s, y: grip.y + m.x * s + m.y * c, z: grip.z + m.z }; })() };
 }
 export { DIRS };
+export const TOP = { x: 0, y: 0, h: 0 };
 export const hipBob = (phase, kneel = 0) => gait(phase, kneel).hipZ - gait(null).hipZ;

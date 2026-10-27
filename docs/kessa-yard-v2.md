@@ -57,6 +57,15 @@ Spiller: `entry` 8 / 21,5 (256 / 688 px), ENTRY-rektangel x 6, y 20,25, 4 × 2,5
 ## Revisjon 27.10 14:40 (stairGap)
 - Sørkant-ledge 32,14.375,7 → 4,75 bred: trappeåpning x 36,75–38,75 (Arenas `stairGap`), restbiten øst for åpningen fjernet. Alle sjekker består.
 
+## Revisjon 27.10 16:10 (speiler Arenas yard-v2.js)
+- Generatoren bruker nå Arenas cover og ledger 1:1 (17 tupler avvek: alle vertikale barrierer 0,75 × 1 rundt samme sentrum, to L-hjørner flyttet, stairGap fjernet, sørledge 4,75).
+- Ny hard regel: barrier med h > w maks 0,75 × 1. Annen vertikal lav dekning er maks 2.
+- De korte barrierene åpnet tre siktlinjer. **Forslag til Arena** (bare lave sandsekker, alle klaringer ok):
+  - P1 `['sandbag', 4.25, 14.75, 1.375, 0.75]` – Rail Cut → spawn (L med barrier 5.625,14.75)
+  - P2 `['sandbag', 30.5, 17.25, 2, 0.75]` – East Lane → spawn
+  - P3 `['sandbag', 10.25, 24, 1.25, 0.75]` – Pier → spawn (L med barrier 11.5,23.625)
+- Min. hopp 2,2 (uendret).
+
 ## Hunker
 Dekning ligger i et forskutt rutenett: nærmeste separate stykke 2,2–5,5 ruter (snitt 3,4), så Hunker kan hoppe cover→cover hele veien fra hver inngang. Grønn linje i skissen = typisk sløyfe. Plattformkanten er et godt «sitte»-punkt for Hunker/Spitter (overtak), rampen er struping.
 
@@ -100,41 +109,44 @@ export const YARD_V2 = {
     ['ledge', 31.375, 12, 0.625, 3],
     ['ledge', 32, 14.375, 4.75, 0.625],
     ['sandbag', 7, 18.25, 2, 0.75],
-    ['barrier', 11.5, 21, 0.75, 1.5],
-    ['barrier', 11.5, 23.5, 0.75, 1.25],
-    ['barrier', 5.25, 17.25, 0.75, 1.5],
+    ['barrier', 11.5, 21.25, 0.75, 1],
+    ['barrier', 11.5, 23.625, 0.75, 1],
+    ['barrier', 5.25, 17.5, 0.75, 1],
     ['crates', 9, 17, 2, 1],
     ['sandbag', 13, 22, 3, 1],
-    ['barrier', 16, 22, 1, 2],
-    ['barrier', 20, 21.5, 1, 2],
+    ['barrier', 16.125, 22.5, 0.75, 1],
+    ['barrier', 20.125, 22, 0.75, 1],
     ['crates', 22, 22.5, 2, 1],
     ['barrier', 33.5, 18.5, 1.25, 0.75],
-    ['barrier', 33.5, 19.25, 0.75, 1.5],
-    ['barrier', 28.5, 18, 1, 2],
+    ['barrier', 33.5, 19.25, 0.75, 1],
+    ['barrier', 28.625, 18.5, 0.75, 1],
     ['sandbag', 25, 16, 2, 1],
-    ['barrier', 5.5, 14.25, 1, 2],
+    ['barrier', 5.625, 14.75, 0.75, 1],
     ['sandbag', 8, 11, 3, 1],
-    ['barrier', 8, 12, 1, 2],
-    ['barrier', 13, 15.25, 1, 2],
+    ['barrier', 8.125, 12.5, 0.75, 1],
+    ['barrier', 13.125, 15.75, 0.75, 1],
     ['crates', 17, 14, 2, 1],
-    ['barrier', 21, 12.5, 1, 2],
+    ['barrier', 21.125, 13, 0.75, 1],
     ['sandbag', 26, 12, 1, 2],
     ['barrier', 27, 13, 2, 1],
     ['barrels', 11, 8, 1, 1],
     ['barrier', 15, 9, 3, 1],
     ['crates', 19, 7, 1, 2],
     ['sandbag', 24, 8, 2, 1],
-    ['barrier', 6, 7, 1, 2],
+    ['barrier', 6.125, 7.5, 0.75, 1],
     ['sandbag', 12, 5, 2, 1],
-    ['barrier', 17, 4, 1, 2],
+    ['barrier', 17.125, 4.5, 0.75, 1],
     ['crates', 24, 5, 2, 1],
-    ['barrier', 28, 4.5, 1, 2],
+    ['barrier', 28.125, 5, 0.75, 1],
     ['crates', 26, 6, 2, 1],
-    ['barrier', 34, 6, 1, 2],
+    ['barrier', 34.125, 6.5, 0.75, 1],
     ['sandbag', 35, 10, 2, 1],
     ['barrier', 33.5, 12, 1.75, 0.75],
-    ['barrier', 33.5, 10.5, 0.75, 1.5],
-    ['barrier', 35, 17.75, 0.75, 1.5],
+    ['barrier', 33.5, 11, 0.75, 1],
+    ['barrier', 35, 18, 0.75, 1],
+    ['sandbag', 4.25, 14.75, 1.375, 0.75],
+    ['sandbag', 30.5, 17.25, 2, 0.75],
+    ['sandbag', 10.25, 24, 1.25, 0.75],
   ],
   zones: {'platform': {'x': 32, 'y': 4, 'w': 7, 'h': 10.5, 'kind': 'raised', 'h_px': 24}, 'ramp': {'x': 30, 'y': 9, 'w': 2, 'h': 3, 'kind': 'ramp', 'dir': 'E'}},
   ammoCrates: [[13.5, 21], [20.5, 17.5], [34, 9], [16, 8.4]],

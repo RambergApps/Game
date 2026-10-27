@@ -18,8 +18,8 @@ Oppdatert: 2026-10-27 ca. 14:40. Eier: src/enemies (unntatt look/, som eies av M
 ## Blokkert av
 - Alexanders demotest. player/cover.js vann-diff venter hos Warden-design.
 
-## Siste klipp/skjermbilde
-- reviews/img/fiende-ai/2026-10-27-hunker-v2.mp4/.png; a2-55-before/-after.mp4
+## Core: lowCoverProtecting (27.10 ~17:00, combat.js tillatt kun her)
+- Vinkelrett avstand (mål→nærmeste rektpunkt ≤48+r) + alle 7 kroppspunkter mot skytter må være blokkert. Kart: reviews/img/fiende-ai/2026-10-27-coverlekk-{before,after}-*.png
 
 ## Hunker bygget 27.10 ~13:55
 - behaviors/hunker.js + stats.js (hunker, r 18, BODY 39/18,6, munning fra HUNKER_MUZZLE). Kun lavt cover, ryggskjold ×0,5, peek-telegraf, bytte ved flanking/2–3 salver, jakt uten cover.

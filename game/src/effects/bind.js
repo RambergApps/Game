@@ -7,6 +7,7 @@ import { spawn, state, clear, guard, MUZZLE_Z, HIT_Z } from './index.js';   // M
 import { pointHidden } from '../core/combat.js';   // samme okklusjonsregel som core og weapons/view34 (Revisjon 6)
 import { PROJ } from '../shared/projection.js';
 import { drawDecalHot, HOT_TIME } from './decals.js';
+import { bindCoverPose } from './coverpose.js';
 
 /** Visuell størrelse per fiendetype (enemies/stats.js). */
 export const TYPE_SIZE = { grunt: 1, flanker: 0.9, heavy: 1.35, grenadier: 1, kilnAlpha: 1.5, ashmaw: 1.4 };
@@ -95,14 +96,15 @@ function bindImpl(world, opts) {
     }
   });
   if (O.spawn) {
-    on('spawnWarn', (p) => p && spawn(world, 'crack', { x: p.x, y: p.y, t: p.t, id: p.id, size: sizeOf(p.type) }));
-    on('spawnRise', (p) => p && spawn(world, 'rise', { x: p.x, y: p.y, id: p.id, size: sizeOf(p.type) }));
+    on('spawnWarn', (p) => p && spawn(world, 'crack', { x: p.x, y: p.y, t: p.t, id: p.id, size: sizeOf(p.type), hidden: hid(p.x, p.y, 2) }));
+    on('spawnRise', (p) => p && spawn(world, 'rise', { x: p.x, y: p.y, id: p.id, size: sizeOf(p.type), hidden: hid(p.x, p.y, 2) }));   // 27.10: bak høy dekning → under-laget (ellers lekker grus over containertaket)
   }
+  bindCoverPose(world, st, on);   // Warden over dekning: støv i kanten + eksponerte treffgnister (coverpose.js)
   installHotHook(world, st);
   // ny bane / omstart: tøm partikler og dekaler (Levels nullstiller verden)
   on('levelStart', () => clear(world)); on('restart', () => clear(world));
   on('arenaLoaded', () => { st.hot.length = 0; });
-  st.offs = () => { for (const f of offs) f(); offs.length = 0; st.offs = null; st.owns = null; st.flushHits = null; st.flushMz = null; };
+  st.offs = () => { for (const f of offs) f(); offs.length = 0; st.offs = null; st.owns = null; st.flushHits = null; st.flushMz = null; st.tickPose = null; st.tickCue = null; };
   return st.offs;
 }
 

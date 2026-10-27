@@ -49,7 +49,34 @@ const LN = Math.max(0, -LIGHT_DIR.y), LW = Math.max(0, -LIGHT_DIR.x);
 
 // Hver maler får (c, R, S): S = { w, d (topp-dybde, forkortet), f (fronthøyde, forkortet), g (forkorting), horiz }
 // Toppflaten ligger i y ∈ [0, d], fronten i [d, d + f]. Lang akse er x når horiz; ellers ligger objektet nord–sør.
-function paintNSBarrier(c, R, S) {
+function paintNSBarrier(c, R, S) { return (globalThis.__BREACH_NSV === 4 ? paintNSBarrierV4 : paintNSBarrierV5)(c, R, S); }
+// v5 (27.10): lang, lav jersey-rekke. Toppen senket (front bare 28 % av løftet), tverrprofil fot–flanke–rygg–flanke–fot,
+// tydelige tverrfuger ca. hver 1,5 rute (leses som liggende seksjoner, ikke søyle), sørende med jersey-trapes + gul/svart stripe.
+function paintNSBarrierV5(c, R, S) {
+  // 27.10 sent: stykker under ~1,4 rute (Arenas 0,75×1) blir ÉN lav blokk med skrå fot og stripe etter frø – ikke to klemte.
+  // Rekke av 2–3 korte, lave jersey-blokker med gulv mellom (aldri én sammenhengende plate). Hver blokk: tverrprofil fot–flanke–rygg–flanke–fot
+  // og egen lav sørende (jersey-trapes). Toppen er senket: fronten er bare 28 % av løftet, så ingenting leses høyere enn treffboksen.
+  const { w, d, f } = S, CON = tint([104, 107, 110], R.r(0.84, 1.0)), fe = f * 0.28, y0 = f - fe, n = S.dw < 44 ? 1 : Math.max(2, Math.round(S.dw / 30)), gap = Math.min(5, d / n * 0.22);
+  const xs = [0.16, 0.27, 0.42, 0.58, 0.73, 0.84].map((k) => k * w), tone = [-0.38, -0.06 + 0.08 * LW, 0.02, -0.24, -0.46], X0 = xs[0], XW = xs[5] - xs[0];
+  const sd = (d - gap * (n - 1)) / n, hzAt = S.hz ? (R() < 0.5 ? 0 : n - 1) : -1;
+  for (let j = 0; j < n; j++) {
+    const ya = y0 + j * (sd + gap), ey = ya + sd;
+    c.fillStyle = 'rgba(0,0,0,0.42)'; c.fillRect(xs[5], ya + 1.5, 2.5, sd + fe - 1); c.fillStyle = 'rgba(0,0,0,0.2)'; c.fillRect(xs[5] + 2.5, ya + 2, 1.5, sd + fe - 1);   // lav kontaktskygge østover
+    c.fillStyle = 'rgba(0,0,0,0.35)'; c.fillRect(X0, ey + fe, XW + 2, Math.min(gap, 2.5));                                                                           // skygge i gulvfugen
+    for (let i = 0; i < 5; i++) { c.fillStyle = rgb(CON, tone[i]); c.fillRect(xs[i], ya, xs[i + 1] - xs[i], sd); }
+    c.fillStyle = 'rgba(255,255,255,0.10)'; c.fillRect(xs[2], ya, 0.6, sd); c.fillStyle = 'rgba(0,0,0,0.3)'; c.fillRect(xs[3], ya, 0.6, sd); c.fillRect(xs[1] - 0.3, ya, 0.6, sd); c.fillRect(xs[4] - 0.3, ya, 0.6, sd);
+    c.fillStyle = rgb(CON, 0.1, 0.8); c.fillRect(xs[1], ya, xs[4] - xs[1], 0.7);   // lys nordkant
+    c.save(); c.beginPath(); c.rect(X0, ya, XW, sd); c.clip(); speckle(c, R, X0, ya, XW, sd, Math.round(XW * sd / 9), [40, 40, 40], 0.12, 0.4); if (R() < 0.5) stain(c, R, X0 + R() * XW, ya + R() * sd, R.r(3, 6), R.r(2, 3), [38, 34, 30], 0.35);
+    c.fillStyle = grad(c, X0, 0, X0 + XW, 0, [[0, 'rgba(60,44,28,0.35)'], [0.2, 'rgba(60,44,28,0)'], [0.8, 'rgba(60,44,28,0)'], [1, 'rgba(60,44,28,0.4)']]); c.fillRect(X0, ya, XW, sd); c.restore();
+    c.fillStyle = 'rgba(10,10,10,0.7)'; c.fillRect(w * 0.47, ya + sd * 0.45, w * 0.06, 1.2);   // løftehull
+    for (let q = 0; q < 2; q++) if (R() < 0.7) { c.fillStyle = rgb(CON, -0.5, 0.9); const cx = R() < 0.5 ? xs[1] : xs[4] - 2, cy = ya + R() * sd; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + 2, cy + R.r(1, 3)); c.lineTo(cx, cy + R.r(2, 4)); c.fill(); }
+    c.fillStyle = 'rgba(0,0,0,0.45)'; c.fillRect(X0, ey, XW, 0.7);
+    c.fillStyle = grad(c, 0, ey, 0, ey + fe, [[0, rgb(CON, -0.16)], [1, rgb(CON, -0.36)]]); c.beginPath(); c.moveTo(xs[2], ey); c.lineTo(xs[3], ey); c.lineTo(xs[4], ey + fe * 0.55); c.lineTo(xs[5], ey + fe); c.lineTo(X0, ey + fe); c.lineTo(xs[1], ey + fe * 0.55); c.closePath(); c.fill();
+    if (j === hzAt) { hazard(c, xs[1] + 0.5, ey + fe * 0.5, xs[4] - xs[1] - 1, fe * 0.38, 1.3); c.fillStyle = 'rgba(0,0,0,0.2)'; c.fillRect(X0, ey + fe * 0.5, XW, fe * 0.4); }
+    c.fillStyle = 'rgba(0,0,0,0.5)'; c.fillRect(X0 - 0.5, ey + fe - 0.8, XW + 1, 1);
+  }
+}
+function paintNSBarrierV4(c, R, S) {
   // Bevisst juks: lys betongtopp (lyseste flate) med langsgående midtrille, lav sørkant (40 % av løftet), ingen sideflate, kort sideskygge.
   const { w, d, f, g } = S, CON = tint([104, 107, 110], R.r(0.84, 1.0)), n = Math.max(1, Math.round(S.dw / 64)), y0 = f * 0.6, fe = f * 0.4, sx = LW >= 0 ? 1 : -1;
   c.fillStyle = 'rgba(0,0,0,0.38)'; c.fillRect(sx > 0 ? w : -4, y0 + 1, 4, d + fe);                 // kort skygge til siden
@@ -252,7 +279,7 @@ function build(kind, o, H, P, qx, qy, seed) {
   const nsB = !horiz && kind === 'barrier';
   if (!nsB) for (let q = 4; q >= 0; q--) { const e = q * 1.2; c.fillStyle = `rgba(0,0,0,${0.13})`; c.beginPath();
     c.moveTo(fx0 - e * 0.3, fy0 - e * 0.3 * g); c.lineTo(fx0 + fw + e * 0.3, fy0 - e * 0.3 * g); c.lineTo(fx0 + fw + sx + e, fy0 + sy - e * g); c.lineTo(fx0 + fw + sx + e, fy0 + fh + sy + e * g); c.lineTo(fx0 + sx - e * 0.5, fy0 + fh + sy + e * g); c.lineTo(fx0 - e * 0.3, fy0 + fh + e * 0.3 * g); c.closePath(); c.fill(); }
-  if (!nsB) c.fillStyle = grad(c, 0, d + f - 1, 0, d + f + 3 * g, [[0, 'rgba(0,0,0,0.8)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(-1.5, d + f - 1, o.w + 3, 3 * g + 1);
+  if (!nsB) { c.fillStyle = grad(c, 0, d + f - 1, 0, d + f + 3 * g, [[0, 'rgba(0,0,0,0.8)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(-1.5, d + f - 1, o.w + 3, 3 * g + 1); }   // 27.10: klammer – før lakk fillRect ut for NS-barrierer (hard svart strek under)
   if (globalThis.__COVER_DEBUG) { c.fillStyle = '#f00'; c.fillRect(0, 0, o.w, d); c.fillStyle = '#0f0'; c.fillRect(0, d, o.w, f); }
   else {
     if (!horiz && (kind === 'barrier' || kind === 'sandbag' || kind === 'crates')) paintNS(kind, c, R, S); else PAINT[kind](c, R, S);
