@@ -1,24 +1,23 @@
-# Status – Breach Mellomsekvens (maler mellomsekvenspanelene)
-Oppdatert: 2026-10-26 14:15
+# Status – Mellomsekvens-maler
+Oppdatert: 2026-10-27 19:00
 
 ## Ferdig
-- Alle sju sekvensene er malt, godkjent av Breach og AKTIVE i PAINTED_PANELS:
-  intro-01..04, yard-clear-01..03, refinery-clear-01..04, foundry-core-01..04,
-  ashmaw-rise-01..04, ending-01..04, fallen-01. Filene ligger i game/img/story/<id>.webp (1920×1080, <400 kB).
-- Stilguide: reviews/mellomsekvens-stilguide-2026-10-23.md (promptmal, troppens kjennetegn, cyan-regelen, kontrolliste).
-- Review: reviews/mellomsekvens-2026-10-23.md. Sammenligninger: reviews/img/story-<sekvens>-panels.png og *-cam-check.png.
-- Intro-video: reviews/img/intro-malt.mp4. Råbilder og skript: reviews/img/mellomsekvens-raw/.
+- 7 sekvenser / 24 paneler godkjent og live.
+- NYTT: ending-03b (gjenforening ved heisburet) levert 27.10: game/img/story/ending-03b.webp (1920×1080, 246 kB, q85).
+  - Sammenligning: reviews/img/story-ending-panels-03b.png. Kamerasjekk: reviews/img/ending-03b-cam-check.png.
+  - Råbilder: reviews/img/mellomsekvens-raw/ending-03b-a.jpg (forkastet: cyan visir på troppen, 4 figurer) og ending-03b-b.jpg (valgt).
+  - Kamerabane (Story): [1.0,.5,.58]→[1.15,.5,.42], 7 s. Blåmåling: kun Warden har cyan/blått.
+- Stilguide: reviews/mellomsekvens-stilguide-2026-10-23.md. Review: reviews/mellomsekvens-2026-10-23.md.
 
 ## Pågår
-- Ingenting. STANDBY etter ordre fra Breach 26.10 (Alexander sparer ressurser).
+- Ingenting. Venter på Breachs vurdering av ending-03b.
 
-## Neste (bare på ordre fra Breach)
-- Mulige ommalinger når Wardens endelige design (variant C) er klar.
-- yard-clear-02: tydelig land innover (asfalt og containere) i stedet for noe som kan leses som vann.
-- Mulig skarpere oppskalering (generatoren gir 1280×720).
+## Neste (bare på ordre)
+- Eventuell ommaling av ending-03b (synligere sprekk i visiret, buret på bakken).
+- Ommaling for Warden variant C, yard-clear-02 landfiks, skarpere oppskalering.
 
 ## Blokkert av
-- Ingenting. Venter på ordre.
+- Ingenting. Story og brett må legge ending-03b inn i cutscenes.js og PAINTED_PANELS.
 
 ## Siste skjermbilde
-- reviews/img/story-foundry-core-panels.png
+- reviews/img/story-ending-panels-03b.png

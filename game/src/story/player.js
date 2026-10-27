@@ -62,6 +62,26 @@ export const storyEvents = (() => {
 // Stemme-manifest (Lyd v1.7): brukes bare til å vente på at siste replikk er ferdig før autoEnd. Feiltolerant, lastes én gang.
 const VOICE_START = 0.16, VOICE_TAIL = 0.1, VOICE_BREATH = 0.2, NO_VOICE_MIN = 3.3;   // v2 27.10 (Breach): hale 0,1 s, pust ~0,2 s ved talerbytte
 let voiceManifest = null, voiceManifestP = null;
+// Tekstvakt (27.10): en manifestoppføring brukes bare hvis tekstfeltet matcher linjens tekst (apostrof/mellomrom normalisert).
+const normText = (t) => String(t ?? '').replace(/[’‘`]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim().toLowerCase();
+function voiceEntry(id, lineId, text) {
+  const v = voiceManifest?.[id]?.[lineId];
+  if (!v) return null;
+  return v.text === undefined || normText(v.text) === normText(text) ? v : null;
+}
+/** true hvis manifestet for sekvensen har minst én oppføring som ikke matcher manuset (eller ekstra/manglende nøkler). */
+const staleCache = new Map();
+export function staleVoice(id) {
+  if (!voiceManifest?.[id]) return false;
+  if (!staleCache.has(id)) {
+    const cs = CUTSCENES[id], sc = voiceManifest[id], want = new Map();
+    cs?.panels.forEach((p, pi) => p.lines.forEach((l, li) => want.set(`${pi}-${li}`, l.text)));
+    let bad = false;
+    for (const [k, e] of Object.entries(sc)) if (!want.has(k) || (e.text !== undefined && normText(e.text) !== normText(want.get(k)))) bad = true;
+    staleCache.set(id, bad);
+  }
+  return staleCache.get(id);
+}
 export function loadVoiceManifest() {
   if (!voiceManifestP) voiceManifestP = fetch(new URL('../../assets/voice/manifest.json', import.meta.url))
     .then((r) => (r.ok ? r.json() : null)).catch(() => null).then((m) => (voiceManifest = m?.scenes || null));
@@ -99,7 +119,12 @@ export function preloadCutscene(id, { paintedOnly = false } = {}) {
 /** Malt panelbilde (img/story/<id>.webp) hvis panelet står i PAINTED_PANELS, ellers null → kodetegnet scene. */
 const imgCache = new Map();
 function panelImage(p) {
-  if (!p.image || !PAINTED_PANELS.has(p.id)) return Promise.resolve(null);
+  // eget bilde bare når id-en står i PAINTED_PANELS; ellers `placeholder` (f.eks. ending-03b → ending-03.webp), ellers kodetegnet scene
+  const own = p.image && PAINTED_PANELS.has(p.id) ? loadImg(p.image) : Promise.resolve(null);
+  return own.then((im) => im || (p.placeholder ? loadImg(p.placeholder) : null));   // mangler eget bilde: plassholder
+}
+function loadImg(src) {
+  const p = { image: src };
   if (!imgCache.has(p.image)) imgCache.set(p.image, new Promise((res) => {
     const im = new Image(); const t = setTimeout(() => res(null), 4000);
     // dekod før bruk, så første drawImage i sekvensen ikke hakker
@@ -149,9 +174,10 @@ async function play(id, o) {
     lineIndex++;
     const L = cur(), lineId = `${pi}-${li}`;
     const ev = { id, index: lineIndex, speaker: L.speaker, panel: pi, line: li, lineId, text: L.text, who: L.who ?? null };
-    emit(o, 'cutsceneLine', ev);   // Lyd (voice.js) lytter på denne
+    // utdatert manifest (teksten matcher ikke manuset): sekvensen går uten stemme i stedet for feil replikk på feil linje
+    emit(o, 'cutsceneLine', staleVoice(id) ? { ...ev, id: id + '~stale-voice' } : ev);   // Lyd (voice.js) lytter på denne
     emit(o, 'cutsceneText', ev);   // samme innhold, eget navn for logg/test
-    const v = voiceManifest?.[id]?.[lineId];
+    const v = voiceEntry(id, lineId, L.text);
     // samme regel som audio/voice.js: stemmen starter ved cutsceneLine + max(0,16, delay) – samtidig med typingen etter textDelay
     const start = sceneT + Math.max(VOICE_START, Math.min(1.5, +v?.delay || 0));
     const nx = panels[pi].lines[li + 1], who = (x) => x.who || x.speaker;

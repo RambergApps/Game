@@ -13,11 +13,7 @@
       "lines": [
         {
           "speaker": "caption",
-          "text": "Forty kilometres inland, the Deepwell drill hit something that bled."
-        },
-        {
-          "speaker": "caption",
-          "text": "Three days later, Kessa Port is still evacuating."
+          "text": "Three days ago, the Deepwell drill hit something that bled. Kessa Port has been evacuating ever since."
         }
       ]
     },
@@ -29,7 +25,7 @@
       "lines": [
         {
           "speaker": "announcer",
-          "text": "All civilians to the piers. Stay off open ground. Repeat: stay off open ground."
+          "text": "All civilians to the piers. Do not stop. Stay off open ground."
         }
       ]
     },
@@ -42,11 +38,11 @@
         {
           "speaker": "command",
           "who": "HALE",
-          "text": "Last ship loads in twenty. Garrison Nine holds the yard."
+          "text": "Last ship loads in twenty, Warden. Garrison Nine holds the yard till she’s gone."
         },
         {
           "speaker": "warden",
-          "text": "Then we hold the yard."
+          "text": "Then we hold the yard. Nobody gets left behind."
         }
       ]
     },
@@ -57,12 +53,8 @@
       "content": "Yard concrete ruptures, molten glow, container tipping; Husks only as smoky silhouettes in the fissure",
       "lines": [
         {
-          "speaker": "caption",
-          "text": "The asphalt glows from underneath."
-        },
-        {
           "speaker": "warden",
-          "text": "Contact. They’re coming up through the cracks."
+          "text": "Ground’s glowing... Contact! They’re coming up through the cracks!"
         }
       ]
     }

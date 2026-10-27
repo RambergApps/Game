@@ -19,12 +19,12 @@ Oppdatert: 2026-10-27 ca. 14:40. Eier: src/enemies (unntatt look/, som eies av M
 - Alexanders demotest. player/cover.js vann-diff venter hos Warden-design.
 
 ## Core: lowCoverProtecting (27.10 ~17:00, combat.js tillatt kun her)
-- Vinkelrett avstand (mål→nærmeste rektpunkt ≤48+r) + alle 7 kroppspunkter mot skytter må være blokkert. Kart: reviews/img/fiende-ai/2026-10-27-coverlekk-{before,after}-*.png
+- Vinkelrett+alle kroppspunkter (16:43). Hunker-munning: HUNKER_MUZZLE.fwd/side, side til høyre for coverFacing (weapon.js muzzleXY).
 
 ## Hunker bygget 27.10 ~13:55
 - behaviors/hunker.js + stats.js (hunker, r 18, BODY 39/18,6, munning fra HUNKER_MUZZLE). Kun lavt cover, ryggskjold ×0,5, peek-telegraf, bytte ved flanking/2–3 salver, jakt uten cover.
 - Test (tools/hunker-test.mjs): cover ✓, skjold 5/10 ✓, telegraf 0,50/0,55 s ✓, bytte ✓, 0 konsollfeil. Ikke i levels-bølger ennå.
 ## Hunker-runde 2 (27.10 ~14:20)
 - Peek/fire kun fra dekningsplass (dukket/peek → telegraph → fire, gate i setState); krøket sprint cover/crouch 0,5; egen kantavstand 20 px (def.spotOffset, kun Hunker).
-## «1–3» prøvd og rullet tilbake (27.10 ~15:00)
-- 27.10 ~15:00: Hunker-munning bruker HUNKER_MUZZLE.fwd/side (side til høyre for coverFacing/facing, y ned) via weapon.muzzleXY; verifisert i hunker-test.
+## Skjult skade 1-5 analysert (27.10 ~18:30)
+- 141 + halvplan rev2 i combat.js (endShield, 30°). Test #1/#2/#4 beskyttet. reviews/fiende-ai-skjult-skade-2026-10-27.md

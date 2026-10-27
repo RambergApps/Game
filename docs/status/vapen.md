@@ -1,4 +1,4 @@
-# Vapen – status (2026-10-27 16:51)
+# Vapen – status (2026-10-27 17:46)
 Oppdatert: 2026-10-27 13:20. Mål: demo av brett 1. Rot: /workspace/breach/game.
 
 ## Ferdig
@@ -25,5 +25,5 @@ Oppdatert: 2026-10-27 13:20. Mål: demo av brett 1. Rot: /workspace/breach/game.
 - Story: restartWave (fiender ved restart ikke testet). src/effects/floor.js gir 404 i ui/test.html og smoke (ikke min fil).
 - Bossangrep og videre pausemeny venter til etter demoen.
 
-## Siste skjermbilde
-- S-12 kloss hold: pickBody+bodySweep (weapons/index.js), TUNING.pointBlank; Lurcher hip 0.48→0.99, aim 0.04→0.97 pellets. Se weapons/tools/pointblank.md. Rifle/M-4-sjekk gjenstår.
+- S-12 kloss hold: pickBody (≤ TUNING.pointBlank.range 100 px) + bodySweep m/ny sikting (weapons/index.js). Lurcher hip 0.48→1.00. Regresjon 80–320 px: rifle/S-12 aim uendret, M-4 hip én celle ±0.15 (støy). weapons/tools/pointblank-regression.md.
+- UI: Voice-slider (settings.js/settingsScreen.js → setVoiceVolume?.(), også ved oppstart). ui/tools/voice.cjs, shots/22-voice-slider.png.

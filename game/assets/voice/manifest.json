@@ -4,77 +4,53 @@
   "intro": {
    "0-0": {
     "file": "intro/0-0.ogg",
-    "dur": 6.31,
+    "dur": 7.21,
     "delay": 1.2,
     "speaker": "caption",
     "who": null,
-    "text": "Forty kilometres inland, the Deepwell drill hit something that bled."
-   },
-   "0-1": {
-    "file": "intro/0-1.ogg",
-    "dur": 4.71,
-    "delay": 0,
-    "speaker": "caption",
-    "who": null,
-    "text": "Three days later, Kessa Port is still evacuating."
+    "text": "Three days ago, the Deepwell drill hit something that bled. Kessa Port has been evacuating ever since."
    },
    "1-0": {
     "file": "intro/1-0.ogg",
-    "dur": 7.81,
+    "dur": 6.01,
     "delay": 0.6,
     "speaker": "announcer",
     "who": null,
-    "text": "All civilians to the piers. Stay off open ground. Repeat: stay off open ground."
+    "text": "All civilians to the piers. Do not stop. Stay off open ground."
    },
    "2-0": {
     "file": "intro/2-0.ogg",
-    "dur": 4.11,
+    "dur": 5.71,
     "delay": 0.6,
     "speaker": "command",
     "who": "HALE",
-    "text": "Last ship loads in twenty. Garrison Nine holds the yard."
+    "text": "Last ship loads in twenty, Warden. Garrison Nine holds the yard till she’s gone."
    },
    "2-1": {
     "file": "intro/2-1.ogg",
-    "dur": 1.26,
+    "dur": 3.61,
     "delay": 0,
     "speaker": "warden",
     "who": null,
-    "text": "Then we hold the yard."
+    "text": "Then we hold the yard. Nobody gets left behind."
    },
    "3-0": {
     "file": "intro/3-0.ogg",
-    "dur": 3.81,
+    "dur": 4.41,
     "delay": 0.8,
-    "speaker": "caption",
-    "who": null,
-    "text": "The asphalt glows from underneath."
-   },
-   "3-1": {
-    "file": "intro/3-1.ogg",
-    "dur": 2.89,
-    "delay": 0,
     "speaker": "warden",
     "who": null,
-    "text": "Contact. They’re coming up through the cracks."
+    "text": "Ground’s glowing... Contact! They’re coming up through the cracks!"
    }
   },
   "yard-clear": {
    "0-0": {
     "file": "yard-clear/0-0.ogg",
-    "dur": 3.41,
+    "dur": 4.11,
     "delay": 1,
-    "speaker": "caption",
-    "who": null,
-    "text": "The last ship clears the breakwater."
-   },
-   "0-1": {
-    "file": "yard-clear/0-1.ogg",
-    "dur": 3.31,
-    "delay": 0,
     "speaker": "command",
     "who": "BRANDT",
-    "text": "That’s everyone. Everyone but us."
+    "text": "Last ship’s out. That’s everyone... but us."
    },
    "1-0": {
     "file": "yard-clear/1-0.ogg",
@@ -82,73 +58,57 @@
     "delay": 0.5,
     "speaker": "command",
     "who": "COMMAND",
-    "text": "Garrison Nine, the swarm is moving inland. Toward the refinery."
+    "text": "Garrison Nine, the swarm is turning inland, straight for the refinery."
    },
    "1-1": {
     "file": "yard-clear/1-1.ogg",
-    "dur": 2.96,
+    "dur": 3.41,
     "delay": 0,
     "speaker": "warden",
     "who": null,
-    "text": "They’re not chasing people. They’re chasing heat."
+    "text": "They were never chasing people. They’re chasing heat."
    },
    "2-0": {
     "file": "yard-clear/2-0.ogg",
-    "dur": 5.31,
+    "dur": 3.61,
     "delay": 1,
-    "speaker": "caption",
-    "who": null,
-    "text": "Deepwell Refinery. Eleven million litres of fuel."
-   },
-   "2-1": {
-    "file": "yard-clear/2-1.ogg",
-    "dur": 1.64,
-    "delay": 0,
     "speaker": "warden",
     "who": null,
-    "text": "Then that’s where we stop them."
+    "text": "Eleven million litres of fuel. That’s where we stop them."
    }
   },
   "refinery-clear": {
    "0-0": {
     "file": "refinery-clear/0-0.ogg",
-    "dur": 5.31,
+    "dur": 4.91,
     "delay": 1,
     "speaker": "caption",
     "who": null,
-    "text": "The Kiln goes down. Its core keeps burning for a full minute."
+    "text": "The Kiln falls, but its core burns on for a full minute."
    },
    "0-1": {
     "file": "refinery-clear/0-1.ogg",
-    "dur": 2.85,
+    "dur": 2.91,
     "delay": 0,
     "speaker": "command",
     "who": "OKAFOR",
-    "text": "Warden. Look at the drill tower."
+    "text": "Warden... look under the drill tower."
    },
    "1-0": {
     "file": "refinery-clear/1-0.ogg",
-    "dur": 6.01,
+    "dur": 6.61,
     "delay": 1.2,
-    "speaker": "caption",
-    "who": null,
-    "text": "Under the rig, the borehole. Wide as a street. Breathing heat."
-   },
-   "1-1": {
-    "file": "refinery-clear/1-1.ogg",
-    "dur": 4.11,
-    "delay": 0,
     "speaker": "command",
     "who": "OKAFOR",
-    "text": "We didn’t find them. We drilled into their house."
+    "text": "It’s wide as a street, and it’s breathing. We didn’t find them. We drilled into their house."
    },
    "2-0": {
     "file": "refinery-clear/2-0.ogg",
-    "dur": 3.11,
+    "dur": 4.31,
     "delay": 0.5,
     "speaker": "command",
     "who": "COMMAND",
-    "text": "Seal it. Charges at the bottom of the shaft."
+    "text": "Then we close the door. Seal it, charges at the bottom of the shaft."
    },
    "2-1": {
     "file": "refinery-clear/2-1.ogg",
@@ -160,37 +120,29 @@
    },
    "2-2": {
     "file": "refinery-clear/2-2.ogg",
-    "dur": 1.63,
+    "dur": 1.9,
     "delay": 0,
     "speaker": "command",
     "who": "HALE",
-    "text": "All the way."
+    "text": "All the way down."
    },
    "3-0": {
     "file": "refinery-clear/3-0.ogg",
-    "dur": 2.44,
+    "dur": 3.31,
     "delay": 0.6,
     "speaker": "warden",
     "who": null,
-    "text": "Garrison Nine. We’re going down."
+    "text": "Garrison Nine, into the cage. We’re going down."
    }
   },
   "foundry-core": {
    "0-0": {
     "file": "foundry-core/0-0.ogg",
-    "dur": 4.01,
+    "dur": 6.41,
     "delay": 1.2,
-    "speaker": "caption",
-    "who": null,
-    "text": "The Deepwell. Two kilometres down."
-   },
-   "0-1": {
-    "file": "foundry-core/0-1.ogg",
-    "dur": 5.41,
-    "delay": 0,
     "speaker": "command",
     "who": "OKAFOR",
-    "text": "Charge is set. The fuse is manual. Someone stays."
+    "text": "Two klicks down, charge is set. But the fuse is manual. Someone has to stay."
    },
    "1-0": {
     "file": "foundry-core/1-0.ogg",
@@ -202,7 +154,7 @@
    },
    "1-1": {
     "file": "foundry-core/1-1.ogg",
-    "dur": 3.71,
+    "dur": 4.11,
     "delay": 0,
     "speaker": "warden",
     "who": null,
@@ -210,53 +162,37 @@
    },
    "2-0": {
     "file": "foundry-core/2-0.ogg",
-    "dur": 5.11,
+    "dur": 5.21,
     "delay": 0.8,
-    "speaker": "caption",
-    "who": null,
-    "text": "The shaft starts to shake. Something big is climbing."
-   },
-   "2-1": {
-    "file": "foundry-core/2-1.ogg",
-    "dur": 2.69,
-    "delay": 0,
     "speaker": "command",
     "who": "BRANDT",
-    "text": "Contacts. Every crack. Hundreds."
+    "text": "The shaft’s shaking. Something big’s climbing! Contacts, every crack... hundreds!"
    },
    "3-0": {
     "file": "foundry-core/3-0.ogg",
-    "dur": 2.87,
+    "dur": 4.71,
     "delay": 0.5,
     "speaker": "warden",
     "who": null,
-    "text": "Seventy-five seconds. Hold the core."
+    "text": "Seventy-five seconds. Hold the core. Nothing touches that charge."
    }
   },
   "ashmaw-rise": {
    "0-0": {
     "file": "ashmaw-rise/0-0.ogg",
-    "dur": 3.91,
+    "dur": 4.01,
     "delay": 0.6,
-    "speaker": "caption",
-    "who": null,
-    "text": "The fuse is lit. The charge is counting down."
-   },
-   "0-1": {
-    "file": "ashmaw-rise/0-1.ogg",
-    "dur": 3.11,
-    "delay": 0,
     "speaker": "command",
     "who": "BRANDT",
-    "text": "Lift’s loaded. Warden, get on. Now."
+    "text": "Fuse is lit! Lift’s loaded. Warden, get on. Now!"
    },
    "1-0": {
     "file": "ashmaw-rise/1-0.ogg",
-    "dur": 8.91,
+    "dur": 8.11,
     "delay": 0.8,
     "speaker": "caption",
     "who": null,
-    "text": "The floor of the well splits. A black dome climbs out on short crab legs. Eight vents, burning like furnaces."
+    "text": "The floor of the well splits, and something climbs out. A black dome on crab legs, eight vents burning like furnaces."
    },
    "1-1": {
     "file": "ashmaw-rise/1-1.ogg",
@@ -268,11 +204,11 @@
    },
    "2-0": {
     "file": "ashmaw-rise/2-0.ogg",
-    "dur": 5.11,
+    "dur": 4.51,
     "delay": 0.4,
     "speaker": "command",
     "who": "HALE",
-    "text": "She’s on top of the charge. If she pulls it loose, it was all for nothing."
+    "text": "She’s on the charge! If she pulls it loose, it was all for nothing!"
    },
    "2-1": {
     "file": "ashmaw-rise/2-1.ogg",
@@ -292,7 +228,7 @@
    },
    "3-1": {
     "file": "ashmaw-rise/3-1.ogg",
-    "dur": 3.41,
+    "dur": 4.01,
     "delay": 0,
     "speaker": "warden",
     "who": null,
@@ -302,11 +238,11 @@
   "ending": {
    "0-0": {
     "file": "ending/0-0.ogg",
-    "dur": 5.91,
+    "dur": 5.81,
     "delay": 0.8,
     "speaker": "caption",
     "who": null,
-    "text": "The last vent bursts. Ashmaw sinks back into the well she came from."
+    "text": "The last vent bursts, and Ashmaw sinks back into the well she came from."
    },
    "0-1": {
     "file": "ending/0-1.ogg",
@@ -318,19 +254,11 @@
    },
    "1-0": {
     "file": "ending/1-0.ogg",
-    "dur": 6.11,
+    "dur": 9.21,
     "delay": 1,
     "speaker": "caption",
     "who": null,
-    "text": "The charge blows. The Deepwell folds in on itself, and on her."
-   },
-   "1-1": {
-    "file": "ending/1-1.ogg",
-    "dur": 6.01,
-    "delay": 0,
-    "speaker": "caption",
-    "who": null,
-    "text": "Without the heat, the Cinderborn slow. Then stop. Then sleep."
+    "text": "The charge blows, and the Deepwell folds in on her. Without the heat, the Cinderborn slow... then stop... then sleep."
    },
    "2-0": {
     "file": "ending/2-0.ogg",
@@ -340,24 +268,24 @@
     "who": "HALE",
     "text": "Lift’s coming back down, Warden. You coming up?"
    },
-   "2-1": {
-    "file": "ending/2-1.ogg",
-    "dur": 2.17,
-    "delay": 0,
+   "3-0": {
+    "file": "ending/3-0.ogg",
+    "dur": 2.3,
+    "delay": 0.5,
     "speaker": "warden",
     "who": null,
     "text": "Yeah. I’m coming up."
    },
-   "3-0": {
-    "file": "ending/3-0.ogg",
-    "dur": 5.71,
+   "4-0": {
+    "file": "ending/4-0.ogg",
+    "dur": 5.31,
     "delay": 1.4,
     "speaker": "caption",
     "who": null,
-    "text": "Kessa Yard. Dawn. Cold, for the first time in weeks."
+    "text": "Kessa Yard at dawn. Cold, for the first time in weeks."
    },
-   "3-1": {
-    "file": "ending/3-1.ogg",
+   "4-1": {
+    "file": "ending/4-1.ogg",
     "dur": 2.87,
     "delay": 0,
     "speaker": "warden",

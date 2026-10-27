@@ -32,10 +32,10 @@
    "center": 109,
    "shots": 20,
    "any": 1,
-   "frac": 0.97,
+   "frac": 0.99,
    "z0": 27.3,
-   "zPass": 21.7,
-   "hz": 22,
+   "zPass": 27,
+   "hz": 27,
    "missMin": 0,
    "state": "move",
    "posture": "hip",
@@ -46,7 +46,7 @@
    ],
    "coverState": "move"
   },
-  "d": -0.02
+  "d": 0
  },
  {
   "b": {
@@ -81,11 +81,11 @@
    "center": 109,
    "shots": 20,
    "any": 1,
-   "frac": 1,
+   "frac": 0.98,
    "z0": 27.3,
-   "zPass": 21.8,
-   "hz": 21.8,
-   "missMin": 0.3,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 0,
    "state": "move",
    "posture": "hip",
    "mz": [
@@ -95,7 +95,7 @@
    ],
    "coverState": "move"
   },
-  "d": 0.02
+  "d": 0
  },
  {
   "b": {
@@ -130,11 +130,11 @@
    "center": 109,
    "shots": 20,
    "any": 1,
-   "frac": 1,
+   "frac": 0.99,
    "z0": 27.3,
-   "zPass": 21.8,
-   "hz": 21.8,
-   "missMin": 0.3,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 1.2,
    "state": "move",
    "posture": "hip",
    "mz": [
@@ -144,7 +144,7 @@
    ],
    "coverState": "move"
   },
-  "d": 0.01
+  "d": 0
  },
  {
   "b": {
@@ -178,12 +178,12 @@
    "deg": 0,
    "center": 189,
    "shots": 20,
-   "any": 0.95,
+   "any": 1,
    "frac": 0.31,
    "z0": 27.3,
-   "zPass": 21.3,
-   "hz": 21.3,
-   "missMin": 0.4,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 0,
    "state": "move",
    "posture": "hip",
    "mz": [
@@ -228,11 +228,11 @@
    "center": 189,
    "shots": 20,
    "any": 1,
-   "frac": 0.95,
+   "frac": 0.74,
    "z0": 27.3,
-   "zPass": 21,
-   "hz": 21,
-   "missMin": 0,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 0.6,
    "state": "move",
    "posture": "hip",
    "mz": [
@@ -242,7 +242,7 @@
    ],
    "coverState": "move"
   },
-  "d": 0.21
+  "d": 0
  },
  {
   "b": {
@@ -279,14 +279,14 @@
    "any": 1,
    "frac": 0.91,
    "z0": 27.3,
-   "zPass": 21.3,
-   "hz": 21.3,
+   "zPass": 27,
+   "hz": 27,
    "missMin": 0,
    "state": "move",
    "posture": "hip",
    "mz": [
     -17.5,
-    -22.6,
+    -22.7,
     27.4
    ],
    "coverState": "move"
@@ -328,9 +328,9 @@
    "any": 0,
    "frac": 0,
    "z0": 27.3,
-   "zPass": 21.3,
+   "zPass": 27,
    "hz": null,
-   "missMin": 43.8,
+   "missMin": 43.7,
    "state": "move",
    "posture": "hip",
    "mz": [
@@ -377,14 +377,14 @@
    "any": 0,
    "frac": 0,
    "z0": 27.3,
-   "zPass": 21,
+   "zPass": 27,
    "hz": null,
-   "missMin": 44.3,
+   "missMin": 44.4,
    "state": "move",
    "posture": "hip",
    "mz": [
     26.6,
-    -2.8,
+    -2.9,
     27.4
    ],
    "coverState": "move"
@@ -424,10 +424,10 @@
    "center": 349,
    "shots": 20,
    "any": 1,
-   "frac": 0.81,
+   "frac": 0.82,
    "z0": 27.3,
-   "zPass": 21.3,
-   "hz": 21.3,
+   "zPass": 27,
+   "hz": 27,
    "missMin": 0,
    "state": "move",
    "posture": "hip",
@@ -438,7 +438,7 @@
    ],
    "coverState": "move"
   },
-  "d": -0.01
+  "d": 0
  },
  {
   "b": {
@@ -473,21 +473,21 @@
    "center": 109,
    "shots": 20,
    "any": 1,
-   "frac": 0.97,
+   "frac": 0.76,
    "z0": 27.3,
-   "zPass": 30,
-   "hz": 30,
+   "zPass": 27,
+   "hz": 27,
    "missMin": 0,
    "state": "move",
    "posture": "hip",
    "mz": [
     24.8,
-    -12.3,
+    -12.2,
     27.4
    ],
    "coverState": "move"
   },
-  "d": 0.21
+  "d": 0
  },
  {
   "b": {
@@ -524,9 +524,9 @@
    "any": 1,
    "frac": 1,
    "z0": 27.3,
-   "zPass": 29.8,
-   "hz": 29.8,
-   "missMin": 0,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 0.1,
    "state": "move",
    "posture": "hip",
    "mz": [
@@ -571,21 +571,21 @@
    "center": 109,
    "shots": 20,
    "any": 1,
-   "frac": 1,
+   "frac": 0.99,
    "z0": 27.3,
-   "zPass": 29.7,
-   "hz": 29.7,
+   "zPass": 27,
+   "hz": 27,
    "missMin": 0.1,
    "state": "move",
    "posture": "hip",
    "mz": [
     -17,
-    -23.1,
+    -23.2,
     27.4
    ],
    "coverState": "move"
   },
-  "d": 0.01
+  "d": 0
  },
  {
   "b": {
@@ -619,11 +619,11 @@
    "deg": 0,
    "center": 189,
    "shots": 20,
-   "any": 0.9,
-   "frac": 0.25,
+   "any": 0.85,
+   "frac": 0.21,
    "z0": 27.3,
-   "zPass": 29.9,
-   "hz": 29.8,
+   "zPass": 27,
+   "hz": 27,
    "missMin": 0.1,
    "state": "move",
    "posture": "hip",
@@ -634,7 +634,7 @@
    ],
    "coverState": "move"
   },
-  "d": 0.04
+  "d": 0
  },
  {
   "b": {
@@ -669,11 +669,11 @@
    "center": 189,
    "shots": 20,
    "any": 1,
-   "frac": 0.9,
+   "frac": 0.86,
    "z0": 27.3,
-   "zPass": 30,
-   "hz": 30,
-   "missMin": 0,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 0.1,
    "state": "move",
    "posture": "hip",
    "mz": [
@@ -683,7 +683,7 @@
    ],
    "coverState": "move"
   },
-  "d": 0.04
+  "d": 0
  },
  {
   "b": {
@@ -718,21 +718,21 @@
    "center": 189,
    "shots": 20,
    "any": 1,
-   "frac": 0.93,
+   "frac": 0.92,
    "z0": 27.3,
-   "zPass": 29.9,
-   "hz": 29.9,
-   "missMin": 0.2,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 0,
    "state": "move",
    "posture": "hip",
    "mz": [
-    -16.7,
+    -16.8,
     -23.4,
     27.4
    ],
    "coverState": "move"
   },
-  "d": 0
+  "d": -0.01
  },
  {
   "b": {
@@ -769,7 +769,7 @@
    "any": 0,
    "frac": 0,
    "z0": 27.3,
-   "zPass": 29.9,
+   "zPass": 27,
    "hz": null,
    "missMin": 45.1,
    "state": "move",
@@ -818,14 +818,14 @@
    "any": 0,
    "frac": 0,
    "z0": 27.3,
-   "zPass": 30,
+   "zPass": 27,
    "hz": null,
-   "missMin": 45.9,
+   "missMin": 45.8,
    "state": "move",
    "posture": "hip",
    "mz": [
     26.6,
-    -3.8,
+    -3.7,
     27.4
    ],
    "coverState": "move"
@@ -865,11 +865,11 @@
    "center": 349,
    "shots": 20,
    "any": 1,
-   "frac": 0.79,
+   "frac": 0.78,
    "z0": 27.3,
-   "zPass": 29.9,
-   "hz": 29.9,
-   "missMin": 0.2,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 0,
    "state": "move",
    "posture": "hip",
    "mz": [
@@ -879,7 +879,7 @@
    ],
    "coverState": "move"
   },
-  "d": 0.01
+  "d": 0
  },
  {
   "b": {
@@ -916,9 +916,9 @@
    "any": 1,
    "frac": 1,
    "z0": 29.3,
-   "zPass": 22.2,
-   "hz": 22.2,
-   "missMin": 0,
+   "zPass": 27.3,
+   "hz": 27.3,
+   "missMin": 12.8,
    "state": "move",
    "posture": "aim",
    "mz": [
@@ -965,14 +965,14 @@
    "any": 1,
    "frac": 1,
    "z0": 29.3,
-   "zPass": 22,
-   "hz": 22,
-   "missMin": 12.4,
+   "zPass": 27.3,
+   "hz": 27.3,
+   "missMin": 0,
    "state": "move",
    "posture": "aim",
    "mz": [
     25.1,
-    10.1,
+    10,
     29.3
    ],
    "coverState": "move"
@@ -1012,21 +1012,21 @@
    "center": 109,
    "shots": 20,
    "any": 0.95,
-   "frac": 0.95,
+   "frac": 0.94,
    "z0": 29.3,
-   "zPass": 22.3,
-   "hz": 22,
-   "missMin": 8.9,
+   "zPass": 27.3,
+   "hz": 27.3,
+   "missMin": 1.8,
    "state": "move",
    "posture": "aim",
    "mz": [
-    -9.8,
-    -28,
+    -9.7,
+    -28.1,
     29.3
    ],
    "coverState": "move"
   },
-  "d": 0.01
+  "d": 0
  },
  {
   "b": {
@@ -1060,12 +1060,12 @@
    "deg": 0,
    "center": 189,
    "shots": 20,
-   "any": 0.9,
-   "frac": 0.33,
+   "any": 1,
+   "frac": 0.38,
    "z0": 29.3,
-   "zPass": 21.6,
-   "hz": 21.7,
-   "missMin": 0,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 0.1,
    "state": "move",
    "posture": "aim",
    "mz": [
@@ -1075,7 +1075,7 @@
    ],
    "coverState": "move"
   },
-  "d": -0.05
+  "d": 0
  },
  {
   "b": {
@@ -1110,21 +1110,21 @@
    "center": 189,
    "shots": 20,
    "any": 1,
-   "frac": 1,
+   "frac": 0.85,
    "z0": 29.3,
-   "zPass": 21,
-   "hz": 21,
-   "missMin": 4.9,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 0,
    "state": "move",
    "posture": "aim",
    "mz": [
     25.4,
-    9.1,
+    9,
     29.3
    ],
    "coverState": "move"
   },
-  "d": 0.15
+  "d": 0
  },
  {
   "b": {
@@ -1161,8 +1161,8 @@
    "any": 0.95,
    "frac": 0.92,
    "z0": 29.3,
-   "zPass": 21.6,
-   "hz": 21.3,
+   "zPass": 27,
+   "hz": 27,
    "missMin": 0,
    "state": "move",
    "posture": "aim",
@@ -1210,7 +1210,7 @@
    "any": 0,
    "frac": 0,
    "z0": 29.3,
-   "zPass": 21.6,
+   "zPass": 27,
    "hz": null,
    "missMin": 42.5,
    "state": "move",
@@ -1259,7 +1259,7 @@
    "any": 0,
    "frac": 0,
    "z0": 29.3,
-   "zPass": 21,
+   "zPass": 27,
    "hz": null,
    "missMin": 42.4,
    "state": "move",
@@ -1308,8 +1308,8 @@
    "any": 0.95,
    "frac": 0.91,
    "z0": 29.3,
-   "zPass": 21.6,
-   "hz": 21.3,
+   "zPass": 27,
+   "hz": 27,
    "missMin": 0,
    "state": "move",
    "posture": "aim",
@@ -1355,10 +1355,10 @@
    "center": 109,
    "shots": 20,
    "any": 1,
-   "frac": 1,
+   "frac": 0.91,
    "z0": 29.3,
-   "zPass": 29.8,
-   "hz": 29.8,
+   "zPass": 27.1,
+   "hz": 27.2,
    "missMin": 0,
    "state": "move",
    "posture": "aim",
@@ -1369,7 +1369,7 @@
    ],
    "coverState": "move"
   },
-  "d": 0.09
+  "d": 0
  },
  {
   "b": {
@@ -1406,8 +1406,8 @@
    "any": 1,
    "frac": 1,
    "z0": 29.3,
-   "zPass": 29.9,
-   "hz": 29.9,
+   "zPass": 27.3,
+   "hz": 27.3,
    "missMin": 13.4,
    "state": "move",
    "posture": "aim",
@@ -1453,11 +1453,11 @@
    "center": 109,
    "shots": 20,
    "any": 0.95,
-   "frac": 0.95,
+   "frac": 0.94,
    "z0": 29.3,
-   "zPass": 29.8,
-   "hz": 29.9,
-   "missMin": 9.9,
+   "zPass": 27.3,
+   "hz": 27.3,
+   "missMin": 1.8,
    "state": "move",
    "posture": "aim",
    "mz": [
@@ -1467,7 +1467,7 @@
    ],
    "coverState": "move"
   },
-  "d": 0.01
+  "d": 0
  },
  {
   "b": {
@@ -1501,11 +1501,11 @@
    "deg": 0,
    "center": 189,
    "shots": 20,
-   "any": 0.95,
-   "frac": 0.33,
+   "any": 0.85,
+   "frac": 0.25,
    "z0": 29.3,
-   "zPass": 29.7,
-   "hz": 29.7,
+   "zPass": 27,
+   "hz": 27,
    "missMin": 0,
    "state": "move",
    "posture": "aim",
@@ -1516,7 +1516,7 @@
    ],
    "coverState": "move"
   },
-  "d": 0.08
+  "d": 0
  },
  {
   "b": {
@@ -1551,11 +1551,11 @@
    "center": 189,
    "shots": 20,
    "any": 1,
-   "frac": 1,
+   "frac": 0.98,
    "z0": 29.3,
-   "zPass": 30,
-   "hz": 30,
-   "missMin": 5.9,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 0.2,
    "state": "move",
    "posture": "aim",
    "mz": [
@@ -1565,7 +1565,7 @@
    ],
    "coverState": "move"
   },
-  "d": 0.02
+  "d": 0
  },
  {
   "b": {
@@ -1600,10 +1600,10 @@
    "center": 189,
    "shots": 20,
    "any": 0.95,
-   "frac": 0.92,
+   "frac": 0.91,
    "z0": 29.3,
-   "zPass": 29.7,
-   "hz": 29.8,
+   "zPass": 27,
+   "hz": 27,
    "missMin": 0,
    "state": "move",
    "posture": "aim",
@@ -1614,7 +1614,7 @@
    ],
    "coverState": "move"
   },
-  "d": 0.01
+  "d": 0
  },
  {
   "b": {
@@ -1651,7 +1651,7 @@
    "any": 0,
    "frac": 0,
    "z0": 29.3,
-   "zPass": 29.7,
+   "zPass": 27,
    "hz": null,
    "missMin": 43.5,
    "state": "move",
@@ -1700,14 +1700,14 @@
    "any": 0,
    "frac": 0,
    "z0": 29.3,
-   "zPass": 30,
+   "zPass": 27,
    "hz": null,
    "missMin": 43.4,
    "state": "move",
    "posture": "aim",
    "mz": [
     25.9,
-    6.8,
+    6.9,
     29.3
    ],
    "coverState": "move"
@@ -1749,8 +1749,8 @@
    "any": 0.95,
    "frac": 0.91,
    "z0": 29.3,
-   "zPass": 29.7,
-   "hz": 29.8,
+   "zPass": 27,
+   "hz": 27,
    "missMin": 0.1,
    "state": "move",
    "posture": "aim",
@@ -1798,13 +1798,13 @@
    "any": 1,
    "frac": 1,
    "z0": 27.5,
-   "zPass": 21.3,
-   "hz": 21.3,
-   "missMin": 10.2,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 9.8,
    "state": "move",
    "posture": "hip",
    "mz": [
-    25.1,
+    25.2,
     -9.5,
     27.5
    ],
@@ -1847,14 +1847,14 @@
    "any": 1,
    "frac": 1,
    "z0": 27.4,
-   "zPass": 21.3,
-   "hz": 21.3,
-   "missMin": 9.2,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 9.7,
    "state": "move",
    "posture": "hip",
    "mz": [
     26.2,
-    -1.7,
+    -1.6,
     27.5
    ],
    "coverState": "move"
@@ -1896,9 +1896,9 @@
    "any": 1,
    "frac": 1,
    "z0": 27.4,
-   "zPass": 21.3,
-   "hz": 21.3,
-   "missMin": 5,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 7,
    "state": "move",
    "posture": "hip",
    "mz": [
@@ -1945,8 +1945,8 @@
    "any": 0.55,
    "frac": 0.55,
    "z0": 27.4,
-   "zPass": 21.3,
-   "hz": 21.5,
+   "zPass": 27,
+   "hz": 27,
    "missMin": 4.8,
    "state": "move",
    "posture": "hip",
@@ -1994,9 +1994,9 @@
    "any": 1,
    "frac": 1,
    "z0": 27.4,
-   "zPass": 21,
-   "hz": 21,
-   "missMin": 12.7,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 13,
    "state": "move",
    "posture": "hip",
    "mz": [
@@ -2043,13 +2043,13 @@
    "any": 1,
    "frac": 1,
    "z0": 27.4,
-   "zPass": 21.3,
-   "hz": 21.3,
+   "zPass": 27,
+   "hz": 27,
    "missMin": 5.1,
    "state": "move",
    "posture": "hip",
    "mz": [
-    -16.5,
+    -16.6,
     -22.9,
     27.5
    ],
@@ -2092,14 +2092,14 @@
    "any": 0,
    "frac": 0,
    "z0": 27.4,
-   "zPass": 21.3,
+   "zPass": 27,
    "hz": null,
-   "missMin": 18.8,
+   "missMin": 19.1,
    "state": "move",
    "posture": "hip",
    "mz": [
     24.7,
-    -11.1,
+    -11.2,
     27.5
    ],
    "coverState": "move"
@@ -2141,9 +2141,9 @@
    "any": 0,
    "frac": 0,
    "z0": 27.4,
-   "zPass": 21,
+   "zPass": 27,
    "hz": null,
-   "missMin": 19.7,
+   "missMin": 19.4,
    "state": "move",
    "posture": "hip",
    "mz": [
@@ -2190,13 +2190,13 @@
    "any": 1,
    "frac": 1,
    "z0": 27.4,
-   "zPass": 21.3,
-   "hz": 21.3,
-   "missMin": 5,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 5.1,
    "state": "move",
    "posture": "hip",
    "mz": [
-    -16.1,
+    -16.2,
     -23.3,
     27.5
    ],
@@ -2239,14 +2239,14 @@
    "any": 1,
    "frac": 1,
    "z0": 29.4,
-   "zPass": 21.6,
-   "hz": 21.6,
+   "zPass": 27.1,
+   "hz": 27.1,
    "missMin": 7.9,
    "state": "move",
    "posture": "aim",
    "mz": [
     26.1,
-    2,
+    2.1,
     29.4
    ],
    "coverState": "move"
@@ -2288,13 +2288,13 @@
    "any": 1,
    "frac": 1,
    "z0": 29.4,
-   "zPass": 21.4,
-   "hz": 21.4,
-   "missMin": 7.5,
+   "zPass": 27.1,
+   "hz": 27.1,
+   "missMin": 8.2,
    "state": "move",
    "posture": "aim",
    "mz": [
-    24.7,
+    24.8,
     9.4,
     29.4
    ],
@@ -2337,13 +2337,13 @@
    "any": 0.95,
    "frac": 0.95,
    "z0": 29.4,
-   "zPass": 21.6,
-   "hz": 21.4,
+   "zPass": 27.1,
+   "hz": 27.1,
    "missMin": 4,
    "state": "move",
    "posture": "aim",
    "mz": [
-    -9,
+    -8.9,
     -27.9,
     29.4
    ],
@@ -2386,9 +2386,9 @@
    "any": 0.55,
    "frac": 0.55,
    "z0": 29.4,
-   "zPass": 21.6,
-   "hz": 21.5,
-   "missMin": 11.1,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 10.9,
    "state": "move",
    "posture": "aim",
    "mz": [
@@ -2435,14 +2435,14 @@
    "any": 1,
    "frac": 1,
    "z0": 29.4,
-   "zPass": 21,
-   "hz": 21,
-   "missMin": 10.8,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 11.3,
    "state": "move",
    "posture": "aim",
    "mz": [
     24.8,
-    9.3,
+    9.2,
     29.4
    ],
    "coverState": "move"
@@ -2484,14 +2484,14 @@
    "any": 0.9,
    "frac": 0.9,
    "z0": 29.4,
-   "zPass": 21.6,
-   "hz": 21,
+   "zPass": 27,
+   "hz": 27,
    "missMin": 2.3,
    "state": "move",
    "posture": "aim",
    "mz": [
-    -9.5,
-    -27.7,
+    -9.6,
+    -27.6,
     29.4
    ],
    "coverState": "move"
@@ -2533,14 +2533,14 @@
    "any": 0,
    "frac": 0,
    "z0": 29.4,
-   "zPass": 21.6,
+   "zPass": 27,
    "hz": null,
-   "missMin": 17.6,
+   "missMin": 17.7,
    "state": "move",
    "posture": "aim",
    "mz": [
     26.2,
-    1.6,
+    1.5,
     29.4
    ],
    "coverState": "move"
@@ -2582,14 +2582,14 @@
    "any": 0,
    "frac": 0,
    "z0": 29.4,
-   "zPass": 21,
+   "zPass": 27,
    "hz": null,
-   "missMin": 17.4,
+   "missMin": 17.5,
    "state": "move",
    "posture": "aim",
    "mz": [
     25.2,
-    8,
+    7.9,
     29.4
    ],
    "coverState": "move"
@@ -2631,8 +2631,8 @@
    "any": 0.9,
    "frac": 0.9,
    "z0": 29.4,
-   "zPass": 21.6,
-   "hz": 21,
+   "zPass": 27,
+   "hz": 27,
    "missMin": 2.3,
    "state": "move",
    "posture": "aim",
@@ -2680,13 +2680,13 @@
    "any": 1,
    "frac": 1,
    "z0": 27,
-   "zPass": 22.7,
-   "hz": 22.7,
-   "missMin": 12.8,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 12.5,
    "state": "move",
    "posture": "hip",
    "mz": [
-    37.5,
+    37.4,
     -14.1,
     27.1
    ],
@@ -2729,8 +2729,8 @@
    "any": 1,
    "frac": 1,
    "z0": 27,
-   "zPass": 22.7,
-   "hz": 22.7,
+   "zPass": 27,
+   "hz": 27,
    "missMin": 11.6,
    "state": "move",
    "posture": "hip",
@@ -2778,14 +2778,14 @@
    "any": 1,
    "frac": 1,
    "z0": 27,
-   "zPass": 22.7,
-   "hz": 22.7,
-   "missMin": 5.9,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 8.4,
    "state": "move",
    "posture": "hip",
    "mz": [
-    -25.9,
-    -32.3,
+    -26,
+    -32.2,
     27.1
    ],
    "coverState": "move"
@@ -2824,22 +2824,22 @@
    "deg": 0,
    "center": 189,
    "shots": 20,
-   "any": 0.35,
-   "frac": 0.35,
+   "any": 0.25,
+   "frac": 0.25,
    "z0": 27,
-   "zPass": 21.3,
-   "hz": 21,
-   "missMin": 0.9,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 2.4,
    "state": "move",
    "posture": "hip",
    "mz": [
     37.1,
-    -15.2,
+    -15.3,
     27.1
    ],
    "coverState": "move"
   },
-  "d": -0.05
+  "d": -0.15
  },
  {
   "b": {
@@ -2873,12 +2873,12 @@
    "deg": 15,
    "center": 189,
    "shots": 20,
-   "any": 0.95,
-   "frac": 0.95,
+   "any": 0.8,
+   "frac": 0.8,
    "z0": 27,
-   "zPass": 21,
-   "hz": 21,
-   "missMin": 4.6,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 4.9,
    "state": "move",
    "posture": "hip",
    "mz": [
@@ -2888,7 +2888,7 @@
    ],
    "coverState": "move"
   },
-  "d": 0.15
+  "d": 0
  },
  {
   "b": {
@@ -2925,14 +2925,14 @@
    "any": 1,
    "frac": 1,
    "z0": 27,
-   "zPass": 21.3,
-   "hz": 21.3,
-   "missMin": 0.2,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 1,
    "state": "move",
    "posture": "hip",
    "mz": [
-    -26.1,
-    -32.1,
+    -26,
+    -32.2,
     27.1
    ],
    "coverState": "move"
@@ -2971,12 +2971,12 @@
    "deg": 0,
    "center": 349,
    "shots": 20,
-   "any": 0.3,
-   "frac": 0.3,
+   "any": 0.35,
+   "frac": 0.35,
    "z0": 27,
-   "zPass": 21.3,
-   "hz": 22,
-   "missMin": 0.1,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 2.7,
    "state": "move",
    "posture": "hip",
    "mz": [
@@ -2986,7 +2986,7 @@
    ],
    "coverState": "move"
   },
-  "d": -0.05
+  "d": 0
  },
  {
   "b": {
@@ -3020,22 +3020,22 @@
    "deg": 15,
    "center": 349,
    "shots": 20,
-   "any": 0.65,
-   "frac": 0.65,
+   "any": 0.5,
+   "frac": 0.5,
    "z0": 27,
-   "zPass": 21,
-   "hz": 21,
-   "missMin": 1.9,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 1.2,
    "state": "move",
    "posture": "hip",
    "mz": [
     39.1,
-    -6.1,
+    -6.2,
     27.1
    ],
    "coverState": "move"
   },
-  "d": 0.15
+  "d": 0
  },
  {
   "b": {
@@ -3069,12 +3069,12 @@
    "deg": -90,
    "center": 349,
    "shots": 20,
-   "any": 0.7,
-   "frac": 0.7,
+   "any": 0.75,
+   "frac": 0.75,
    "z0": 27,
-   "zPass": 21.3,
-   "hz": 21,
-   "missMin": 0.2,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 0.3,
    "state": "move",
    "posture": "hip",
    "mz": [
@@ -3084,7 +3084,7 @@
    ],
    "coverState": "move"
   },
-  "d": -0.05
+  "d": 0
  },
  {
   "b": {
@@ -3121,13 +3121,13 @@
    "any": 1,
    "frac": 1,
    "z0": 29,
-   "zPass": 23.4,
-   "hz": 23.4,
-   "missMin": 8.2,
+   "zPass": 27.6,
+   "hz": 27.6,
+   "missMin": 8.1,
    "state": "move",
    "posture": "aim",
    "mz": [
-    39.4,
+    39.3,
     2.5,
     29
    ],
@@ -3170,14 +3170,14 @@
    "any": 1,
    "frac": 1,
    "z0": 29,
-   "zPass": 23.2,
-   "hz": 23.2,
-   "missMin": 7.7,
+   "zPass": 27.6,
+   "hz": 27.6,
+   "missMin": 8.3,
    "state": "move",
    "posture": "aim",
    "mz": [
     37.6,
-    12.6,
+    12.8,
     29
    ],
    "coverState": "move"
@@ -3219,13 +3219,13 @@
    "any": 0.95,
    "frac": 0.95,
    "z0": 29,
-   "zPass": 23.4,
-   "hz": 23.2,
+   "zPass": 27.6,
+   "hz": 27.6,
    "missMin": 4.2,
    "state": "move",
    "posture": "aim",
    "mz": [
-    -14,
+    -14.1,
     -40.1,
     29
    ],
@@ -3268,14 +3268,14 @@
    "any": 0.45,
    "frac": 0.45,
    "z0": 29,
-   "zPass": 21.6,
-   "hz": 21.7,
+   "zPass": 27,
+   "hz": 27,
    "missMin": 20.3,
    "state": "move",
    "posture": "aim",
    "mz": [
     39.4,
-    0.4,
+    0.5,
     29
    ],
    "coverState": "move"
@@ -3317,9 +3317,9 @@
    "any": 1,
    "frac": 1,
    "z0": 29,
-   "zPass": 21,
-   "hz": 21,
-   "missMin": 1,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 1.9,
    "state": "move",
    "posture": "aim",
    "mz": [
@@ -3366,9 +3366,9 @@
    "any": 0.9,
    "frac": 0.9,
    "z0": 29,
-   "zPass": 21.6,
-   "hz": 21,
-   "missMin": 4,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 3.9,
    "state": "move",
    "posture": "aim",
    "mz": [
@@ -3415,14 +3415,14 @@
    "any": 0.75,
    "frac": 0.75,
    "z0": 29,
-   "zPass": 21.6,
-   "hz": 21.4,
-   "missMin": 31.2,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 31.4,
    "state": "move",
    "posture": "aim",
    "mz": [
     39.4,
-    0.9,
+    1,
     29
    ],
    "coverState": "move"
@@ -3464,9 +3464,9 @@
    "any": 1,
    "frac": 1,
    "z0": 29,
-   "zPass": 21,
-   "hz": 21,
-   "missMin": 31,
+   "zPass": 27,
+   "hz": 27,
+   "missMin": 31.2,
    "state": "move",
    "posture": "aim",
    "mz": [
@@ -3513,8 +3513,8 @@
    "any": 0.9,
    "frac": 0.9,
    "z0": 29,
-   "zPass": 21.6,
-   "hz": 21,
+   "zPass": 27,
+   "hz": 27,
    "missMin": 3.5,
    "state": "move",
    "posture": "aim",

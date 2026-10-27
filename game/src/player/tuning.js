@@ -35,7 +35,7 @@ export const TUNING = {
   blindArmor: 0.5, staggerDmg: 25, staggerTime: 0.38, staggerCancelAt: 0.26, staggerKnock: 140, explosionStaggerR: 64,
   flinchTime: 0.12, hitFlash: 0.06,
   // helse
-  maxHp: 100, regenDelay: 4.5, regenPerSec: 18, regenRamp: 0.25, healthEventInterval: 0.25, deathTime: 1.1,
+  maxHp: 100, regenDelay: 3.5, regenPerSec: 18, regenRamp: 0.25, healthEventInterval: 0.25, deathTime: 1.1,
   omenVignetteStart: 0.75, omenSymbolBelow: 0.35,
 };
 

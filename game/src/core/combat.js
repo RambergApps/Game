@@ -126,10 +126,11 @@ export function updateProjectiles(dt, world) {
 // (nærmeste punkt, dvs. fra bakflaten) <= LOW_COVER_RANGE + r. Høy dekning teller også som blokk for et punkt.
 const LC_SAMPLES = [0, -1.4, -0.9, -0.45, 0.45, 0.9, 1.4].map(a => [Math.cos(a), Math.sin(a)]);
 export function lowCoverProtecting(world, p, target) {
-  const r = target.r || 14, reach = LOW_COVER_RANGE + r, near = [], high = [];
+  const r = target.r || 14, reach = LOW_COVER_RANGE + r, near = [], high = [], low = [];
   for (const c of world.cover) {
     if (c.type === 'high') { high.push(c); continue; }
     if (c.type !== 'low') continue;
+    low.push(c);
     const px = Math.max(c.x, Math.min(target.x, c.x + c.w)), py = Math.max(c.y, Math.min(target.y, c.y + c.h));
     if (dist(target.x, target.y, px, py) <= reach) near.push(c);
   }
@@ -139,7 +140,8 @@ export function lowCoverProtecting(world, p, target) {
   const blocked = (sx, sy, first) => {
     const L = dist(p.ox, p.oy, sx, sy);
     for (const c of near) { const t = segmentRect(p.ox, p.oy, sx, sy, c); if (t !== null && t * L >= SHOOTER_IGNORE) { if (first) hit = c; return true; } }
-    if (first) return false;                         // sentrumslinjen må gå gjennom lav dekning
+    if (first) return false;                         // sentrumslinjen må gå gjennom NÆR lav dekning
+    for (const c of low) { const t = segmentRect(p.ox, p.oy, sx, sy, c); if (t !== null && t * L >= SHOOTER_IGNORE) return true; } // 27.10 fiks 141: kantpunkter godtar alt lavt cover
     for (const c of high) { const t = segmentRect(p.ox, p.oy, sx, sy, c); if (t !== null && t * L >= SHOOTER_IGNORE) return true; }
     return false;
   };
@@ -147,9 +149,32 @@ export function lowCoverProtecting(world, p, target) {
   const rr = r * 0.95;
   for (let k = 1; k < LC_SAMPLES.length; k++) {
     const [ca, sa] = LC_SAMPLES[k], dx = ux * ca - uy * sa, dy = ux * sa + uy * ca; // roter retning-mot-skytter
-    if (!blocked(target.x + dx * rr, target.y + dy * rr, false)) return null;
+    const sx = target.x + dx * rr, sy = target.y + dy * rr;
+    if (!blocked(sx, sy, false) && !endShield(hit, target, sx, sy, p.ox, p.oy)) return null;
   }
   return hit;
+}
+
+// 27.10 halvplan-regel (Alexander, rev. 2 etter Tests skjult-gul #1/#2/#4): kalles bare når sentrumslinjen er blokkert av
+// Wardens eget (nære) lave cover c. Et fritt kantpunkt gjør ham treffbar KUN hvis skytteren står bak ham (Wardens side
+// av flaten), eller hvis punktet stikker ut forbi enden av c OG skytteren står forbi forlengelsen av den enden med
+// tydelig vinkel (>= END_PEEK_DEG mot normalen, målt fra endekanten). Frie punkter innenfor coverets bredde (linje over hjørnet) skjermes.
+const END_PEEK_TAN = Math.tan(30 * Math.PI / 180);
+function endShield(c, t, sx, sy, ox, oy) {
+  const inX = t.x >= c.x && t.x <= c.x + c.w, inY = t.y >= c.y && t.y <= c.y + c.h;
+  const gx = Math.max(c.x - t.x, t.x - (c.x + c.w), 0), gy = Math.max(c.y - t.y, t.y - (c.y + c.h), 0);
+  const vert = inX ? true : inY ? false : gy >= gx;            // true: Warden nord/sør for c (tangent = x)
+  // a = tangentakse, b = normalakse; lo/hi = endene, fFar = flaten på skytterens side
+  const a0 = vert ? c.x : c.y, a1 = vert ? c.x + c.w : c.y + c.h, tb = vert ? t.y : t.x, cb = vert ? c.y + c.h / 2 : c.x + c.w / 2;
+  const sa = vert ? sx : sy, oa = vert ? ox : oy, ob = vert ? oy : ox, near0 = tb < cb;  // Warden på lav side av normalaksen
+  const fWard = near0 ? (vert ? c.y : c.x) : (vert ? c.y + c.h : c.x + c.w);           // flaten Warden står inntil
+  const fFar = near0 ? (vert ? c.y + c.h : c.x + c.w) : (vert ? c.y : c.x);
+  if (near0 ? ob <= fWard : ob >= fWard) return false;          // skytter på Wardens side → fritt punkt teller
+  if (sa >= a0 && sa <= a1) return true;                         // punktet er innenfor bredden: linje over hjørnet → skjermet
+  const end = sa < a0 ? a0 : a1, lat = sa < a0 ? end - oa : oa - end; // hvor langt skytteren er forbi endens forlengelse
+  if (lat <= 0) return true;                                     // skytter foran coveret
+  const perp = Math.max(1, Math.abs(ob - fFar));
+  return lat < perp * END_PEEK_TAN;                              // forbi enden, men for spiss vinkel → skjermet
 }
 
 function segCircle(ax, ay, bx, by, cx, cy, r) {
