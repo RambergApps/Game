@@ -1,0 +1,44 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Breach audio – offline render</title></head>
+<body><p>Offline render of sound recipes (used by tools/render.cjs).</p>
+<script type="module">
+import { AudioEngine } from '../engine.js';
+import { createMusic } from '../music.js';
+import { createCredits, createMenuMusic } from '../stingers.js';
+import { createScene } from '../scene.js';
+import { createBed, SPEAKER_SOUND, IDLE_BED } from '../radio.js';
+const SR = 48000;
+function b64(f32) {
+  const u8 = new Uint8Array(f32.buffer); let s = '';
+  for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+// job: { sounds: [{name, at, opts}], dur, music: {intensity} | null, listener }
+window.renderJob = async (job) => {
+  const ac = new OfflineAudioContext(2, Math.ceil(SR * job.dur), SR);
+  const eng = new AudioEngine(ac);
+  eng.setMaster(job.master ?? 0.8);
+  if (job.listener) eng.listener = job.listener;
+  if (job.music) {
+    const m = createMusic(ac, eng.music, eng.reverbSend);
+    m.start(0); m.setIntensity(job.music.intensity, 0.01); m.scheduleUntil(job.dur);
+    if (job.music.fadeAt !== undefined) m.fadeOut(job.music.fade ?? 2.5, job.music.fadeAt);
+  }
+  if (job.credits) { // {at, stopAt}: rulletekst-løkken (v1.4.1)
+    const c = createCredits(ac, eng.master, eng.reverbSend); c.start(job.credits.at ?? 0.05); c.scheduleUntil(job.credits.stopAt ?? job.dur); if (job.credits.stopAt) c.stopAt(job.credits.stopAt, 4);
+  }
+  if (job.menu) { const mm = createMenuMusic(ac, eng.master, eng.reverbSend); mm.start(job.menu.at ?? 0.05); mm.scheduleUntil(job.menu.stopAt ?? job.dur); if (job.menu.stopAt) mm.stopAt(job.menu.stopAt, 1.2); }
+  if (job.scene) { const sc = createScene(ac, eng.radio, eng.reverbSend); sc.start(job.scene.id, job.scene.at ?? 0.05); for (const [i, at] of job.scene.panels || []) sc.panel(i, at); if (job.scene.stopAt) sc.stop(job.scene.stopAt, 1.2); }
+  if (job.paused) eng.setPaused(true); // mellomsekvens/pause: musikk dukkes som i spillet
+  if (job.bed) { // [{at, mode: 'idle'|speaker|'stop'}]
+    const bed = createBed(ac, eng.radio);
+    for (const b of job.bed) {
+      if (b.mode === 'stop') bed.stop(b.at, 0.5);
+      else { if (!bed.active) bed.start(b.at); bed.setMode(b.mode === 'idle' ? IDLE_BED : SPEAKER_SOUND[b.mode], b.at); }
+    }
+  }
+  for (const s of job.sounds || []) eng.play(s.name, { ...(s.opts || {}), when: s.at ?? 0.05, force: true });
+  const buf = await ac.startRendering();
+  return { sr: SR, L: b64(buf.getChannelData(0)), R: b64(buf.getChannelData(1)) };
+};
+window.ready = true;
+</script></body></html>

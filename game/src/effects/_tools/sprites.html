@@ -1,0 +1,18 @@
+<!doctype html><html><body style="margin:0;background:#3a3936"><canvas id="c" width="1600" height="900"></canvas>
+<script type="module">
+import * as S from '../sprites.js';
+const c = document.getElementById('c'), x = c.getContext('2d'); x.font = '12px system-ui';
+const items = [];
+for (const t of ['soot','smoke','dust','concrete','steam']) items.push([t, S.puff(t, 0)]);
+for (const h of [0,1,2]) items.push(['flame'+h, S.flame(h,0), 1]);
+for (const s of ['rifle','shotgun','marksman','enemy']) items.push([s, S.flash(s,0), 1]);
+for (const k of ['chitin','concrete','metal','rock']) items.push([k, S.shard(k,0)]);
+const sp = S.ichorSplat(0); items.push(['splat', sp.base], ['splat hot', sp.hot, 1]);
+items.push(['scorch', S.scorch(0)]);
+const bh = S.bulletHole('metal',0); items.push(['hole m', bh.base], ['hole m hot', bh.hot, 1], ['hole c', S.bulletHole('concrete',0).base]);
+items.push(['ring', S.ring(), 1], ['dustRing', S.dustRing()]);
+const cr = S.crack(0); cr.stages.forEach((s,i)=>{ items.push(['crack'+i, s.dark], ['glow'+i, s.glow, 1]); });
+const sh = S.sinkhole(0); items.push(['sink', sh.base], ['sink hot', sh.hot, 1], ['smear', S.smear()], ['droplet', S.droplet()], ['streak', S.streak(255,180,90),1]);
+let i = 0; for (const [n, img, add] of items) { const cx = (i % 10) * 160, cy = Math.floor(i / 10) * 180; x.globalCompositeOperation = add ? 'lighter' : 'source-over'; x.drawImage(img, cx + 5, cy + 5, 150, 150 * img.height / img.width); x.globalCompositeOperation='source-over'; x.fillStyle='#fff'; x.fillText(n, cx + 5, cy + 172); i++; }
+window.__done = true;
+</script></body></html>

@@ -1,0 +1,17 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>BREACH VFX – quality levels</title><style>body{margin:0;background:#0b0c0d}canvas{display:block}</style></head>
+<body><canvas id="c"></canvas>
+<script type="module">
+// Før/etter for kvalitetsnivåene: samme scene og tidspunkt, rad = nivå (high = dagens standard, uendret). Skala 2× (≈ spill 1,5× + litt).
+import { SCENES, simulate, drawScene, ground } from '../scenes.js'; import { warmup } from '../sprites.js'; import * as FX from '../index.js';
+const IDS = [['chitin', null], ['ichor', null], ['explosion', 0.3], ['explosion', 1.2], ['crack', null], ['rise', null]], LV = ['high', 'medium', 'low'];
+const PW = 380, PH = 300, PAD = 12, LABW = 110, HEAD = 70, W = LABW + IDS.length * (PW + PAD) + PAD, H = HEAD + LV.length * (PH + PAD) + PAD;
+const cv = document.getElementById('c'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d'); warmup();
+ctx.fillStyle = '#0d0e10'; ctx.fillRect(0, 0, W, H); ctx.fillStyle = '#e8edf1'; ctx.font = '700 30px "Arial Narrow", system-ui'; ctx.fillText('VFX QUALITY LEVELS — same moment, 2× zoom', PAD, 40);
+IDS.forEach(([id, t], c) => { const sc = SCENES.find((s) => s.id === id); ctx.fillStyle = '#9aa4ad'; ctx.font = '600 15px system-ui'; ctx.fillText(sc.title.slice(0, 40) + (t != null ? ` @ ${t}s` : ''), LABW + PAD + c * (PW + PAD), HEAD - 8); });
+LV.forEach((lv, r) => {
+  const y = HEAD + r * (PH + PAD); ctx.fillStyle = '#d9dee2'; ctx.font = '700 22px system-ui'; ctx.fillText(lv.toUpperCase(), PAD, y + PH / 2);
+  IDS.forEach(([id, t], c) => { const sc = SCENES.find((s) => s.id === id), w = { time: Math.min(0, sc.script[0][0]) }; FX.init(w, { warmup: false, quality: lv });
+    simulate(sc, t ?? sc.snap, w); const x = LABW + PAD + c * (PW + PAD); drawScene(ctx, sc, w, x, y, PW, PH, 2, ground(PW, PH, sc.seed, 'concrete', 2)); });
+});
+window.__done = true;
+</script></body></html>

@@ -1,0 +1,12 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0;background:#111"><canvas id="c" width="1200" height="560"></canvas>
+<script type="module">
+// Dekaler på dekning (Arenas krok): kulehull metall/betong og ichor på typiske flater. Øverst spillskala (1,5×), under 4× forstørret.
+import { drawDecalSprite, drawDecalHot } from '../decals.js';
+const c = document.getElementById('c'), x = c.getContext('2d'); x.font = '13px system-ui';
+const rows = [['bullet_metal', '#8a3a26', 'metal · red container'], ['bullet_metal', '#4a5560', 'metal · blue-grey container'], ['bullet_concrete', '#8f897e', 'concrete'], ['ichor', '#7a6a52', 'ichor · crate']];
+rows.forEach(([k, bg, label], j) => { const y0 = 20 + j * 135; x.fillStyle = bg; x.fillRect(10, y0, 1180, 120); x.fillStyle = '#eee'; x.fillText(label, 18, y0 + 16);
+  for (let i = 0; i < 6; i++) { const r = k === 'ichor' ? 6 + i : 2.2 + (i % 3) * 0.6; x.globalAlpha = 1;
+    x.save(); x.translate(60 + i * 32, y0 + 60); x.scale(1.5, 1.5); drawDecalSprite(x, k, r, i * 1.1, i * 7 + 1); x.restore();
+    x.save(); x.translate(330 + i * 140, y0 + 64); x.scale(4, 4); drawDecalSprite(x, k, r, i * 1.1, i * 7 + 1); if (i === 5) drawDecalHot(x, k, r, i * 1.1, i * 7 + 1, 0.8); x.restore(); } });
+x.fillStyle = '#ccc'; x.fillText('left: game scale (1.5×) · right: 4× · last column: hot overlay', 14, 552); window.__done = true;
+</script></body></html>

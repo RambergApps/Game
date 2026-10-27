@@ -1,0 +1,44 @@
+<!doctype html><html><body style="margin:0;background:#000"><canvas id="c" width="1600" height="900"></canvas>
+<script type="module">
+// Ytelsestest for effektsystemet. ?s=typical|heavy  ?q=high|medium|low  ?sync=0|1
+//  sync=0 (standard): kjører i requestAnimationFrame som i spillet, måler CPU-tid for update+draw('under')+draw('over') per bilde,
+//                     uten tilbakelesing (getImageData). Dette er tallet som sammenlignes med budsjettet (2 / 3,5 ms).
+//  sync=1: tvinger GPU-flush med getImageData etter hvert lag → pessimistisk øvre grense (inkl. rasterisering, men med synk-straff).
+// Scenarier (hendelser per sekund):
+//  typical: 10 skudd, 7 treff, 1 død / 3 s, 1 granat / 8 s, 1 sprekk / 4 s   (≈ 3–4 fiender, én spiller)
+//  heavy:   30 skudd, 25 treff, 1,4 døde/s, 1 granat/s, 1 sprekk / 1,2 s (verste realistiske topp)
+import * as FX from '../index.js'; import { ground } from '../scenes.js';
+const c = document.getElementById('c'), ctx = c.getContext('2d'), w = { time: 0 };
+const Qs = new URLSearchParams(location.search), SC = Qs.get('s') || 'typical', LV = Qs.get('q') || 'high', SYNC = Qs.get('sync') === '1';
+FX.init(w, { quality: LV });
+const RATE = SC === 'heavy' ? { shot: 30, hit: 25, nade: 1, death: 1 / 0.7, crack: 1 / 1.2 } : { shot: 10, hit: 7, nade: 1 / 8, death: 1 / 3, crack: 1 / 4 };
+const g = ground(1600, 900, 3, 'concrete', 1.5); const R = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
+const ms = [], iv = [], dt = 1 / 60, parts = { u: 0, under: 0, over: 0 }; const next = { shot: 0, hit: 0, nade: 0.5, death: 1, crack: 0.3 };
+const WARM = 120, FRAMES = 720; let f = 0, last = 0;
+function events() {
+  w.time += dt; const t = w.time, X = () => (R() - 0.5) * 900, Y = () => (R() - 0.5) * 500;
+  while (t > next.shot) { next.shot += 1 / RATE.shot; FX.spawn(w, 'muzzle', { x: X(), y: Y(), angle: R() * 6.28, weapon: R() < 0.2 ? 'shotgun' : 'rifle', team: R() < 0.4 ? 'enemy' : 'player' }); }
+  while (t > next.hit) { next.hit += 1 / RATE.hit; FX.spawn(w, 'impact', { x: X(), y: Y(), angle: R() * 6.28, surface: ['metal', 'concrete', 'chitin'][Math.floor(R() * 3)] }); }
+  while (t > next.nade) { next.nade += 1 / RATE.nade; FX.spawn(w, 'explosion', { x: X(), y: Y(), radius: 90 }); }
+  while (t > next.death) { next.death += 1 / RATE.death; FX.spawn(w, 'death', { x: X(), y: Y(), angle: R() * 6.28 }); }
+  while (t > next.crack) { next.crack += 1 / RATE.crack; FX.spawn(w, 'crack', { x: X(), y: Y(), t: 0.9, id: f }); }
+}
+function frame(now) {
+  events();
+  const t0 = performance.now(); FX.update(dt, w); const t1 = performance.now();
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(g, 0, 0); if (SYNC) ctx.getImageData(0, 0, 1, 1); const t2 = performance.now(); ctx.setTransform(1.5, 0, 0, 1.5, 800, 450);
+  FX.draw(ctx, w, null, 'under'); if (SYNC) ctx.getImageData(0, 0, 1, 1); const t3 = performance.now(); FX.draw(ctx, w, null, 'over'); if (SYNC) ctx.getImageData(0, 0, 1, 1); const t4 = performance.now();
+  if (f > WARM) { ms.push(t4 - t0 - (t2 - t1)); parts.u += t1 - t0; parts.under += t3 - t2; parts.over += t4 - t3; if (last) iv.push(now - last); }
+  last = now; f++;
+}
+const P = (a, q) => +a[Math.min(a.length - 1, Math.floor(a.length * q))].toFixed(2);
+function done() {
+  const n = ms.length; ms.sort((a, b) => a - b); iv.sort((a, b) => a - b); const st = FX.stats(w);
+  window.__result = { s: SC, q: LV, sync: SYNC ? 1 : 0, frames: n, avg: +(ms.reduce((a, b) => a + b, 0) / n).toFixed(2), p50: P(ms, 0.5), p95: P(ms, 0.95), max: P(ms, 1),
+    updMs: +(parts.u / n).toFixed(3), underMs: +(parts.under / n).toFixed(2), overMs: +(parts.over / n).toFixed(2), live: st.live, peak: st.peak, dropped: st.dropped, decals: st.decals,
+    frameP50: iv.length ? P(iv, 0.5) : null, frameP95: iv.length ? P(iv, 0.95) : null };
+  document.title = JSON.stringify(window.__result); window.__done = true;
+}
+if (SYNC) { for (let i = 0; i < FRAMES; i++) frame(0); done(); }
+else { const loop = (now) => { frame(now); if (f < FRAMES) requestAnimationFrame(loop); else done(); }; requestAnimationFrame(loop); }
+</script></body></html>

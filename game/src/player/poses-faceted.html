@@ -1,0 +1,54 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Warden faceted – demo poses</title>
+<style>html,body{margin:0;background:#0b0d0f;color:#cfd6dc;font:12px system-ui}canvas{display:block}</style></head>
+<body><canvas id="c"></canvas>
+<script type="module">
+// Posark for Warden «faceted» (Breach Karakter v4): demoposene i 1× og 3×, farge (øverst) og gråtoner (nederst).
+// ?ang=0.6  (siktevinkel i rad)   ?only=stand,walk0   Kjøres av /tmp/posesheet.cjs → shots/v4-faceted-poser.png
+import { createRig, WARDEN } from '../shared/rig/index.js';
+import { faceted } from '../shared/rig/styles/faceted.js';
+const Q = new URLSearchParams(location.search); const ANG = +(Q.get('ang') ?? .6); const DT = 1 / 60;
+const run = (rig, n, d) => { for (let i = 0; i < n; i++) { rig.drive(typeof d === 'function' ? d(i) : d); rig.update(DT); } };
+const base = (x = 0, y = 0, o = {}) => ({ x, y, aimAngle: ANG, mode: 'idle', ...o });
+const LOW = { nx: -Math.cos(ANG), ny: -Math.sin(ANG), type: 'low', edgeDir: -1 }, HIGH = { ...LOW, type: 'high' };
+const walkAt = (frames, run_ = false) => (rig) => { let x = 0; const a = ANG; run(rig, frames, (i) => { x += run_ ? 5 : 2.4; return { x: Math.cos(a) * x, y: Math.sin(a) * x, aimAngle: a, mode: run_ ? 'run' : 'walk', moveAngle: a, aimBlend: 0 }; }); };
+const POSES = [
+  ['stand', (r) => run(r, 40, base(0, 0, { aimBlend: 0 }))],
+  ['aim', (r) => run(r, 40, base(0, 0, { aimBlend: 1 }))],
+  ['walk A', walkAt(60)], ['walk B', walkAt(64)], ['walk C', walkAt(68)], ['walk D', walkAt(72)],
+  ['sprint', walkAt(60, true)],
+  ['low cover', (r) => run(r, 60, base(0, 0, { mode: 'cover', cover: LOW }))],
+  ['popUp', (r) => run(r, 60, base(0, 0, { mode: 'cover', cover: LOW, peek: 1, aimBlend: 1 }))],
+  ['blind', (r) => run(r, 60, base(0, 0, { mode: 'cover', cover: LOW, blind: 1 }))],
+  ['high cover', (r) => run(r, 60, base(0, 0, { mode: 'cover', cover: HIGH }))],
+  ['roll 1', (r) => roll(r, 6)], ['roll 2', (r) => roll(r, 12)], ['roll 3', (r) => roll(r, 20)],
+  ['death', (r) => { run(r, 20, base()); r.play('death'); run(r, 90, base(0, 0, { mode: 'death' })); }],
+  ['grenade', (r) => run(r, 40, base(0, 0, { aimBlend: 0 })), { pose: 'throw' }],
+  ['slide', (r) => { let x = 0; run(r, 14, (i) => { x += 6; return { x: Math.cos(ANG) * x, y: Math.sin(ANG) * x, aimAngle: ANG, mode: 'slide', moveAngle: ANG, cover: LOW }; }); }],
+  ['melee', (r) => { run(r, 20, base(0, 0, { aimBlend: .4 })); r.play('melee'); run(r, 9, base()); }],
+];
+function roll(r, n) { run(r, 20, base()); r.play('roll'); let x = 0; run(r, n, () => { x += 6; return { x: Math.cos(ANG) * x, y: Math.sin(ANG) * x, aimAngle: ANG, mode: 'roll', moveAngle: ANG }; }); }
+const only = Q.get('only')?.split(','); const list = only ? POSES.filter(p => only.includes(p[0])) : POSES;
+const C3 = 190, C1 = 60, COLS = list.length > 9 ? Math.ceil(list.length / 2) : list.length;
+const rowsPer = Math.ceil(list.length / COLS), BLOCK = (C3 + C1 + 20) * rowsPer;
+const cv = document.getElementById('c'); cv.width = COLS * C3; cv.height = BLOCK * 2 + 24; const g = cv.getContext('2d');
+g.fillStyle = '#1d2124'; g.fillRect(0, 0, cv.width, cv.height);
+const errs = [];
+list.forEach(([label, sim, o], i) => {
+  try {
+    const rig = createRig(WARDEN, { skin: 'warden', angle: ANG }); rig.setStyle(faceted); rig.weaponLook = 'rifle';
+    sim(rig); const F = rig.frame(); const opts = {}; if (o?.pose === 'throw') opts.pose = faceted.THROW_POSE;
+    const col = i % COLS, row = (i / COLS) | 0, x0 = col * C3, y0 = row * (C3 + C1 + 20);
+    for (const [Z, cx, cy, C] of [[3, x0 + C3 / 2, y0 + 20 + C3 * .62, C3], [1, x0 + C3 / 2, y0 + 16 + C3 + C1 * .62, C1]]) {
+      g.save(); g.beginPath(); g.rect(x0, cy - C * .58, C3, C); g.clip();
+      g.setTransform(Z, 0, 0, Z, cx - F.x * Z, cy - F.y * Z);
+      faceted.drawFigure(g, rig, F, opts); g.restore();
+    }
+    g.fillStyle = '#cfd6dc'; g.fillText(label, x0 + 5, y0 + 12);
+    g.strokeStyle = 'rgba(255,255,255,.07)'; g.strokeRect(x0 + .5, y0 + .5, C3 - 1, C3 + C1 + 19);
+  } catch (e) { errs.push(label + ': ' + String(e && e.stack || e)); }
+});
+// gråtoner: kopi av fargeblokken under
+g.save(); g.filter = 'grayscale(1)'; g.drawImage(cv, 0, 0, cv.width, BLOCK, 0, BLOCK, cv.width, BLOCK); g.restore();
+g.fillStyle = '#8fa0ad'; g.fillText('Warden faceted v4.1 – demo poses – 3× (big) and 1× (small) – colour (top) / greyscale (bottom)', 6, cv.height - 8);
+window.__done = true; window.__errs = errs;
+</script></body></html>

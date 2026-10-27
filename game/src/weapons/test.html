@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>BREACH – Weapons test range</title><link rel="icon" href="data:,">
+<style>
+html,body{margin:0;height:100%;background:#0b0c0d;overflow:hidden;font-family:system-ui,sans-serif}
+canvas{display:block;cursor:none}
+#panel{position:fixed;top:12px;right:12px;width:430px;max-height:calc(100% - 24px);overflow:auto;background:rgba(10,13,16,.86);border:1px solid rgba(120,150,170,.22);color:#d9e2e8;font-size:11px;padding:10px 12px;box-sizing:border-box}
+#panel h2{font-size:11px;letter-spacing:2px;color:#39c6ff;margin:4px 0 6px;font-weight:700}
+#panel h2 small{color:#7d8a94;letter-spacing:0;font-weight:500}
+#panel table{border-collapse:collapse;width:100%;margin-bottom:10px;font-variant-numeric:tabular-nums}
+#panel th,#panel td{padding:2px 4px;text-align:right;border-bottom:1px solid rgba(255,255,255,.05)}
+#panel th{color:#7d8a94;font-weight:600}
+#panel td:first-child,#panel th:first-child{text-align:left}
+#panel tr.cur td{color:#fff}#panel tr.cur td:first-child{color:#39c6ff}
+#panel .dim{color:#56626b}
+#panel .note{color:#7d8a94;line-height:1.4;margin:4px 0 0}
+</style>
+</head><body><canvas id="c"></canvas><div id="panel"></div><script type="module" src="./test.js"></script></body></html>

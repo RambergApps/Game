@@ -1,0 +1,16 @@
+<!doctype html><meta charset="utf-8"><title>Warden C runde 2</title>
+<canvas id="c"></canvas>
+<script type="module">
+// Runde 2 (fargeløft img/c2/). Rader: stå/sikt 8 retninger; gange Ø 6 faser; gange V 6 faser. ?z=1|2|4
+import { loadPaintedC, drawWardenC } from './paintedC.js';
+import { RIFLE_LOOK } from '../../../weapons/look/rifle.js';
+const Z = +(new URLSearchParams(location.search).get('z') || 1), CW = 56, CH = 64, FX = 28, FY = 52;
+const rows = [[...Array(8)].map((_, i) => ({ aim: i * Math.PI / 4 })),
+  [...Array(6)].map((_, i) => ({ aim: 0, phase: i / 6 })), [...Array(6)].map((_, i) => ({ aim: Math.PI, phase: i / 6 }))];
+const cv = document.getElementById('c'); cv.width = CW * 8 * Z; cv.height = CH * rows.length * Z;
+const ctx = cv.getContext('2d'); ctx.imageSmoothingQuality = 'high'; window.errors = [];
+try { await loadPaintedC(new URL('./img/c2/', import.meta.url));
+  rows.forEach((r, ri) => r.forEach((f, ci) => { ctx.save(); ctx.scale(Z, Z); drawWardenC(ctx, { x: ci * CW + FX, y: ri * CH + FY, look: RIFLE_LOOK, zoom: Z, legs: 'painted', ...f }); ctx.restore(); }));
+} catch (e) { window.errors.push(String(e.stack || e)); }
+window.done = true;
+</script>

@@ -1,0 +1,31 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0;background:#111"><canvas id="c" width="900" height="420"></canvas>
+<script type="module">
+// Test av Arenas dekningskrok med en falsk arena: coverHitPoint/addCoverDecal/onCoverDraw + fallback uten krok. Viser også dekaltypene.
+import * as FX from '../index.js'; import { drawDecalSprite, drawDecalHot, DECAL_KINDS } from '../decals.js'; import { createEvents } from '../../core/events.js';
+const out = { calls: [], hotDraws: 0, errors: [] }; window.onerror = (m) => out.errors.push(m);
+const cover = { id: 7, x: 100, y: 100, w: 120, h: 30, type: 'high', material: 'metal' };
+const arenaMod = { coverObjects: () => [cover], coverHitPoint: (w, c, x, y) => ({ coverId: c.id, face: 'front', x, z: 30, material: c.material, nx: 0, ny: 1, angle: 0.3 }), addCoverDecal: (w, id, d) => out.calls.push({ id, ...d }) };
+const w = { time: 0, events: createEvents(), arena: {}, modules: { arena: arenaMod } };
+const QP = new URLSearchParams(location.search), QQ = QP.get('q') || QP.get('quality');   // både q= og quality= støttes
+FX.init(w); if (QQ) FX.setQuality(w, QQ); FX.bindEvents(w, { impacts: true });
+// Hovedkilden er bulletImpact (coverHit er reserve i kø og spilles først i update): send bulletImpact, og kjør ett update-steg.
+w.events.emit('bulletImpact', { kind: 'cover', projectile: { angle: 0, kind: 'bullet' }, cover, surface: 'metal', x: 150, y: 130, z: 22, angle: 0, partial: false });
+FX.update(1 / 60, w);
+const hooked = out.calls.length === 1 && cover.hotDecals === true;
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+const orig = w.arena.onCoverDraw; w.arena.onCoverDraw = (ctx, o) => { out.hotDraws++; orig(ctx, o); }; w.arena.onCoverDraw(ctx, cover);
+for (let i = 0; i < 70; i++) { FX.update(1 / 60, w); w.time += 1 / 60; }
+const cooled = cover.hotDecals === false;
+// fallback: ingen krok → egen vegg-dekal
+const w2 = { time: 0, events: createEvents(), modules: {} }; FX.init(w2); FX.bindEvents(w2, { impacts: true });
+w2.events.emit('coverHit', { projectile: { angle: 0, kind: 'bullet' }, cover, x: 150, y: 130, partial: false });
+FX.update(1 / 60, w2);
+const fallback = FX.stats(w2).decals === 1;
+// dekaltyper, kald + varm
+ctx.fillStyle = '#5b5d5f'; ctx.fillRect(0, 0, 900, 420); ctx.fillStyle = '#ddd'; ctx.font = '14px system-ui';
+DECAL_KINDS.forEach((k, i) => { const r = { bullet_metal: 3, bullet_concrete: 5, scorch: 34, ichor: 12, slash: 14 }[k] * 2.5, x = 90 + i * 175;
+  ctx.fillText(k, x - 40, 30); ctx.save(); ctx.translate(x, 120); drawDecalSprite(ctx, k, r, 0.4, 3); ctx.restore();
+  ctx.save(); ctx.translate(x, 300); drawDecalSprite(ctx, k, r, 0.4, 3); drawDecalHot(ctx, k, r, 0.4, 3, 1); ctx.restore(); });
+ctx.fillText('cold (top) · hot overlay (bottom) · 2.5× size', 10, 405);
+window.__result = { hooked, hotDraws: out.hotDraws, cooled, fallback, call: out.calls[0], errors: out.errors }; window.__done = true;
+</script></body></html>

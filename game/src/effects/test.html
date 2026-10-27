@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>BREACH – VFX test (live)</title>
+<style>html,body{margin:0;background:#0b0c0d;color:#cfd6dc;font:13px system-ui}#hud{position:fixed;left:8px;top:6px;background:rgba(0,0,0,.65);padding:5px 9px;white-space:pre;font:12px ui-monospace,monospace}</style></head>
+<body><canvas id="c"></canvas><div id="hud"></div>
+<script type="module">
+// Levende testside.
+//  test.html                       – alle scener fra designarket i loop (galleri)
+//  test.html?scenario=typical|heavy – Arenas standard målescenario (1600×1000, kamera 1,5×, 10 s vindu), se bench.js
+//  &q=high|medium|low              – kvalitetsnivå (standard = effektsystemets standard, i dag 'high')
+// Måler kun effektsystemet: FX.update + FX.draw('under') + FX.draw('over'), CPU-tid uten tilbakelesing (som i spillet).
+// Resultat: HUD + window.BREACH_VFX.result() → { scenario, quality, median, p95, ... } · window.__result settes etter første 10 s.
+import { SCENES, drawScene, ground } from './scenes.js';
+import { makeDriver, SCENARIOS } from './bench.js';
+import * as FX from './index.js';
+const Q = new URLSearchParams(location.search), SCN = Q.get('scenario'), qArg = Q.get('q') || Q.get('quality');   // q= (standard) eller quality=
+const cv = document.getElementById('c'), ctx = cv.getContext('2d'), hud = document.getElementById('hud');
+const WIN = 600, DT = 1 / 60, ms = [], pr = (a, p) => { const s = [...a].sort((x, y) => x - y); return s.length ? s[Math.min(s.length - 1, Math.floor(s.length * p))] : 0; };
+const setQ = (w) => { if (qArg) FX.setQuality(w, isNaN(+qArg) ? qArg : +qArg); };
+let result = null, frames = 0; const SHOTS = (Q.get('shot') || '').split(',').filter(Boolean).map(Number);
+window.BREACH_VFX = { FX, result: () => result };
+if (SCN) {
+  // ---------------------------------------------------------------- målescenario
+  cv.width = 1600; cv.height = 1000; const ZOOM = 1.5, w = { time: 0 }; FX.init(w); setQ(w); if (Q.get('adapt') === '0') w._vfx.noAdapt = true;   // &adapt=0: uten adaptiv last (før-bilde)
+  const drive = makeDriver(FX, SCN in SCENARIOS ? SCN : 'typical'); const g = ground(1600, 1000, 3, 'concrete', ZOOM);
+  const part = { u: [], a: [], b: [] };
+  function frame() {
+    w.time += DT; drive(w);
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(g, 0, 0); ctx.setTransform(ZOOM, 0, 0, ZOOM, 800, 500);
+    const t0 = performance.now(); FX.update(DT, w); const t1 = performance.now(); FX.draw(ctx, w, null, 'under'); const t2 = performance.now(); FX.draw(ctx, w, null, 'over'); const t3 = performance.now();
+    if (SHOTS.includes(frames)) (window.__shots ||= {})[frames] = cv.toDataURL('image/png');   // &shot=f1,f2: bilder på faste bilder (deterministisk)
+    frames++; if (frames > 60) { ms.push(t3 - t0); part.u.push(t1 - t0); part.a.push(t2 - t1); part.b.push(t3 - t2); for (const k of [ms, part.u, part.a, part.b]) if (k.length > WIN) k.shift(); }
+    const st = FX.stats(w), f2 = (x) => x.toFixed(2);
+    result = { scenario: SCN, quality: st.level, frames: ms.length, median: +f2(pr(ms, 0.5)), p95: +f2(pr(ms, 0.95)), updMedian: +f2(pr(part.u, 0.5)), underMedian: +f2(pr(part.a, 0.5)), overMedian: +f2(pr(part.b, 0.5)), live: st.live, peak: st.peak, decals: st.decals, dropped: st.dropped,
+      budget: SCN === 'heavy' ? 3.5 : 2 };
+    if (ms.length >= WIN && !window.__result) { window.__result = { ...result }; window.__done = true; document.title = JSON.stringify(window.__result); }
+    hud.textContent = `scenario ${SCN} · quality ${st.level} · window ${ms.length}/${WIN} frames\nfx median ${f2(result.median)} ms · p95 ${f2(result.p95)} ms · budget ${result.budget} ms\n  update ${f2(result.updMedian)} · under ${f2(result.underMedian)} · over ${f2(result.overMedian)}\nparticles ${st.live} (peak ${st.peak}, dropped ${st.dropped}) · decals ${st.decals}`;
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+} else {
+  // ---------------------------------------------------------------- galleri
+  const COLS = 4, CW = 400, CH = 300; cv.width = COLS * CW; cv.height = 3 * CH;
+  const live = SCENES.map((sc) => { const w = { time: Math.min(0, sc.script[0][0]) }; FX.init(w); setQ(w); return { sc, w, i: 0, t0: w.time }; });
+  window.BREACH_VFX.live = live;
+  function frame() {
+    const t0 = performance.now(); let parts = 0, decals = 0;
+    live.forEach((L, k) => {
+      const { sc, w } = L; if (w.time - L.t0 > sc.period) { FX.clear(w); w.time = L.t0; L.i = 0; }
+      while (L.i < sc.script.length && sc.script[L.i][0] <= w.time) { sc.script[L.i][1](w); L.i++; }
+      FX.update(DT, w); w.time += DT;
+      const c = k < 8 ? k : k + 1, x = (c % COLS) * CW, y = Math.floor(c / COLS) * CH, zoom = sc.wide ? 1.0 : 1.5;
+      drawScene(ctx, sc, w, x, y, CW, CH, zoom, ground(CW, CH, sc.seed, 'concrete', zoom));
+      ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(x, y + CH - 20, CW, 20); ctx.fillStyle = '#cfd6dc'; ctx.fillText(sc.title, x + 6, y + CH - 6);
+      const s = FX.stats(w); parts += s.live; decals += s.decals;
+    });
+    ms.push(performance.now() - t0); if (ms.length > 120) ms.shift();
+    hud.textContent = `gallery (all 11 scenes incl. ground) · quality ${FX.stats(live[0].w).level} · particles ${parts} · decals ${decals} · ${pr(ms, 0.5).toFixed(2)} ms/frame  ·  ?scenario=typical|heavy for the benchmark`;
+    window.__done = true; requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+</script></body></html>

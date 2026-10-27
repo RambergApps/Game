@@ -1,0 +1,4 @@
+const r=require(process.argv[2]),D=r.demo||{};const ex=r.extras||{};console.log("aud",JSON.stringify(ex.aud).slice(0,900));
+const by={};for(const [t,ph,rms,pk,st] of D.meter||[]){const k=ph.split(":")[0];const o=by[k]=by[k]||{n:0,pk:-200,rmsMed:[],sil:0,clip:0,st:{}};o.n++;o.pk=Math.max(o.pk,+pk.toFixed(1));o.rmsMed.push(rms);if(rms<-80)o.sil++;if(pk>=-0.1)o.clip++;o.st[st]=(o.st[st]||0)+1;}for(const o of Object.values(by)){o.rmsMed.sort((a,b)=>a-b);o.rmsMed=+o.rmsMed[o.rmsMed.length>>1].toFixed(1);}console.log("meter",JSON.stringify(by),D.merr, (D.meter||[]).length);
+const wd=D.warden||[];const m=k=>wd.map(q=>q[k]).sort((a,b)=>a-b)[wd.length>>1];console.log("warden median",m(0),m(1),m(2),wd.length);
+console.log("kiln seen",JSON.stringify(D.kSeen),"shot",JSON.stringify(D.kShot));console.log("errors",JSON.stringify(r.errors).slice(0,300));

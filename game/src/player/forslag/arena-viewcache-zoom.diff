@@ -1,0 +1,33 @@
+--- a/game/src/arena/index.js
++++ b/game/src/arena/index.js
+@@ -224,14 +224,16 @@
+   const mk = (src) => {
+     const c = (vc && vc.L === L && vc[src]?.getContext && vc[src].width === W && vc[src].height === H) ? vc[src] : makeCanvas(W, H);
+     const x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, W, H);
+-    x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
++    x.imageSmoothingEnabled = true; x.imageSmoothingQuality = scale > 2 ? 'low' : 'high';   // forstørring: 'high' koster ~300 ms per lag
+     x.drawImage(layers[src], 0, 0, layers[src].width, layers[src].height, 0, 0, L.width * scale, L.height * scale);
+     return c;
+   };
+-  const vcNew = { L, scale, floor: mk('floor'), top: mk('top'), glow: mk('glow') };
+-  if (layers.over) vcNew.over = mk('over');
+-  if (layers.overGlow) { vcNew.overGlow = mk('overGlow'); vcNew.glowRest = mk('glowRest'); }
+-  s.vc = vcNew;
++  // Bygg ett lag per bilde (ikke alle i samme ramme): reserveveien tegner til alt er klart.
++  const want = ['floor', 'top', 'glow', ...(layers.over ? ['over'] : []), ...(layers.overGlow ? ['overGlow', 'glowRest'] : [])];
++  const b = (s.vcBuild && s.vcBuild.L === L && s.vcBuild.scale === scale) ? s.vcBuild : (s.vcBuild = { L, scale });
++  const next = want.find(k => !b[k]);
++  if (next) { if (b.t && now - b.t < 10) return null; b[next] = mk(next); b.t = performance.now(); if (want.some(k => !b[k])) return null; }
++  s.vc = b; s.vcBuild = null;
+   // (ImageBitmap-variant testet 2026-10-23: tregere i riggen, så vi blir på canvas.)
+   return s.vc;
+ }
+@@ -324,7 +326,7 @@
+   if (w <= 0 || h <= 0 || w * h > 4e6) { o._simg = null; return; }
+   const c = (o._simg && o._simg.width === w && o._simg.height === h) ? o._simg : makeCanvas(w, h);
+   const x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, w, h);
+-  x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
++  x.imageSmoothingEnabled = true; x.imageSmoothingQuality = scale > 2 ? 'low' : 'high';   // forstørring: 'high' koster ~300 ms per lag
+   x.drawImage(o.img, fx - px, fy - py, o.sw * sc, o.sh * sc);
+   o._simg = c; o._px = px; o._py = py;
+ }

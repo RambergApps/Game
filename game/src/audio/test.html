@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BREACH – audio test</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { --bg:#0c0d0e; --panel:#16191b; --line:#2b2e31; --metal:#3d4246; --txt:#c9cdd1; --dim:#7d848a; --cyan:#39c6ff; --amber:#ffb347; --warn:#c9a227; --red:#c0392b; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font:13px/1.4 "Segoe UI", system-ui, sans-serif; }
+  header { display:flex; align-items:center; gap:16px; padding:12px 20px; border-bottom:1px solid var(--line);
+    background:repeating-linear-gradient(135deg, #1a1c1e 0 14px, #15171a 14px 28px); }
+  header h1 { margin:0; font-size:18px; letter-spacing:.32em; font-weight:700; color:#e6e9ec; }
+  header h1 span { color:var(--cyan); }
+  .stripe { height:4px; background:repeating-linear-gradient(135deg, var(--warn) 0 10px, #1b1c1e 10px 20px); }
+  #status { margin-left:auto; font-family:ui-monospace, monospace; font-size:12px; color:var(--dim); }
+  #status b { color:var(--amber); font-weight:600; }
+  main { display:grid; grid-template-columns: 1fr 360px; gap:16px; padding:16px 20px; }
+  section { background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:12px 14px; }
+  section h2 { margin:0 0 10px; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--dim); font-weight:600; }
+  .grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; }
+  button { background:linear-gradient(#2a2e32, #212427); color:var(--txt); border:1px solid #3a3f45; border-left:3px solid var(--metal);
+    padding:7px 8px; border-radius:2px; font:12px system-ui, sans-serif; cursor:pointer; text-align:left; }
+  button:hover { border-left-color:var(--cyan); color:#fff; }
+  button.enemy { border-left-color:#8e1e1e; } button.enemy:hover { border-left-color:var(--red); }
+  button.on { background:linear-gradient(#3a2a12, #2a1f10); border-left-color:var(--amber); color:var(--amber); }
+  button small { display:block; color:var(--dim); font-size:10px; font-family:ui-monospace, monospace; }
+  canvas { width:100%; background:#1c1f22; border:1px solid var(--line); display:block; cursor:crosshair; }
+  .row { display:flex; align-items:center; gap:10px; margin:8px 0; }
+  .row label { width:92px; color:var(--dim); }
+  .row input[type=range] { flex:1; accent-color:var(--cyan); }
+  .row output { width:38px; text-align:right; font-family:ui-monospace, monospace; color:var(--amber); }
+  #log { height:150px; overflow:auto; font:11px/1.5 ui-monospace, monospace; color:var(--dim); background:#0f1112; padding:6px 8px; border:1px solid var(--line); }
+  #log .e { color:var(--txt); }
+  .hint { color:var(--dim); font-size:12px; margin:6px 0 0; }
+  #unlock { position:fixed; inset:0; background:rgba(8,9,10,.82); display:flex; align-items:center; justify-content:center; z-index:5; }
+  #unlock div { border:1px solid var(--line); background:var(--panel); padding:22px 30px; text-align:center; letter-spacing:.1em; }
+  #unlock b { color:var(--cyan); }
+  #meter { height:8px; background:#0f1112; border:1px solid var(--line); margin-top:6px; }
+  #meter i { display:block; height:100%; width:0; background:linear-gradient(90deg, var(--cyan), var(--amber) 70%, var(--red)); transition:width .08s; }
+</style>
+</head>
+<body>
+<header><h1>BRE<span>A</span>CH · AUDIO TEST</h1><div id="status">audio: <b id="st">off</b> · voices <b id="vc">0</b> · intensity <b id="it">0.00</b></div></header>
+<div class="stripe"></div>
+<div id="unlock"><div>Click or press a key to start audio<br><small>(the browser requires a user gesture before Web Audio)</small><br><br><b>▶ START</b></div></div>
+<main>
+  <div>
+    <section>
+      <h2>Arena (click = sound source, right-click/drag = move Warden)</h2>
+      <canvas id="map" width="960" height="420"></canvas>
+      <p class="hint">Events are sent via <code>world.events.emit</code> from the source (orange) – panning and distance attenuation are computed from the Warden (cyan).</p>
+    </section>
+    <section style="margin-top:16px">
+      <h2>Events</h2>
+      <div class="grid" id="btns"></div>
+    </section>
+  </div>
+  <div>
+    <section>
+      <h2>Auto fire</h2>
+      <div class="grid" style="grid-template-columns:1fr 1fr">
+        <button id="afP">Warden-rifle<small>shot · 9/s</small></button>
+        <button id="afE" class="enemy">Enemies (Grunt)<small>shot · 3 shooters</small></button>
+        <button id="afH" class="enemy">Heavy<small>shot · 2/s</small></button>
+        <button id="afAll">Full firefight<small>all + grenades</small></button>
+      </div>
+    </section>
+    <section style="margin-top:16px">
+      <h2>Mix</h2>
+      <div class="row"><label>Master</label><input id="vMaster" type="range" min="0" max="1" step="0.01" value="0.8"><output>0.80</output></div>
+      <div class="row"><label>Music</label><input id="vMusic" type="range" min="0" max="1" step="0.01" value="0.42"><output>0.42</output></div>
+      <div class="row"><label>Effects</label><input id="vSfx" type="range" min="0" max="1" step="0.01" value="1"><output>1.00</output></div>
+      <div class="row"><label>Intensity</label><input id="vInt" type="range" min="0" max="1" step="0.01" value="0"><output>auto</output></div>
+      <div class="row"><label></label><button id="autoInt" class="on" style="flex:1">Auto intensity</button><button id="muteB" style="flex:1">Mute all</button></div>
+      <div class="row"><label></label><button id="pauseB" style="flex:1">Pause (world.paused)</button></div>
+      <div class="row"><label>Player health</label><input id="vHp" type="range" min="0" max="100" step="1" value="100"><output>100</output></div>
+      <div id="meter"><i></i></div>
+    </section>
+    <section style="margin-top:16px">
+      <h2>Event log</h2>
+      <div id="log"></div>
+    </section>
+  </div>
+</main>
+<script type="module">
+import * as audio from './index.js';
+import { lineOfSight } from '../core/geom.js';
+import { CUTSCENES } from '../story/cutscenes.js'; // bare manusdata (les) – til mellomsekvens-stubben
+
+// ---- Stubber for src/core (bare det lydmodulen trenger) ----
+function createEvents() {
+  const m = new Map();
+  return { on(t, f) { if (!m.has(t)) m.set(t, new Set()); m.get(t).add(f); return () => m.get(t)?.delete(f); },
+    off(t, f) { m.get(t)?.delete(f); },
+    emit(t, p) { for (const f of [...(m.get(t) || [])]) f(p); for (const f of [...(m.get('*') || [])]) f({ type: t, payload: p }); } };
+}
+const world = { time: 0, events: createEvents(), enemies: [], cover: [], projectiles: [], effects: [],
+  player: { x: 480, y: 260, r: 15, hp: 100, maxHp: 100, team: 'player', dead: false } };
+const COVERS = [{ x: 300, y: 150, w: 32, h: 140, type: 'high', surface: 'metal' }, { x: 560, y: 300, w: 140, h: 24, type: 'low', surface: 'concrete' },
+  { x: 700, y: 110, w: 96, h: 96, type: 'high', surface: 'concrete' }, { x: 160, y: 330, w: 110, h: 24, type: 'low', surface: 'metal' }];
+world.cover = COVERS;
+const grunts = [{ type: 'grunt', x: 820, y: 330, team: 'enemy', dead: false }, { type: 'grunt', x: 760, y: 80, team: 'enemy', dead: false }, { type: 'flanker', x: 120, y: 90, team: 'enemy', dead: false }];
+const heavyE = { type: 'heavy', x: 880, y: 220, team: 'enemy', dead: false };
+world.enemies = [...grunts, heavyE];
+let src = { x: 700, y: 260 };
+const flashes = [];
+
+audio.init(world);
+const logEl = document.getElementById('log');
+world.events.on('*', ({ type, payload }) => {
+  const p = payload ? JSON.stringify(payload, (k, v) => (k === 'entity' || k === 'target' || k === 'owner' || k === 'cover') && v ? (v.type ?? 'obj') : typeof v === 'number' ? Math.round(v) : v) : '';
+  const d = document.createElement('div'); d.innerHTML = `<span class="e">${type}</span> ${p}`; logEl.prepend(d);
+  while (logEl.children.length > 60) logEl.lastChild.remove();
+  if (payload && typeof payload.x === 'number') flashes.push({ x: payload.x, y: payload.y, t: 0.25, type });
+});
+
+const S = () => ({ x: src.x, y: src.y });
+const nearCover = () => COVERS.reduce((a, c) => Math.hypot(c.x - src.x, c.y - src.y) < Math.hypot(a.x - src.x, a.y - src.y) ? c : a);
+const E = (name, p) => world.events.emit(name, p);
+const BTNS = [
+  ['Assault rifle', 'shot · rifle', () => E('shot', { ...pp(), team: 'player', weapon: 'rifle', entity: world.player })],
+  ['Shotgun', 'shot · shotgun', () => E('shot', { ...pp(), team: 'player', weapon: 'shotgun', pellets: 8, entity: world.player })],
+  ['Marksman rifle', 'shot · marksman', () => E('shot', { ...pp(), team: 'player', weapon: 'marksman', entity: world.player })],
+  ['Chamber: rifle', 'chamber · rifle', () => E('chamber', { ...pp(), team: 'player', weapon: 'rifle' })],
+  ['Chamber: shotgun (pump)', 'chamber · shotgun', () => E('chamber', { ...pp(), team: 'player', weapon: 'shotgun' })],
+  ['Chamber: marksman (bolt)', 'chamber · marksman', () => E('chamber', { ...pp(), team: 'player', weapon: 'marksman' })],
+  ['Enemy shotgun', 'shot · shotgun', () => E('shot', { ...S(), team: 'enemy', weapon: 'shotgun', pellets: 8, entity: grunts[0] }), 'enemy'],
+  ['Enemy marksman', 'shot · marksman', () => E('shot', { ...S(), team: 'enemy', weapon: 'marksman', entity: grunts[1] }), 'enemy'],
+  ['Enemy: pump', 'chamber · shotgun', () => E('chamber', { ...S(), team: 'enemy', weapon: 'shotgun' }), 'enemy'],
+  ['Enemy: bolt', 'chamber · marksman', () => E('chamber', { ...S(), team: 'enemy', weapon: 'marksman' }), 'enemy'],
+  ['Grunt weapon', 'shot', () => E('shot', { ...S(), team: 'enemy', weapon: 'rifle', entity: grunts[0] }), 'enemy'],
+  ['Heavy weapon', 'shot', () => E('shot', { ...S(), team: 'enemy', weapon: 'heavy', entity: heavyE }), 'enemy'],
+  ['Grenade throw (player)', 'grenade throw', () => E('grenade', { ...pp(), team: 'player', entity: world.player, phase: 'throw' })],
+  ['Grenade windup → throw', 'grenade windup → throw', () => { const b = { ...pp(), team: 'player', weapon: 'grenade', entity: world.player }; E('grenade', { ...b, phase: 'windup', windup: 0.25 }); setTimeout(() => E('grenade', { ...b, phase: 'throw' }), 250); }],
+  ['Explosion', 'explosion', () => E('explosion', S()), 'enemy'],
+  ['Body hit', 'projectileHit', () => E('projectileHit', { ...S(), target: grunts[0] })],
+  ['Cover hit metal', 'coverHit', () => E('coverHit', { ...S(), cover: { type: 'high', surface: 'metal' }, partial: false })],
+  ['Cover hit concrete', 'coverHit', () => E('coverHit', { ...S(), cover: { type: 'low', surface: 'concrete' }, partial: true })],
+  ['Player hit', 'hit', () => E('hit', { target: world.player, amount: 8 }), 'enemy'],
+  ['Blocked hit (roll)', 'hit blocked:true → graze', () => { const P = world.player; P.invuln = true; E('hit', { target: P, amount: 0, blocked: true, raw: 12, source: { projectile: { team: 'enemy' } } }); E('projectileHit', { target: P, x: P.x, y: P.y }); P.invuln = false; }],
+  ['Blocked hit ×5', 'voice limit', () => { for (let i = 0; i < 5; i++) setTimeout(() => E('hit', { target: world.player, amount: 0, blocked: true, raw: 12 }), i * 30); }],
+  ['Enemy dies', 'death', () => E('death', { target: grunts[1], ...S() }), 'enemy'],
+  ['Heavy dies', 'death', () => E('death', { target: heavyE, ...S() }), 'enemy'],
+  ['Warden dies', 'death', () => E('death', { target: world.player }), 'enemy'],
+  ['Enter high cover', 'coverEnter', () => E('coverEnter', { ...pp(), entity: world.player, cover: COVERS[0], type: 'high', surface: 'metal' })],
+  ['Enter low cover', 'coverEnter', () => E('coverEnter', { ...pp(), entity: world.player, cover: COVERS[1], type: 'low', surface: 'concrete' })],
+  ['Leave cover', 'coverExit', () => E('coverExit', { ...pp(), entity: world.player })],
+  ['Roll', 'roll', () => E('roll', { ...pp(), entity: world.player })],
+  ['Footstep concrete', 'footstep', () => E('footstep', { ...pp(), surface: 'concrete', entity: world.player })],
+  ['Footstep metal', 'footstep', () => E('footstep', { ...pp(), surface: 'metal', entity: world.player })],
+  ['Reload rifle (normal)', 'reload start → end', () => reloadSeq('rifle')],
+  ['Reload rifle: perfect', 'reload active perfect', () => reloadSeq('rifle', 'perfect')],
+  ['Reload rifle: good', 'reload active good', () => reloadSeq('rifle', 'good')],
+  ['Reload rifle: fail (jam)', 'reload active fail', () => reloadSeq('rifle', 'fail')],
+  ['Reload shotgun (normal)', 'reload start → end', () => reloadSeq('shotgun')],
+  ['Reload shotgun: perfect', 'reload active perfect', () => reloadSeq('shotgun', 'perfect')],
+  ['Reload marksman: perfect', 'reload active perfect', () => reloadSeq('marksman', 'perfect')],
+  ['Reload marksman: fail', 'reload active fail', () => reloadSeq('marksman', 'fail')],
+  ['Enemy reloads', 'reload (enemy)', () => reloadSeq('rifle', null, grunts[0]), 'enemy'],
+  ['Dry fire: rifle', 'dryFire', () => E('dryFire', { ...pp(), entity: world.player, team: 'player', weapon: 'rifle' })],
+  ['Dry fire: shotgun', 'dryFire', () => E('dryFire', { ...pp(), entity: world.player, team: 'player', weapon: 'shotgun' })],
+  ['Dry fire: marksman', 'dryFire', () => E('dryFire', { ...pp(), entity: world.player, team: 'player', weapon: 'marksman' })],
+  ['Switch → rifle', 'weaponSwitch', () => E('weaponSwitch', { ...pp(), entity: world.player, team: 'player', from: 'shotgun', to: 'rifle', weapon: 'rifle' })],
+  ['Switch → shotgun', 'weaponSwitch', () => E('weaponSwitch', { ...pp(), entity: world.player, team: 'player', from: 'rifle', to: 'shotgun', weapon: 'shotgun' })],
+  ['Switch → marksman', 'weaponSwitch', () => E('weaponSwitch', { ...pp(), entity: world.player, team: 'player', from: 'rifle', to: 'marksman', weapon: 'marksman' })],
+  ['Grenade bounce concrete', 'grenadeBounce', () => E('grenadeBounce', { ...S(), team: 'player', surface: 'concrete', grenade: { vx: 380, vy: 90 } })],
+  ['Grenade bounce metal', 'grenadeBounce', () => E('grenadeBounce', { ...S(), team: 'player', surface: 'metal', grenade: { vx: 380, vy: 90 } })],
+  ['Grenade bounce ×6 (voice limit)', 'grenadeBounce ×6', () => { for (let i = 0; i < 6; i++) setTimeout(() => E('grenadeBounce', { ...S(), team: 'player', grenade: { vx: 400 - i * 60, vy: 0 } }), i * 40); }],
+  ['Enemy grenade lands', 'grenade phase:land', () => E('grenade', { ...S(), phase: 'land', team: 'enemy', entity: grunts[0], fuse: 1.2 }), 'enemy'],
+  ['Ammo crate (refill)', 'refill → ping in 25 s', () => E('refill', { ...pp(), entity: world.player, team: 'player', crateId: 'test-1' })],
+  ['Crate ready (ping now)', 'crateReady', () => audio.play('crateReady', { x: world.player.x + 60, y: world.player.y })],
+  ['Melee: hit', 'melee start → hit[1] → end', () => meleeSeq(true)],
+  ['Melee: hit chitin', 'hit {hits[0].surface chitin}', () => meleeSeq(true, false, { surface: 'chitin' })],
+  ['Melee: kill', 'hit {killed, chitin} – shell crack + embers', () => meleeSeq(true, false, { surface: 'chitin', killed: true })],
+  ['Melee: hit metal', 'hit {surface metal}', () => meleeSeq(true, false, { surface: 'metal' })],
+  ['Melee: hit flesh', 'hit {surface flesh}', () => meleeSeq(true, false, { surface: 'flesh' })],
+  ['Melee: miss', 'melee start → hit[] → end', () => meleeSeq(false)],
+  ['Melee interrupts reload', 'reload end cancel → melee', () => { E('reload', { ...pp(), entity: world.player, team: 'player', weapon: 'rifle', phase: 'start', time: 1.8 }); setTimeout(() => meleeSeq(true, true), 600); }],
+  ['Crate during reload', 'reload end cancel → refill', () => crateDuringReload()],
+  ['Reload cancelled (unknown)', 'reload end cancel', () => E('reload', { ...pp(), entity: world.player, team: 'player', weapon: 'shotgun', phase: 'end', result: 'cancel' })],
+  ['Shot core format (shotgun)', 'shot {weapon,pellets,x,y}', () => E('shot', { ...pp(), angle: 0, weapon: 'shotgun', pellets: 8, team: 'player', entity: world.player, owner: world.player, projectile: { x: world.player.x, y: world.player.y, team: 'player', owner: world.player } })],
+  ['Level starts', 'levelStart', () => E('levelStart', { level: 1, id: 'yard' })],
+  ['Upgrade cards open', 'upgradeOffer (proposed name)', () => E(audio.UPGRADE_OPEN, { offer: ['armor', 'mag', 'heal'] })],
+  ['Upgrade card picked', 'upgrade', () => E('upgrade', { id: 'armor', stats: {}, instant: false })],
+  ['Level complete', 'levelEnd', () => E('levelEnd', { level: 1, id: 'yard' })],
+  ['Game complete', 'gameComplete', () => E('gameComplete', {})],
+  ['Wave restart (death)', 'restart · music intensity reset', () => E('restart', { level: 1, waveId: '1-' + Math.max(1, wave), cause: 'death' })],
+  ['Boss starts (temp)', 'bossStart · intensity max', () => E('bossStart', { id: 'ashmaw', wave: '3-7' })],
+  ['Boss phase (temp)', 'bossPhase', () => E('bossPhase', { id: 'ashmaw', phase: 2 })],
+  ['Boss ends (temp)', 'bossEnd · long exhale', () => E('bossEnd', { id: 'ashmaw', skipped: false })],
+  ['Credits start', 'creditsStart · quiet theme loop', () => E('creditsStart', {})],
+  ['Credits end', 'creditsEnd · fade out', () => E('creditsEnd', { skipped: false })],
+  ['Wave starts', 'waveStart', () => E('waveStart', { level: 1, wave: ++wave })],
+  ['Wave cleared', 'waveEnd', () => E('waveEnd', { level: 1, wave })],
+  ['Low health', 'lowHealth', () => E('lowHealth', {})],
+  // v1.4 – Weapons rev. 4 (Kiln minigun reload) + CINDER
+  ['Kiln minigun', 'shot · minigun', () => E('shot', { ...S(), team: 'enemy', weapon: 'minigun', entity: heavyE }), 'enemy'],
+  ['Kiln reload (minigun)', 'reload start → end (3 s)', () => reloadSeq('minigun', null, heavyE, 3000), 'enemy'],
+  ['Kiln reload: perfect', 'reload active perfect (minigun)', () => reloadSeq('minigun', 'perfect', heavyE), 'enemy'],
+  ['Kiln reload: fail', 'reload active fail (minigun)', () => reloadSeq('minigun', 'fail', heavyE), 'enemy'],
+  ['Reload unknown weapon', 'reload weapon:"plasma" → rifle', () => reloadSeq('plasma')],
+  ['Husk emerges', 'spawnWarn 0.9 s → spawnRise', () => cinderSpawn('grunt', 0.9), 'enemy'],
+  ['Lurcher emerges', 'spawnWarn 0.6 s → spawnRise', () => cinderSpawn('flanker', 0.6), 'enemy'],
+  ['Kiln emerges', 'spawnWarn 1.2 s → spawnRise', () => cinderSpawn('heavy', 1.2), 'enemy'],
+  ['Spitter emerges', 'spawnWarn 0.9 s → spawnRise', () => cinderSpawn('grenadier', 0.9), 'enemy'],
+  ['Wave of 6 emerging', '6 × spawnWarn/Rise', () => ['grunt', 'flanker', 'grunt', 'heavy', 'grenadier', 'flanker'].forEach((t, i) => setTimeout(() => cinderSpawn(t, 0.6 + Math.random() * 0.6, true), i * 140)), 'enemy'],
+  ['Husk steps', 'footstep team:enemy ×4', () => cinderSteps(grunts[0]), 'enemy'],
+  ['Lurcher steps', 'footstep team:enemy ×4', () => cinderSteps(grunts[2]), 'enemy'],
+  ['Kiln steps', 'footstep team:enemy ×4', () => cinderSteps(heavyE), 'enemy'],
+  ['Husk telegraph', 'telegraph (chitin rattle, 60 %)', () => E('telegraph', { ...S(), entity: grunts[0], team: 'enemy', duration: 0.5, weapon: 'rifle' }), 'enemy'],
+  ['Lurcher charge', 'telegraph melee + meleeCharge', () => { const b = { ...S(), entity: grunts[2], team: 'enemy', duration: 0.35 }; E('telegraph', { ...b, weapon: 'melee', melee: true }); E('meleeCharge', b); }, 'enemy'],
+  ['Kiln spin-up → fire', 'spinup → shot minigun ×8 → spindown', () => kilnBurst(), 'enemy'],
+  ['Hit Husk', 'projectileHit (chitin)', () => E('projectileHit', { ...S(), target: grunts[0] }), 'enemy'],
+  ['Hit Kiln', 'projectileHit (chitin + plate)', () => E('projectileHit', { ...S(), target: heavyE }), 'enemy'],
+  ['Husk dies', 'death (chitin crunch, embers)', () => E('death', { target: grunts[0], ...S() }), 'enemy'],
+  ['Lurcher dies', 'death', () => E('death', { target: grunts[2], ...S() }), 'enemy'],
+  ['Kiln dies', 'death (core vents)', () => E('death', { target: heavyE, ...S() }), 'enemy'],
+  ['Spitter sac (height fallback)', 'windup → throw → z = 0 → burst (until a land event is seen)', () => spitterSac(false), 'enemy'],
+  ['Embers on/off', 'burning layer near living enemies', () => toggleEmbers()],
+  // v1.4.1 – organic enemy shots, Kiln Alpha, sac land event
+  ['Husk spine shot', 'shot · spine', () => E('shot', { ...S(), team: 'enemy', weapon: 'spine', entity: grunts[0], owner: grunts[0] }), 'enemy'],
+  ['Husk spine volley', 'shot · spine ×4', () => { for (let i = 0; i < 4; i++) setTimeout(() => E('shot', { x: grunts[i % 2].x, y: grunts[i % 2].y, team: 'enemy', weapon: 'spine', entity: grunts[i % 2], owner: grunts[i % 2] }), i * 230); }, 'enemy'],
+  ['Kiln slag spray', 'spinup → shot slag ×14 → spindown', () => kilnBurst(heavyE, 'slag', 14, 95), 'enemy'],
+  ['Spitter acid shot', 'shot · acid + grenade throw (one plop)', () => { const b = { x: spitter.x, y: spitter.y, team: 'enemy', owner: spitter, entity: spitter }; E('shot', { ...b, weapon: 'acid' }); E('grenade', { ...b, phase: 'throw', weapon: 'grenade' }); }, 'enemy'],
+  ['Spitter sac (land event)', 'windup → throw → phase:land → burst', () => spitterSac(true), 'enemy'],
+  ['Kiln Alpha emerges', 'spawnWarn 1.4 s → spawnRise (variant alpha)', () => cinderSpawn('heavy', 1.4, false, 'alpha'), 'enemy'],
+  ['Kiln Alpha steps', 'footstep ×4 (alpha)', () => cinderSteps(alphaE), 'enemy'],
+  ['Kiln Alpha slag spray', 'spinup → shot slag ×14 (alpha)', () => kilnBurst(alphaE, 'slag', 14, 95), 'enemy'],
+  ['Hit Kiln Alpha', 'projectileHit (alpha)', () => E('projectileHit', { ...S(), target: alphaE }), 'enemy'],
+  ['Kiln Alpha dies', 'death (alpha, long tail)', () => E('death', { target: alphaE, ...S(), variant: 'alpha' }), 'enemy'],
+  ['Mass death (6)', '6 × death – growl limit 2', () => [grunts[0], grunts[1], grunts[2], heavyE, spitter, grunts[0]].forEach((t, i) => setTimeout(() => E('death', { target: t, x: 150 + i * 120, y: 200 }), i * 60)), 'enemy'],
+  // v1.4.1: CINDER radio – BROADCAST (emergency AM), RADIO (field radio), helmet radio, muted caption
+  ['Cutscene: intro', 'emergency broadcast + port, siren, glowing cracks', () => runCutscene('intro')],
+  ['Cutscene: yard-clear', 'field radio + harbour, ship horn, refinery fire', () => runCutscene('yard-clear')],
+  ['Cutscene: foundry-core', 'field radio, deep underground', () => runCutscene('foundry-core')],
+  ['Cutscene: ashmaw-rise', 'field radio, shaft quakes', () => runCutscene('ashmaw-rise')],
+  ['Cutscene: ending', 'quiet, clean signal', () => runCutscene('ending')],
+  ['Fallen (death)', 'cutscene fallen (2nd time = short)', () => runCutscene('fallen')],
+  ['Skip cutscene', 'cutsceneEnd skipped', () => stopCutscene(true)],
+  ['Main menu open', 'menuOpen – menu ambience', () => E('menuOpen', {})],
+  ['Main menu: PLAY', 'menuStart – start sting, ambience fades', () => E('menuStart', {})],
+  ['Main menu close', 'menuClose', () => E('menuClose', {})],
+  ['UI click', 'uiClick', () => E('uiClick', {})],
+  ['UI-hover', 'uiHover', () => E('uiHover', {})],
+];
+let wave = 0;
+// Mellomsekvens-stubb: samme hendelser og rekkefølge som src/story/player.js (world.paused settes som i levels).
+const CE = audio.CUTSCENE_EVENTS;
+let csIdx = -1, csPanel = 0, csTimers = [], csId = null;
+function stopCutscene(skipped) {
+  if (!csId) return; csTimers.forEach(clearTimeout); csTimers = [];
+  E(CE.end, { id: csId, skipped }); csId = null;
+  setTimeout(() => { world.paused = false; document.getElementById('pauseB').classList.remove('on'); }, 50);
+}
+function runCutscene(id) {
+  stopCutscene(true);
+  const cs = CUTSCENES[id]; if (!cs) return;
+  csId = id; world.paused = true; document.getElementById('pauseB').classList.add('on');
+  E(CE.start, { id });
+  let t = 900, index = 0;
+  cs.panels.forEach((p, panel) => p.lines.forEach((l) => {
+    const i = index++; csTimers.push(setTimeout(() => E(CE.line, { id, index: i, speaker: l.speaker, panel }), t));
+    t += 700 + l.text.length * 35;
+  }));
+  csTimers.push(setTimeout(() => stopCutscene(false), t + 400));
+}
+const pp = () => ({ x: world.player.x, y: world.player.y });
+// Nærkamp slik src/weapons/melee.js sender: start → windup 0,12 s → hit {targets} → recover 0,2 s → end
+function meleeSeq(hit, cancelReload = false, info = null) {
+  const b = () => ({ ...pp(), entity: world.player, angle: 0, team: 'player' });
+  if (cancelReload) E('reload', { ...b(), weapon: 'rifle', phase: 'end', result: 'cancel' }); // synkront rett før start, som i melee.js
+  E('melee', { ...b(), phase: 'start', targets: [] });
+  const hits = hit && info ? [{ target: grunts[0], x: grunts[0].x, y: grunts[0].y, killed: !!info.killed, surface: info.surface }] : [];
+  setTimeout(() => E('melee', { ...b(), phase: 'hit', targets: hit ? [grunts[0]] : [], hit, hits, killed: !!info?.killed }), 120);
+  setTimeout(() => E('melee', { ...b(), phase: 'end', targets: hit ? [grunts[0]] : [] }), 320);
+}
+// Ammokasse midt i lading slik src/weapons/index.js refill sender: reload end cancel → refill (synkront)
+function crateDuringReload() {
+  const b = { ...pp(), entity: world.player, team: 'player' };
+  E('reload', { ...b, weapon: 'rifle', phase: 'start', time: 1.8 });
+  setTimeout(() => { E('reload', { ...b, weapon: 'rifle', phase: 'end', result: 'cancel' }); E('refill', { ...b, crateId: 'test-2' }); }, 600);
+}
+// Lading slik Våpen v1 sender den: reload start → (R: reload active + activeReload) → reload end.
+function reloadSeq(weapon, result = null, ent = world.player, len = 1600) {
+  const b = () => ({ x: ent.x, y: ent.y, entity: ent, team: ent.team, weapon });
+  E('reload', { ...b(), phase: 'start', time: 2.0 });
+  if (!result) { setTimeout(() => E('reload', { ...b(), phase: 'end', result: 'normal' }), len); return; }
+  setTimeout(() => {
+    E('reload', { ...b(), phase: 'active', result }); E('activeReload', { ...b(), result });
+    setTimeout(() => E('reload', { ...b(), phase: 'end', result }), result === 'fail' ? 1100 : 0);
+  }, 700);
+}
+// ---- CINDER-hjelpere (v1.4) ----
+const spitter = { type: 'grenadier', x: 700, y: 420, team: 'enemy', dead: false };
+const alphaE = { type: 'heavy', variant: 'alpha', x: 840, y: 140, team: 'enemy', dead: false };
+function cinderSpawn(type, warn, random = false, variant) {
+  const x = random ? 150 + Math.random() * 700 : src.x, y = random ? 60 + Math.random() * 330 : src.y, id = 'c' + Math.random().toString(36).slice(2, 7);
+  E('spawnWarn', { x, y, type, t: warn, id, team: 'enemy', variant });
+  setTimeout(() => E('spawnRise', { x, y, type, id, variant, entity: { type, x, y, team: 'enemy', variant }, team: 'enemy' }), warn * 1000);
+}
+function cinderSteps(e) { for (let i = 0; i < 4; i++) setTimeout(() => E('footstep', { x: e.x, y: e.y, team: 'enemy', entity: e, surface: 'concrete' }), i * 360); }
+function kilnBurst(ent = heavyE, weapon = 'minigun', n = 8, gap = 110) {
+  const b = { x: ent.x, y: ent.y, entity: ent, owner: ent, team: 'enemy' };
+  E('spinup', { ...b, duration: 0.9, weapon }); E('telegraph', { ...b, duration: 0.9, weapon, spinup: true });
+  for (let i = 0; i < n; i++) setTimeout(() => E('shot', { ...b, weapon }), 900 + i * gap);
+  setTimeout(() => E('spindown', b), 900 + n * gap + 50);
+}
+function spitterSac(landEvent = false) {
+  const s = spitter, tx = world.player.x + 60, ty = world.player.y - 30;
+  E('grenadeWindup', { entity: s, x: s.x, y: s.y, team: 'enemy', duration: 0.75, total: 1, radius: 90, weapon: 'grenade' });
+  setTimeout(() => {
+    const g = { kind: 'grenade', weapon: 'grenade', x: s.x, y: s.y, z: 14, t: 0, def: { fuse: 1.1 }, owner: s, team: 'enemy', dead: false };
+    E('grenade', { phase: 'throw', x: g.x, y: g.y, team: 'enemy', owner: s, entity: s, weapon: 'grenade', grenade: g });
+    const t0 = performance.now(), iv = setInterval(() => {
+      const u = (performance.now() - t0) / 1000; g.t = u;
+      const k = Math.min(1, u / 0.5); g.x = s.x + (tx - s.x) * k; g.y = s.y + (ty - s.y) * k; g.z = Math.max(0, 14 + 120 * u - 270 * u * u);
+      if (landEvent && g.z === 0 && !g.landSent) { g.landSent = true; E('grenade', { phase: 'land', x: g.x, y: g.y, team: 'enemy', owner: s, weapon: 'grenade', grenade: g, fuse: 1.1 - u }); }
+      if (u >= 1.1) { clearInterval(iv); g.dead = true; E('explosion', { x: g.x, y: g.y, owner: s, weapon: 'grenade', surface: 'concrete', hits: [], grenade: g }); }
+    }, 16);
+  }, 750);
+}
+let embersOn = true;
+function toggleEmbers() { embersOn = !embersOn; world.enemies = embersOn ? [...grunts, heavyE, spitter, alphaE] : []; }
+const btns = document.getElementById('btns');
+for (const [label, ev, fn, cls] of BTNS) {
+  const b = document.createElement('button'); b.innerHTML = `${label}<small>${ev}</small>`; if (cls) b.className = cls;
+  b.addEventListener('click', () => { audio.unlock(); fn(); });
+  b.addEventListener('mouseenter', () => E('uiHover', {}));
+  btns.appendChild(b);
+}
+
+// automatisk ild
+const af = { P: false, E: false, H: false, All: false };
+const timers = { P: 0, E: [0.1, 0.4, 0.7], H: 0.2, G: 2 };
+for (const k of ['P', 'E', 'H', 'All']) {
+  const b = document.getElementById('af' + k);
+  b.addEventListener('click', () => { audio.unlock(); af[k] = !af[k]; b.classList.toggle('on', af[k]); });
+}
+function autofire(dt) {
+  const all = af.All;
+  if (af.P || all) { timers.P -= dt; if (timers.P <= 0) { timers.P += 1 / 9; E('shot', { ...pp(), team: 'player', weapon: 'rifle', entity: world.player });
+    if (Math.random() < 0.5) { const c = nearCover(); E('coverHit', { x: c.x + Math.random() * c.w, y: c.y + Math.random() * c.h, cover: c, partial: c.type === 'low' }); }
+    else if (Math.random() < 0.6) E('projectileHit', { ...grunts[0], target: grunts[0] }); } }
+  if (af.E || all) grunts.forEach((g, i) => { timers.E[i] -= dt; if (timers.E[i] <= 0) { timers.E[i] += 0.12 + Math.random() * 0.25; E('shot', { x: g.x, y: g.y, team: 'enemy', weapon: 'rifle', entity: g });
+    if (Math.random() < 0.3) E('coverHit', { x: world.player.x - 20, y: world.player.y, cover: COVERS[1], partial: true }); } });
+  if (af.H || all) { timers.H -= dt; if (timers.H <= 0) { timers.H += 0.5; E('shot', { x: heavyE.x, y: heavyE.y, team: 'enemy', weapon: 'heavy', entity: heavyE }); } }
+  if (all) { timers.G -= dt; if (timers.G <= 0) { timers.G = 3 + Math.random() * 3; const x = 300 + Math.random() * 500, y = 80 + Math.random() * 260;
+    E('grenade', { x: 880, y: 300 }); setTimeout(() => E('explosion', { x, y }), 1400); } }
+}
+
+// miks-kontroller
+const bind = (id, fn, fmt = (v) => (+v).toFixed(2)) => { const el = document.getElementById(id), out = el.nextElementSibling;
+  el.addEventListener('input', () => { out.textContent = fmt(el.value); fn(+el.value); }); };
+bind('vMaster', audio.setMasterVolume); bind('vMusic', audio.setMusicVolume); bind('vSfx', audio.setSfxVolume);
+let autoInt = true;
+bind('vInt', (v) => { autoInt = false; document.getElementById('autoInt').classList.remove('on'); audio.setIntensity(v); });
+document.getElementById('autoInt').addEventListener('click', (e) => { autoInt = !autoInt; e.currentTarget.classList.toggle('on', autoInt);
+  audio.setIntensity(autoInt ? null : +document.getElementById('vInt').value); document.getElementById('vInt').nextElementSibling.textContent = autoInt ? 'auto' : (+document.getElementById('vInt').value).toFixed(2); });
+document.getElementById('pauseB').addEventListener('click', (e) => { world.paused = !world.paused; e.currentTarget.classList.toggle('on', world.paused); });
+document.getElementById('muteB').addEventListener('click', (e) => { const m = audio.mute(); e.currentTarget.classList.toggle('on', m); e.currentTarget.textContent = m ? 'Unmute' : 'Mute all'; });
+bind('vHp', (v) => { world.player.hp = v; world.player.dead = v <= 0; }, (v) => String(v));
+
+// stemningsloop starter som når arenaen er lastet
+world.events.emit('arenaLoaded', { id: 'audio-test' });
+const unlockEl = document.getElementById('unlock');
+const hide = () => { audio.unlock(); unlockEl.style.display = 'none'; };
+unlockEl.addEventListener('pointerdown', hide); addEventListener('keydown', hide, { once: true });
+
+// kart
+const cv = document.getElementById('map'), ctx = cv.getContext('2d');
+const toWorld = (e) => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * cv.width / r.width, y: (e.clientY - r.top) * cv.height / r.height }; };
+let dragging = false;
+cv.addEventListener('contextmenu', (e) => e.preventDefault());
+cv.addEventListener('pointerdown', (e) => { audio.unlock(); const p = toWorld(e); if (e.button === 2 || e.shiftKey) { dragging = true; Object.assign(world.player, p); } else { src = p; E('coverHit', { ...p, cover: nearCover(), partial: false }); } });
+cv.addEventListener('pointermove', (e) => { if (dragging) Object.assign(world.player, toWorld(e)); });
+addEventListener('pointerup', () => (dragging = false));
+
+function drawMap() {
+  ctx.fillStyle = '#25282b'; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.strokeStyle = 'rgba(255,255,255,.035)';
+  for (let x = 0; x <= cv.width; x += 32) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, cv.height); ctx.stroke(); }
+  for (let y = 0; y <= cv.height; y += 32) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cv.width, y); ctx.stroke(); }
+  // hørevidde-ringer
+  ctx.strokeStyle = 'rgba(57,198,255,.12)'; ctx.setLineDash([4, 6]);
+  for (const r of [200, 450, 900]) { ctx.beginPath(); ctx.arc(world.player.x, world.player.y, r, 0, Math.PI * 2); ctx.stroke(); }
+  ctx.setLineDash([]);
+  for (const c of COVERS) {
+    ctx.fillStyle = c.type === 'high' ? '#3d4246' : '#4a4f54'; ctx.fillRect(c.x, c.y, c.w, c.h);
+    ctx.fillStyle = c.surface === 'metal' ? '#6b737a' : '#2b2e31'; ctx.fillRect(c.x + 3, c.y + 3, c.w - 6, c.h - 6);
+    if (c.type === 'low') { ctx.fillStyle = '#c9a227'; ctx.fillRect(c.x, c.y, c.w, 3); }
+    ctx.fillStyle = '#7d848a'; ctx.font = '10px ui-monospace, monospace'; ctx.fillText(`${c.type}/${c.surface}`, c.x, c.y - 4);
+  }
+  for (const g of world.enemies) { ctx.fillStyle = g.type === 'heavy' ? '#ff7a1a' : g.type === 'flanker' ? '#8e1e1e' : '#c0392b';
+    ctx.beginPath(); ctx.arc(g.x, g.y, g.type === 'heavy' ? 18 : 14, 0, Math.PI * 2); ctx.fill(); }
+  for (const f of flashes) { ctx.strokeStyle = `rgba(255,179,71,${f.t * 4})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(f.x, f.y, 6 + (0.25 - f.t) * 120, 0, Math.PI * 2); ctx.stroke(); }
+  ctx.lineWidth = 1;
+  // kilde
+  ctx.strokeStyle = '#ffb347'; ctx.beginPath(); ctx.arc(src.x, src.y, 9, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(src.x - 14, src.y); ctx.lineTo(src.x + 14, src.y); ctx.moveTo(src.x, src.y - 14); ctx.lineTo(src.x, src.y + 14); ctx.stroke();
+  // Warden
+  const p = world.player; ctx.fillStyle = '#5a6068'; ctx.beginPath(); ctx.arc(p.x, p.y, 15, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#39c6ff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(p.x, p.y, 15, -0.5, 0.5); ctx.stroke(); ctx.lineWidth = 1;
+  ctx.fillStyle = '#39c6ff'; ctx.font = '11px ui-monospace, monospace'; ctx.fillText('WARDEN', p.x - 22, p.y + 30);
+  const d = Math.hypot(src.x - p.x, src.y - p.y);
+  const occ = d > 48 && !lineOfSight(world, src.x - (src.x - p.x) * 8 / d, src.y - (src.y - p.y) * 8 / d, p.x, p.y);
+  ctx.strokeStyle = occ ? 'rgba(192,57,43,.6)' : 'rgba(57,198,255,.35)'; ctx.setLineDash(occ ? [3, 4] : []);
+  ctx.beginPath(); ctx.moveTo(src.x, src.y); ctx.lineTo(p.x, p.y); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = occ ? '#e5533d' : '#7d848a'; ctx.fillText(`source: ${Math.round(d)} px  pan ${Math.max(-1, Math.min(1, (src.x - p.x) / 520 * 0.85)).toFixed(2)}${occ ? '  · HIDDEN BEHIND HIGH COVER (−6 dB, low-pass)' : ''}${world.paused ? '  · PAUSE' : ''}`, 10, cv.height - 10);
+}
+
+let last = performance.now(), acc = 0;
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now; acc += dt;
+  while (acc >= 1 / 60) { acc -= 1 / 60; world.time += 1 / 60; autofire(1 / 60); audio.update(1 / 60, world); }
+  for (const f of flashes) f.t -= dt; while (flashes.length && flashes[0].t <= 0) flashes.shift();
+  drawMap();
+  const s = audio.getState();
+  document.getElementById('st').textContent = s.state === 'running' ? 'on' : s.state;
+  document.getElementById('vc').textContent = s.voices; document.getElementById('it').textContent = s.intensity.toFixed(2);
+  document.querySelector('#meter i').style.width = (s.intensity * 100) + '%';
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+window.TEST = { world, audio };
+</script>
+</body>
+</html>

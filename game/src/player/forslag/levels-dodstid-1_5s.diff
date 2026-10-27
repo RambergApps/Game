@@ -1,0 +1,11 @@
+--- a/game/src/levels/index.js
++++ b/game/src/levels/index.js
+@@ -32,7 +32,7 @@
+ const READY_TYPES = ['grunt', 'flanker', 'heavy', 'grenadier'];
+ const FIRST_BREAK = 3;      // s før første bølge i et nivå
+ const RETRY_BREAK = 2.5;    // s før bølgen startes på nytt etter død (spilleren har kontroll i pausen)
+-const DEATH_FALL = 1.0;     // s med fall/nedtoning før respawn
++const DEATH_FALL = 2.0;     // s: fall (0,45 s, rig death-klipp) + ~1,5 s liggende før respawn/game over
+ export { BUILD } from './build.js';
+ 
+ /** Økt-tilstand. «fallen» vises bare ved FØRSTE død per økt; lagringen kan sette flagget (profile.seenCutscenes). */

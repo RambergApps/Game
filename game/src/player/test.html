@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Warden – player test</title>
+<style>html,body{margin:0;background:#0d0f11;overflow:hidden}canvas{display:block}
+#help{position:fixed;left:12px;top:10px;font:12px/1.5 system-ui,sans-serif;color:#cfd8de;background:rgba(10,14,18,.72);padding:8px 12px;border-left:2px solid #39c6ff;pointer-events:none;white-space:pre}
+#st{position:fixed;right:12px;top:10px;font:12px/1.4 ui-monospace,monospace;color:#9fe8ff;background:rgba(10,14,18,.72);padding:6px 10px;pointer-events:none;white-space:pre}</style></head>
+<body><canvas id="game"></canvas><div id="help"></div><div id="st"></div>
+<script type="module">
+// Testbenk for Warden. NB: det er TESTBENKEN (ikke spilleren) som kjører core-loopen med weapons.update/draw.
+import { createWorld, createInput, createCamera, createLoop, spawnProjectile, lineOfSight } from '../core/index.js';
+import * as player from './index.js';
+import * as weapons from '../weapons/index.js';
+import { createRig, WARDEN } from '../shared/rig/index.js';
+
+const Q = new URLSearchParams(location.search);
+const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
+function resize() { canvas.width = innerWidth; canvas.height = innerHeight; } resize(); addEventListener('resize', resize);
+const world = createWorld({ width: 1400, height: 1000 });
+const camera = createCamera(canvas); camera.zoom = +(Q.get('zoom') || 2);
+const real = createInput(canvas);
+// skriptbar input (for skjermbilder): TEST.hold('KeyD'), TEST.tap('Space'), TEST.aimAt(x,y), TEST.mouse({left,right})
+const S = { down: new Set(), pressed: new Set(), aim: null };
+const input = {
+  mouse: real.mouse,
+  down: (c) => real.down(c) || S.down.has(c),
+  pressed: (c) => real.pressed(c) || S.pressed.has(c),
+  released: (c) => real.released(c),
+  sync(cam) { real.sync(cam); if (S.aim) { real.mouse.worldX = S.aim.x; real.mouse.worldY = S.aim.y; } },
+  endFrame() { real.endFrame(); S.pressed.clear(); },
+};
+world.camera = camera; world.input = input;
+world.playerStats = { maxHp: 100, magSize: 30, reloadTime: 1.8, coverDamageMult: 1, grenades: 2, rollDistMult: 1, healOnKill: 0, coverSpreadMult: 1, pierce: 0 };
+
+// ---- testbane: lav dekning (kasser), høy dekning (vegger)
+const L = (x, y, w, h) => ({ x, y, w, h, type: 'low' }), H = (x, y, w, h) => ({ x, y, w, h, type: 'high' });
+world.cover = [L(520, 380, 120, 36), L(640, 380, 40, 36), L(380, 560, 36, 120), H(820, 300, 40, 220), H(860, 480, 180, 40), L(620, 700, 160, 30), L(980, 700, 36, 36), H(240, 260, 160, 40)];
+
+// ---- mål: Protocol-Wardens (samme rigg, rød palett)
+const enemies = [];
+function addTarget(x, y) { const e = { x, y, r: 13, hp: 100, maxHp: 100, team: 'enemy', dead: false, aim: Math.PI, type: 'dummy', rig: createRig(WARDEN, { skin: 'protocol', x, y, angle: Math.PI }), t: 0, deadT: 0 }; enemies.push(e); return e; }
+addTarget(760, 250); addTarget(1120, 620); addTarget(560, 900);
+world.enemies = enemies;
+const shoot = Q.get('shoot') === '1';
+const enemyMod = {
+  update(dt, w) { const p = w.player;
+    for (const e of enemies) {
+      if (e.dead) { e.deadT += dt; if (e.deadT > 2.5) { e.dead = false; e.hp = e.maxHp; e.deadT = 0; e.rig.reset(e.x, e.y, e.aim); } }
+      else if (p) { e.aim = Math.atan2(p.y - e.y, p.x - e.x); e.t += dt;
+        if (shoot && e.t > 1.1 && !p.dead && lineOfSight(w, e.x, e.y, p.x, p.y)) { e.t = 0; spawnProjectile(w, { x: e.x + Math.cos(e.aim) * 20, y: e.y + Math.sin(e.aim) * 20, angle: e.aim + (w.rng() - .5) * .06, dmg: 9, team: 'enemy', owner: e, speed: 700 }); } }
+      e.rig.drive({ x: e.x, y: e.y, aimAngle: e.aim, mode: e.dead ? 'death' : 'idle', aimBlend: .6 }); e.rig.update(dt);
+    } },
+  draw(c, w, cam) { for (const e of [...enemies].sort((a, b) => a.y - b.y)) e.rig.draw(c, cam, { alpha: e.dead ? Math.max(0, 1 - e.deadT) : 1 }); },
+};
+world.events.on('death', ({ target }) => { if (target.team === 'enemy') { target.rig.play('death'); camera.shake(4, 200); } });
+world.events.on('hit', ({ target }) => { if (target.team === 'enemy' && !target.dead) target.rig.play('hurt'); });
+
+// ---- gulv og dekning (enkel testgrafikk)
+let floor = null;
+function makeFloor() { const c = document.createElement('canvas'); c.width = world.bounds.w; c.height = world.bounds.h; const g = c.getContext('2d');
+  g.fillStyle = '#23272b'; g.fillRect(0, 0, c.width, c.height);
+  let s = 7; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let y = 0; y < c.height; y += 64) for (let x = 0; x < c.width; x += 64) { const v = 32 + R() * 8 | 0; g.fillStyle = `rgb(${v},${v + 3},${v + 6})`; g.fillRect(x + 1, y + 1, 62, 62); }
+  for (let i = 0; i < 900; i++) { g.fillStyle = `rgba(${R() < .5 ? '0,0,0' : '255,255,255'},${.03 + R() * .04})`; g.fillRect(R() * c.width, R() * c.height, 1 + R() * 3, 1 + R() * 3); }
+  g.strokeStyle = 'rgba(230,170,40,.35)'; g.setLineDash([18, 14]); g.lineWidth = 3; g.beginPath(); g.moveTo(100, 820); g.lineTo(1300, 820); g.stroke();
+  return c; }
+const arenaMod = {
+  draw(c) { floor ||= makeFloor(); c.drawImage(floor, 0, 0); },
+  drawCover(c) { for (const k of world.cover) { const hi = k.type === 'high', lift = hi ? 10 : 4;
+    c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(k.x + lift * .6, k.y + lift, k.w, k.h);
+    c.fillStyle = hi ? '#4a5056' : '#6b5a44'; c.fillRect(k.x, k.y, k.w, k.h);
+    c.fillStyle = hi ? '#5d646b' : '#86704f'; c.fillRect(k.x + 2, k.y + 2, k.w - 4, k.h - 4 - (hi ? 4 : 2));
+    c.strokeStyle = hi ? 'rgba(0,0,0,.5)' : 'rgba(40,25,10,.55)'; c.lineWidth = 1; c.strokeRect(k.x + .5, k.y + .5, k.w - 1, k.h - 1);
+    if (!hi) { c.strokeStyle = 'rgba(40,25,10,.35)'; for (let x = k.x + 20; x < k.x + k.w - 4; x += 20) { c.beginPath(); c.moveTo(x, k.y + 2); c.lineTo(x, k.y + k.h - 2); c.stroke(); } } } },
+};
+
+weapons.init(world); player.init(world);
+player.respawn(world, 440, 470);
+camera.follow(world.player); camera.x = world.player.x; camera.y = world.player.y;
+const loop = createLoop({ world, ctx, camera, input, mods: { level: null, player, enemies: enemyMod, arena: arenaMod, weapons } });
+if (Q.get('paused') !== '1') loop.start();
+
+document.getElementById('help').textContent = [
+  'WARDEN – PLAYER TEST', 'WASD move · Shift sprint · Space roll / vault (low cover)', 'E take cover / leave · Q cover-to-cover',
+  'RMB aim · pop up · lean out    LMB fire · blindfire', 'R reload · G grenade (hold/release) · F melee · 1/2/3 weapons', 'F1 debug · ?zoom=1.5|2 · ?shoot=1 enemies fire'].join('\n');
+const stEl = document.getElementById('st');
+setInterval(() => { const p = world.player, D = player._debug(); stEl.textContent = `state ${D.st.name}${D.cov.line ? ' / ' + D.cov.sub : ''}\nhp ${p.hp.toFixed(0)}/${p.maxHp}  r ${p.r}  armor ${p.armor.toFixed(2)}\nhitChance ${p.coverHitChance ?? '-'}  invuln ${p.invuln}\nfps ${loop.stats.fps.toFixed(0)}`; }, 200);
+
+const ev = []; world.events.on('*', ({ type, payload }) => { if (['playerState', 'coverEnter', 'coverExit', 'coverImpact', 'roll', 'vault', 'melee', 'playerHealth', 'footstep'].includes(type)) ev.push({ type, t: +world.time.toFixed(3), state: payload?.state, phase: payload?.phase, health: payload?.health, hp: payload?.hp }); });
+window.TEST = { world, loop, camera, input, player, weapons, ev, S,
+  hold(c) { S.down.add(c); }, release(c) { S.down.delete(c); }, tap(c) { S.pressed.add(c); S.down.add(c); setTimeout(() => S.down.delete(c), 0); },
+  tapNow(c) { S.pressed.add(c); }, aimAt(x, y) { S.aim = { x, y }; }, mouse(o) { Object.assign(real.mouse, o); },
+  step(n = 1) { loop.advance(n); }, P: () => player._debug(), setZoom(z) { camera.zoom = z; } };
+window.__ready = true;
+</script></body></html>

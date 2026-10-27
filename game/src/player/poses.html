@@ -1,0 +1,57 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Warden – pose sheet</title>
+<style>html,body{margin:0;background:#0b0d0f;color:#cfd6dc;font:12px system-ui}canvas{display:block}</style></head>
+<body><canvas id="c"></canvas>
+<script type="module">
+// Contact-sheet generator for the shared rig (roll / slide / crouch / melee). ?sheet=roll&zoom=2&cell=150
+import { createRig, WARDEN } from '../shared/rig/index.js';
+const Q = new URLSearchParams(location.search);
+const sheet = Q.get('sheet') || 'roll', Z = +(Q.get('zoom') || 2), CELL = +(Q.get('cell') || 150), SKIN = Q.get('skin') || 'warden';
+const DT = 1 / 60;
+const floor = (g, w, h) => { g.fillStyle = '#1b1e20'; g.fillRect(0, 0, w, h); for (let i = 0; i < 400; i++) { g.fillStyle = `rgba(${Math.random() < .5 ? '0,0,0' : '90,95,100'},${Math.random() * .08})`; g.fillRect(Math.random() * w, Math.random() * h, 2 + Math.random() * 20, 2 + Math.random() * 20); } g.strokeStyle = 'rgba(0,0,0,.25)'; for (let x = 0; x < w; x += 32 * Z) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); } for (let y = 0; y < h; y += 32 * Z) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); } };
+const coverBox = (g, c) => { g.fillStyle = '#3a3f44'; g.fillRect(c.x, c.y, c.w, c.h); g.fillStyle = '#4a5056'; g.fillRect(c.x + 2, c.y + 2, c.w - 4, c.h - 4); g.strokeStyle = 'rgba(0,0,0,.6)'; g.strokeRect(c.x, c.y, c.w, c.h); };
+// scenarios: each returns { cells:[{label, run(rig) → state}], cover? }
+const S = {
+  roll: () => ({ times: [0, 45, 90, 140, 190, 240, 290, 330, 375, 420, 460, 500], dir: 0,
+    sim(rig, tms) { let x = 0; const steps = Math.round(tms / (1000 * DT)); rig.drive({ x, y: 0, aimAngle: 0, mode: 'idle' }); for (let i = 0; i < 20; i++) rig.update(DT);
+      rig.play('roll'); for (let i = 0; i < steps; i++) { const t = i * DT * 1000; const v = t < 90 ? 294 + (420 - 294) * t / 90 : 420 - (420 - 160) * (1 - Math.pow(1 - Math.min(1, (t - 90) / 330), 3)); x += v * DT; rig.drive({ x, y: 0, aimAngle: 0, mode: 'roll', moveAngle: 0 }); rig.update(DT); } return { x, y: 0 }; },
+    label: t => `${t} ms` }),
+  slide: () => ({ times: [0, 60, 120, 180, 230, 250, 270, 300, 340, 400, 520, 800], cover: { x: 150, y: -40, w: 24, h: 80, type: 'low' },
+    sim(rig, tms) { let x = 0; const tx = 135; rig.drive({ x, y: 0, aimAngle: 0, mode: 'run', vx: 290 }); for (let i = 0; i < 30; i++) { x += 4.8; rig.drive({ x: x - 144, y: 0, aimAngle: 0, mode: 'run' }); rig.update(DT); } x = rig.S.x;
+      const steps = Math.round(tms / (1000 * DT)); let hit = false, st = 'slide';
+      for (let i = 0; i < steps; i++) { if (!hit) { x = Math.min(tx, x + 400 * DT); const cov = { nx: -1, ny: 0, type: 'low' };
+          rig.drive({ x, y: 0, aimAngle: 0, mode: 'slide', cover: cov, vx: 400 }); if (x >= tx) { hit = true; rig.play('impact', { nx: -1, ny: 0 }); rig.freeze(2 * DT); } }
+        else rig.drive({ x, y: 0, aimAngle: 0, mode: 'cover', cover: { nx: -1, ny: 0, type: 'low' } });
+        rig.update(DT); } return { x, y: 0 }; },
+    label: t => `${t} ms` }),
+  crouch: () => ({ times: ['stand', 'hidden', 'glide', 'popUp', 'blind', 'high', 'lean'], cover: { x: 150, y: -40, w: 24, h: 80, type: 'low' },
+    sim(rig, k) { const cov = { nx: -1, ny: 0, type: k === 'high' || k === 'lean' ? 'high' : 'low', edgeDir: -1 };
+      let x = 135, y = 0; for (let i = 0; i < 90; i++) { if (k === 'glide') y += 95 * DT; const d = { x, y: k === 'lean' ? -20 : y, aimAngle: k === 'popUp' || k === 'lean' ? -.3 : 0, mode: k === 'stand' ? 'idle' : 'cover', cover: k === 'stand' ? null : cov, peek: k === 'popUp' || k === 'lean' ? 1 : 0, blind: k === 'blind' ? 1 : 0, aimBlend: k === 'popUp' ? 1 : 0 }; rig.drive(d); rig.update(DT); }
+      return { x, y: rig.S.y, cover: k === 'stand' ? null : cov }; },
+    label: k => k }),
+  melee: () => ({ times: [0, 40, 80, 120, 145, 170, 195, 220, 280, 360, 440, 520],
+    sim(rig, tms) { rig.drive({ x: 0, y: 0, aimAngle: 0, mode: 'idle', aimBlend: .4 }); for (let i = 0; i < 30; i++) rig.update(DT); rig.play('melee'); const steps = Math.round(tms / (1000 * DT)); for (let i = 0; i < steps; i++) { rig.drive({ x: 0, y: 0, aimAngle: 0, mode: 'idle' }); rig.update(DT); } return { x: 0, y: 0 }; },
+    label: t => `${t} ms` }),
+  walk: () => ({ times: [0, 1, 2, 3, 4, 5, 6, 7], sim(rig, k) { let x = 0; const a = k * Math.PI / 4; for (let i = 0; i < 60; i++) { x += 3; rig.drive({ x: Math.cos(a) * x, y: Math.sin(a) * x, aimAngle: -Math.PI / 2, mode: 'walk' }); rig.update(DT); } return { x: rig.S.x, y: rig.S.y }; }, label: k => `walk ${k * 45}°` }),
+};
+const sc = S[sheet](); if (Q.get('t')) sc.times = Q.get('t').split(',').map(v => isNaN(+v) ? v : +v); const N = sc.times.length, COLS = Math.min(6, N), ROWS = Math.ceil(N / COLS);
+const cv = document.getElementById('c'); cv.width = COLS * CELL; cv.height = ROWS * CELL + 22; const g = cv.getContext('2d');
+floor(g, cv.width, cv.height);
+const errs = [];
+sc.times.forEach((t, i) => {
+  try {
+    const rig = createRig(WARDEN, { skin: SKIN, angle: 0 });
+    const st = sc.sim(rig, t);
+    const cx = (i % COLS) * CELL + CELL / 2, cy = ((i / COLS) | 0) * CELL + CELL / 2;
+    g.save(); g.beginPath(); g.rect(cx - CELL / 2, cy - CELL / 2, CELL, CELL); g.clip();
+    g.setTransform(Z, 0, 0, Z, cx - st.x * Z, cy - st.y * Z);
+    if (sc.cover) coverBox(g, sc.cover);
+    if (st.cover && sc.cover) { const c = sc.cover; g.fillStyle = 'rgba(57,198,255,.5)'; g.fillRect(c.x - 1.5, st.y - 16, 1.5, 32); }
+    rig.draw(g, null);
+    g.restore();
+    g.fillStyle = '#cfd6dc'; g.fillText(sc.label(t), (i % COLS) * CELL + 6, ((i / COLS) | 0) * CELL + 14);
+    g.strokeStyle = 'rgba(255,255,255,.08)'; g.strokeRect((i % COLS) * CELL + .5, ((i / COLS) | 0) * CELL + .5, CELL - 1, CELL - 1);
+  } catch (e) { errs.push(String(e && e.stack || e)); }
+});
+g.fillStyle = '#8fa0ad'; g.fillText(`Warden – ${sheet} – zoom ${Z}×`, 6, cv.height - 7);
+window.__done = true; window.__errs = errs;
+</script></body></html>

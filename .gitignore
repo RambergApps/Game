@@ -1,0 +1,15 @@
+node_modules/
+*.mp4
+*.webm
+*.bk
+*.bak
+*~
+*.tmp
+.env
+.env.*
+*.env
+graph.env
+tests/results/
+shots/
+reviews/img/
+.DS_Store

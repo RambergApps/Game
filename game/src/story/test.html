@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>BREACH – test page: cutscenes</title><link rel="icon" href="data:,">
+<style>
+  html,body{margin:0;height:100%;background:#0c0d0e;color:#cfd3d6;font:15px/1.4 "Barlow Condensed","Arial Narrow",sans-serif}
+  #bg{position:fixed;inset:0;width:100%;height:100%}
+  main{position:relative;max-width:760px;margin:6vh auto;padding:24px 28px;background:rgba(10,11,12,.86);border:1px solid #2b2e31}
+  h1{margin:0 0 4px;font-size:28px;letter-spacing:.12em;color:#39c6ff}
+  p{color:#8b9196;margin:0 0 16px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  button{all:unset;cursor:pointer;padding:10px 14px;background:#1b1e21;border-left:3px solid #c9a227;color:#e6e1d6;letter-spacing:.06em}
+  button:hover{background:#262a2e} button small{display:block;color:#7d848a;letter-spacing:0;font-size:13px}
+  #log{margin-top:16px;padding:10px;background:#050606;height:140px;overflow:auto;font:12px/1.5 ui-monospace,monospace;color:#9fb0bb}
+  label{display:inline-flex;gap:6px;align-items:center;margin:0 16px 12px 0;color:#8b9196}
+</style></head>
+<body>
+<canvas id="bg"></canvas>
+<main>
+  <h1>BREACH // CUTSCENES</h1>
+  <p>Enter / click: finish the line, then next line or panel · Esc: skip the whole cutscene. Story: CINDER. Panels use painted images from <code>img/story/&lt;panel-id&gt;.webp</code> when listed in PAINTED_PANELS, otherwise the code-drawn placeholder scene. The background is a stub of the game.</p>
+  <label><input type="checkbox" id="auto"> Auto-advance (2.5 s)</label>
+  <label><input type="checkbox" id="all"> Play all in sequence</label>
+  <div class="grid" id="list"></div>
+  <div id="log"></div>
+</main>
+<script type="module">
+import { showCutscene, CUTSCENES, storyEvents } from './index.js';
+// lydhendelser: logg og samle for automatiserte tester
+window.__events = [];
+for (const t of ['cutsceneStart', 'cutsceneLine', 'cutsceneEnd']) storyEvents.on(t, (d) => { window.__events.push({ type: t, ...d }); log(`${t} ${JSON.stringify(d)}`); });
+// stub-bakgrunn: «spillet» bak overlayet
+const bg = document.getElementById('bg'), bx = bg.getContext('2d');
+function drawBg(t) {
+  bg.width = innerWidth; bg.height = innerHeight; bx.fillStyle = '#2b2e31'; bx.fillRect(0, 0, bg.width, bg.height);
+  bx.strokeStyle = 'rgba(255,255,255,.04)'; for (let x = 0; x < bg.width; x += 32) { bx.beginPath(); bx.moveTo(x, 0); bx.lineTo(x, bg.height); bx.stroke(); }
+  for (let y = 0; y < bg.height; y += 32) { bx.beginPath(); bx.moveTo(0, y); bx.lineTo(bg.width, y); bx.stroke(); }
+}
+drawBg(); addEventListener('resize', drawBg);
+const log = (m) => { const el = document.getElementById('log'); el.textContent += `[${new Date().toLocaleTimeString('en-GB')}] ${m}\n`; el.scrollTop = 1e9; };
+window.__results = [];
+async function run(id) {
+  const t0 = performance.now(); log(`start ${id}`);
+  const r = await showCutscene(id, { autoAdvance: document.getElementById('auto').checked ? 2.5 : 0 });
+  window.__results.push(r);
+  log(`done ${id} → ${JSON.stringify(r)} after ${((performance.now() - t0) / 1000).toFixed(1)} s`);
+  return r;
+}
+const list = document.getElementById('list');
+for (const cs of Object.values(CUTSCENES)) {
+  const b = document.createElement('button'); b.dataset.id = cs.id;
+  if (cs.prototype) b.style.borderLeftColor = '#ff3a24';
+  b.innerHTML = `${cs.id}<small>${cs.chapter} ${cs.title} · ${cs.panels.length} panel${cs.panels.length > 1 ? "s" : ""} · ${cs.when}</small>`;
+  b.onclick = async () => {
+    if (document.getElementById('all').checked) { for (const id of Object.keys(CUTSCENES)) if (!CUTSCENES[id].prototype) await run(id); } else await run(cs.id);
+  };
+  list.appendChild(b);
+}
+// testkrok for automatiserte tester
+window.__story = { showCutscene, run };
+window.STORY_READY = true;
+</script>
+</body></html>

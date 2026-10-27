@@ -1,0 +1,20 @@
+<!doctype html><meta charset="utf-8"><title>Warden C – prototype</title>
+<style>body{margin:0;background:#0000}canvas{display:block}</style>
+<canvas id="c"></canvas>
+<script type="module">
+import { loadPaintedC, drawWardenC } from './paintedC.js';
+import { RIFLE_LOOK } from '../../../weapons/look/rifle.js';
+// Rutenett av figurer på gjennomsiktig bakgrunn i Z× (standard 4×). Rader: stå 8 retninger (proc, painted), gange Ø 6 faser (proc, painted).
+const Z = +(new URLSearchParams(location.search).get('z') || 4), CW = 80, CH = 84, FX = 40, FY = 70;
+const rows = [];
+for (const legs of ['proc', 'painted']) rows.push([...Array(8)].map((_, i) => ({ aim: i * Math.PI / 4, legs })));
+for (const legs of ['proc', 'painted']) rows.push([...Array(6)].map((_, i) => ({ aim: 0, phase: i / 6, legs })));
+const cv = document.getElementById('c'); cv.width = CW * 8 * Z; cv.height = CH * rows.length * Z;
+const ctx = cv.getContext('2d'); ctx.imageSmoothingQuality = 'high';
+window.errors = [];
+try {
+  await loadPaintedC();
+  rows.forEach((r, ri) => r.forEach((f, ci) => { ctx.save(); ctx.scale(Z, Z); drawWardenC(ctx, { x: ci * CW + FX, y: ri * CH + FY, look: RIFLE_LOOK, zoom: Z / 2, ...f }); ctx.restore(); }));
+} catch (e) { window.errors.push(String(e.stack || e)); }
+window.done = true;
+</script>

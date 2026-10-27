@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BREACH – Enemy AI test range</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { --bg:#0c0d0e; --panel:#17191b; --metal:#3d4246; --concrete:#2b2e31; --stripe:#c9a227; --cyan:#39c6ff; --txt:#c9ced3; }
+  html,body { margin:0; background:var(--bg); color:var(--txt); font:13px/1.4 system-ui, sans-serif; }
+  .wrap { display:flex; gap:14px; padding:12px; align-items:flex-start; }
+  canvas { display:block; background:#121416; border:1px solid #000; box-shadow:0 0 0 1px #2a2d30, 0 10px 40px #000; cursor:crosshair; }
+  aside { width:250px; background:var(--panel); border:1px solid #2a2d30; padding:12px; box-shadow:inset 0 3px 0 var(--stripe); }
+  h1 { font-size:15px; letter-spacing:.18em; margin:2px 0 10px; color:#e6e9ec; }
+  h1 span { color:var(--cyan); }
+  h2 { font-size:11px; letter-spacing:.14em; color:#8a9096; margin:14px 0 6px; text-transform:uppercase; }
+  button { display:block; width:100%; margin:4px 0; padding:7px 9px; text-align:left; background:#202326; color:var(--txt);
+           border:1px solid #33373b; border-left:4px solid var(--c, #555); cursor:pointer; font:inherit; }
+  button:hover:not(:disabled) { background:#2a2e32; }
+  button:disabled { opacity:.38; cursor:not-allowed; }
+  button.on { background:#1d2a31; border-color:#2c5566; }
+  #states { font:11px ui-monospace, monospace; white-space:pre; color:#aab1b8; min-height:80px; }
+  .hint { color:#7d848b; font-size:11px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <canvas id="game" width="1280" height="768"></canvas>
+  <aside>
+    <h1>BREACH <span>//</span> ENEMY AI</h1>
+    <div class="hint">WASD move · mouse aim · click fire · F1 debug · R revive<br>Spawns use the arena spawn points (yellow stripes).</div>
+    <h2>Spawn</h2>
+    <button id="sp-grunt" style="--c:#c0392b">Husk</button>
+    <button id="sp-flanker" style="--c:#8e1e1e">Lurcher</button>
+    <button id="sp-heavy" style="--c:#ff7a1a">Kiln</button>
+    <button id="sp-grenadier" style="--c:#9b59ff">Spitter</button>
+    <button id="sp-hunker" style="--c:#e0c234">Hunker</button>
+    <button id="sp-squad" style="--c:#c9a227">Pack: 3 Husk + 2 Lurcher</button>
+    <button id="sp-mixed" style="--c:#c9a227">Squad: mixed (all four)</button>
+    <button id="clear" style="--c:#555">Clear all</button>
+    <h2>Options</h2>
+    <button id="debug" style="--c:#39c6ff">Debug (F1)</button>
+    <button id="god" style="--c:#39c6ff">God mode</button>
+    <button id="pause" style="--c:#39c6ff">Pause</button>
+    <h2>States</h2>
+    <div id="states"></div>
+  </aside>
+</div>
+<script type="module" src="./test.js"></script>
+</body>
+</html>

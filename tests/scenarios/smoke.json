@@ -1,0 +1,249 @@
+{
+  "name": "smoke",
+  "description": "Last spillet, vent 2 s, skjermbilde, gå i hver retning (WASD), sikt rundt, skyt (venstre klikk), dekning (E), rulling (Space), skjermbilde, ytelsesmåling 10 s. Deretter 5 s måling under kamp (bevegelse + holdt skyting + rulling). Til slutt skjermbilde med F1-debugoverlegg (cover-typer, siktlinjer). Før scenariet: skjermbilde av startskjermen og start via BREACH.startGame() (ellers klikk på canvas). Etter start: teller kall til lydmodulens update (V8-dekning) og leser lydtilstand.",
+  "steps": [
+    {
+      "do": "wait",
+      "ms": 2000
+    },
+    {
+      "do": "state",
+      "label": "start"
+    },
+    {
+      "do": "callCount",
+      "label": "lyd-update",
+      "url": "src/audio/index.js",
+      "fn": "update",
+      "ms": 2000
+    },
+    {
+      "do": "eval",
+      "label": "lyd-tilstand",
+      "expr": "window.BREACH ? import('/src/audio/index.js').then(m => m.getState ? m.getState() : null).catch(e => ({ error: String(e) })) : null"
+    },
+    {
+      "do": "shot",
+      "name": "lastet"
+    },
+    {
+      "do": "move",
+      "x": 900,
+      "y": 360
+    },
+    {
+      "do": "keys",
+      "keys": [
+        "KeyW"
+      ],
+      "ms": 600
+    },
+    {
+      "do": "keys",
+      "keys": [
+        "KeyD"
+      ],
+      "ms": 600
+    },
+    {
+      "do": "keys",
+      "keys": [
+        "KeyS"
+      ],
+      "ms": 600
+    },
+    {
+      "do": "keys",
+      "keys": [
+        "KeyA"
+      ],
+      "ms": 600
+    },
+    {
+      "do": "keys",
+      "keys": [
+        "KeyW",
+        "KeyD"
+      ],
+      "ms": 400
+    },
+    {
+      "do": "state",
+      "label": "etter-bevegelse"
+    },
+    {
+      "do": "shot",
+      "name": "etter-bevegelse"
+    },
+    {
+      "do": "aimCircle",
+      "cx": 0.5,
+      "cy": 0.5,
+      "r": 220,
+      "steps": 24,
+      "ms": 1500
+    },
+    {
+      "do": "move",
+      "x": 1000,
+      "y": 250
+    },
+    {
+      "do": "click",
+      "button": "left",
+      "count": 5,
+      "interval": 120
+    },
+    {
+      "do": "mouseHold",
+      "button": "left",
+      "ms": 800
+    },
+    {
+      "do": "shot",
+      "name": "skyting"
+    },
+    {
+      "do": "eval",
+      "label": "lyd-tilstand-etter-skyting",
+      "expr": "window.BREACH ? import('/src/audio/index.js').then(m => m.getState ? m.getState() : null).catch(e => ({ error: String(e) })) : null"
+    },
+    {
+      "do": "press",
+      "key": "KeyE"
+    },
+    {
+      "do": "wait",
+      "ms": 600
+    },
+    {
+      "do": "state",
+      "label": "dekning"
+    },
+    {
+      "do": "shot",
+      "name": "dekning-E"
+    },
+    {
+      "do": "press",
+      "key": "KeyE"
+    },
+    {
+      "do": "wait",
+      "ms": 300
+    },
+    {
+      "do": "keyDown",
+      "key": "KeyA"
+    },
+    {
+      "do": "press",
+      "key": "Space"
+    },
+    {
+      "do": "wait",
+      "ms": 150
+    },
+    {
+      "do": "shot",
+      "name": "rulling-midt"
+    },
+    {
+      "do": "wait",
+      "ms": 400
+    },
+    {
+      "do": "keyUp",
+      "key": "KeyA"
+    },
+    {
+      "do": "state",
+      "label": "etter-rulling"
+    },
+    {
+      "do": "shot",
+      "name": "etter-rulling"
+    },
+    {
+      "do": "perf",
+      "ms": 10000,
+      "label": "tomgang-10s"
+    },
+    {
+      "do": "perf",
+      "ms": 5000,
+      "label": "kamp-5s",
+      "during": [
+        {
+          "do": "move",
+          "x": 1000,
+          "y": 200
+        },
+        {
+          "do": "mouseDown",
+          "button": "left"
+        },
+        {
+          "do": "keys",
+          "keys": [
+            "KeyW"
+          ],
+          "ms": 800
+        },
+        {
+          "do": "keys",
+          "keys": [
+            "KeyD"
+          ],
+          "ms": 800
+        },
+        {
+          "do": "press",
+          "key": "Space"
+        },
+        {
+          "do": "keys",
+          "keys": [
+            "KeyS"
+          ],
+          "ms": 800
+        },
+        {
+          "do": "keys",
+          "keys": [
+            "KeyA"
+          ],
+          "ms": 800
+        },
+        {
+          "do": "mouseUp",
+          "button": "left"
+        }
+      ]
+    },
+    {
+      "do": "state",
+      "label": "slutt"
+    },
+    {
+      "do": "shot",
+      "name": "slutt"
+    },
+    {
+      "do": "press",
+      "key": "F1"
+    },
+    {
+      "do": "wait",
+      "ms": 300
+    },
+    {
+      "do": "shot",
+      "name": "debug-F1"
+    },
+    {
+      "do": "press",
+      "key": "F1"
+    }
+  ]
+}

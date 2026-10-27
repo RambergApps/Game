@@ -1,0 +1,70 @@
+{
+  "id": "intro",
+  "title": "Kessa Yard",
+  "chapter": "CHAPTER 01",
+  "source": "Lines mirror src/story/cutscenes.js (intro). Images: game/img/story/<id>.webp, 1920x1080.",
+  "note": "Husks are drafts, kept in smoke/glow/silhouette until Enemy Design delivers final art.",
+  "panels": [
+    {
+      "id": "intro-01",
+      "shot": "establishing",
+      "file": "img/story/intro-01.webp",
+      "content": "Garrison Nine (Warden cyan, Hale, Okafor, Brandt) on a walkway over Kessa Port at night",
+      "lines": [
+        {
+          "speaker": "caption",
+          "text": "Forty kilometres inland, the Deepwell drill hit something that bled."
+        },
+        {
+          "speaker": "caption",
+          "text": "Three days later, Kessa Port is still evacuating."
+        }
+      ]
+    },
+    {
+      "id": "intro-02",
+      "shot": "wide / crowd",
+      "file": "img/story/intro-02.webp",
+      "content": "Civilians streaming to a cargo ship on the pier in rain, PA horns, orange glow on inland horizon",
+      "lines": [
+        {
+          "speaker": "announcer",
+          "text": "All civilians to the piers. Stay off open ground. Repeat: stay off open ground."
+        }
+      ]
+    },
+    {
+      "id": "intro-03",
+      "shot": "two-shot / close",
+      "file": "img/story/intro-03.webp",
+      "content": "Hale on radio (pale visor, whip antenna) beside Warden (cyan visor) in Kessa Yard",
+      "lines": [
+        {
+          "speaker": "command",
+          "who": "HALE",
+          "text": "Last ship loads in twenty. Garrison Nine holds the yard."
+        },
+        {
+          "speaker": "warden",
+          "text": "Then we hold the yard."
+        }
+      ]
+    },
+    {
+      "id": "intro-04",
+      "shot": "action",
+      "file": "img/story/intro-04.webp",
+      "content": "Yard concrete ruptures, molten glow, container tipping; Husks only as smoky silhouettes in the fissure",
+      "lines": [
+        {
+          "speaker": "caption",
+          "text": "The asphalt glows from underneath."
+        },
+        {
+          "speaker": "warden",
+          "text": "Contact. They’re coming up through the cracks."
+        }
+      ]
+    }
+  ]
+}

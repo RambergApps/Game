@@ -1,0 +1,30 @@
+--- a/game/src/main.js
++++ b/game/src/main.js
+@@ -12,7 +12,26 @@
+ 
+ const canvas = document.getElementById('game');
+ const ctx = canvas.getContext('2d');
+-function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
++// DPR-bevisst canvas: bakbuffer = CSS-størrelse × DPR (maks 2). canvas.width/height, ctx.setTransform/resetTransform/getTransform
++// ses i CSS-px, så kamera, input (mus → verden), HUD og modulenes setTransform(1,0,0,1,…) stemmer uendret. DPR leses på nytt ved resize.
++let DPR = 1, LW = innerWidth, LH = innerHeight;
++{
++  const P = HTMLCanvasElement.prototype, WD = Object.getOwnPropertyDescriptor(P, 'width'), HD = Object.getOwnPropertyDescriptor(P, 'height');
++  Object.defineProperty(canvas, 'width', { configurable: true, get: () => LW, set: (v) => { LW = v; WD.set.call(canvas, Math.round(v * DPR)); } });
++  Object.defineProperty(canvas, 'height', { configurable: true, get: () => LH, set: (v) => { LH = v; HD.set.call(canvas, Math.round(v * DPR)); } });
++  const st = ctx.setTransform.bind(ctx), gt = ctx.getTransform.bind(ctx);
++  ctx.setTransform = (a, b, c, d, e, f) => {
++    if (a === undefined) { a = d = 1; b = c = e = f = 0; } else if (typeof a === 'object') ({ a, b, c, d, e, f } = DOMMatrix.fromMatrix(a));
++    return st(a * DPR, b * DPR, c * DPR, d * DPR, e * DPR, f * DPR);
++  };
++  ctx.resetTransform = () => ctx.setTransform(1, 0, 0, 1, 0, 0);
++  ctx.getTransform = () => { const m = gt(); return new DOMMatrix([m.a / DPR, m.b / DPR, m.c / DPR, m.d / DPR, m.e / DPR, m.f / DPR]); };
++}
++function resize() {
++  DPR = Math.min(2, devicePixelRatio || 1);
++  canvas.style.width = innerWidth + 'px'; canvas.style.height = innerHeight + 'px';
++  canvas.width = innerWidth; canvas.height = innerHeight; ctx.setTransform(1, 0, 0, 1, 0, 0);
++}
+ resize(); addEventListener('resize', resize);
+ 
+ const world = createWorld();

@@ -1,0 +1,9 @@
+<!doctype html><html><body style="margin:0;background:#111"><canvas id="c" width="1200" height="640"></canvas><script type="module">
+import { drawEdge, drawWater } from './ground.js'; import { PROJ } from '../shared/projection.js';
+const ctx = document.getElementById('c').getContext('2d'), G = PROJ.groundScaleY, z = 2;
+ctx.setTransform(z, 0, 0, z * G, 0, 0); ctx.fillStyle = '#2a2e33'; ctx.fillRect(0, 0, 600, 640 / G);
+const edges = [{ kind: 'quay', side: 's', x0: 20, y0: 80, x1: 280, y1: 80 }, { kind: 'water', side: 'n', x0: 320, y0: 120, x1: 580, y1: 120 }, { kind: 'water', side: 'e', x0: 120, y0: 200, x1: 120, y1: 420 }, { kind: 'platform', side: 's', x0: 320, y0: 300, x1: 580, y1: 300 }, { kind: 'platform', side: 'w', x0: 320, y0: 300, x1: 320, y1: 500 }];
+const W = [{ kind: 'water', x: 20, y: 80, w: 260, h: 80 }, { kind: 'water', x: 320, y: 40, w: 260, h: 80 }, { kind: 'water', x: 120, y: 200, w: 160, h: 220 }]; const LL = { tile: 32, objects: W, lights: [{ x: 4, y: 2, r: 5, i: 1 }] }; let s0 = 3; const r0 = () => ((s0 = (s0 * 16807) % 2147483647) / 2147483647); for (const w of W) drawWater(ctx, LL, w, r0);
+let n = 0, s = 1; const rng = () => ((s = (s * 16807) % 2147483647) / 2147483647); for (const e of edges) n += drawEdge(ctx, null, e, rng) ? 1 : 0;
+ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#ddd'; ctx.font = '13px sans-serif'; ctx.fillText(`drawEdge: quay s, water n, water e, platform s+w - ok ${n}/5`, 10, 16); window.__done = n;
+</script></body></html>
