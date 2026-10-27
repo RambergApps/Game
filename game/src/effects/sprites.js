@@ -326,13 +326,55 @@ export function smear() {
   });
 }
 
-/** Bygg alt på forhånd (unngå hakk første gang en effekt brukes). */
-export function warmup() {
-  for (const t of ['soot', 'smoke', 'dust', 'concrete', 'steam']) for (let v = 0; v < 4; v++) puff(t, v);
-  for (let h = 0; h < 3; h++) for (let v = 0; v < 3; v++) flame(h, v);
-  for (const s of ['rifle', 'shotgun', 'marksman', 'enemy']) for (let v = 0; v < 3; v++) flash(s, v);
-  for (const k of ['chitin', 'concrete', 'metal', 'rock']) for (let v = 0; v < 6; v++) shard(k, v);
-  for (let v = 0; v < 4; v++) { ichorSplat(v); crack(v); } for (let v = 0; v < 3; v++) { scorch(v); sinkhole(v); }
-  for (let v = 0; v < 3; v++) { bulletHole('metal', v); bulletHole('concrete', v); }
-  ring(); dustRing(); smear(); droplet();
+/** Liste over bake-jobber i fast rekkefølge (delt av warmup og warmupChunked). Hver sprite har egen seed → rekkefølgen påvirker ikke pikslene, men holdes lik uansett. */
+function warmJobs() {
+  const J = [];
+  for (const t of ['soot', 'smoke', 'dust', 'concrete', 'steam']) for (let v = 0; v < 4; v++) J.push(['puff ' + t + v, () => puff(t, v)]);
+  for (let h = 0; h < 3; h++) for (let v = 0; v < 3; v++) J.push(['flame ' + h + v, () => flame(h, v)]);
+  for (const s of ['rifle', 'shotgun', 'marksman', 'enemy']) for (let v = 0; v < 3; v++) J.push(['flash ' + s + v, () => flash(s, v)]);
+  for (const k of ['chitin', 'concrete', 'metal', 'rock']) for (let v = 0; v < 6; v++) J.push(['shard ' + k + v, () => shard(k, v)]);
+  for (let v = 0; v < 4; v++) { J.push(['ichorSplat ' + v, () => ichorSplat(v)]); J.push(['crack ' + v, () => crack(v)]); }
+  for (let v = 0; v < 3; v++) { J.push(['scorch ' + v, () => scorch(v)]); J.push(['sinkhole ' + v, () => sinkhole(v)]); }
+  for (let v = 0; v < 3; v++) { J.push(['bulletHole metal' + v, () => bulletHole('metal', v)]); J.push(['bulletHole concrete' + v, () => bulletHole('concrete', v)]); }
+  J.push(['ring', ring], ['dustRing', dustRing], ['smear', smear], ['droplet', droplet]);
+  return J;
 }
+
+/** Bygg alt på forhånd (unngå hakk første gang en effekt brukes). Synkron, samme API som før. */
+export function warmup() { for (const [, f] of warmJobs()) f(); }
+
+let chunkRun = null;
+const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+function yieldFrame() {
+  if (typeof requestAnimationFrame === 'function' && typeof document !== 'undefined' && !document.hidden) return new Promise((r) => requestAnimationFrame(() => r()));
+  if (typeof setTimeout === 'function') return new Promise((r) => setTimeout(r, 0));
+  return null;
+}
+/**
+ * Som warmup(), men spredt over frames. Bakes jobb for jobb; når budsjettet (ms) er brukt, gis kontrollen fra seg
+ * (rAF, ellers setTimeout 0, ellers synkront). memo() hindrer dobbel baking hvis get/draw baker lazy imens.
+ * onProgress({done,total,label,ms}) etter hver jobb. Resolves med {total, frames, longestMs, totalMs, slowest:{label,ms}}.
+ * Samtidige kall deler samme Promise.
+ */
+export function warmupChunked({ budgetMs = 8, onProgress } = {}) {
+  if (chunkRun) return chunkRun;
+  chunkRun = (async () => {
+    const J = warmJobs(), t0 = now(); let fs = now(), frames = 1, longest = 0, slowest = { label: '', ms: 0 };
+    for (let i = 0; i < J.length; i++) {
+      const a = now(); J[i][1](); const ms = now() - a;
+      if (ms > slowest.ms) slowest = { label: J[i][0], ms };
+      if (onProgress) onProgress({ done: i + 1, total: J.length, label: J[i][0], ms });
+      if (now() - fs >= budgetMs && i < J.length - 1) {
+        longest = Math.max(longest, now() - fs); const y = yieldFrame();
+        if (y) { await y; frames++; } fs = now();
+      }
+    }
+    longest = Math.max(longest, now() - fs);
+    return { total: J.length, frames, longestMs: longest, totalMs: now() - t0, slowest };
+  })();
+  return chunkRun;
+}
+
+/** Kun for verktøy/test: tøm cachen og hent alle bakte lerreter. */
+export function _resetSpriteCache() { cache.clear(); chunkRun = null; }
+export function _spriteCacheEntries() { return [...cache.entries()]; }

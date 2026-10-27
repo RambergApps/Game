@@ -244,7 +244,7 @@ export function surfaceAt(world, x, y) {
 export function init(world) {
   loadArena(world, 'yard');
   // Hakk 27.10: hopp over spilltegningen mens en mellomsekvens (story/player.js, opak #000-bakgrunn) dekker skjermen helt
-  if (typeof document !== 'undefined' && !world.renderHold) world.renderHold = () => { const cv = document.querySelector('canvas.breach-cutscene'); return !!cv && cv.style.opacity === '1'; };
+  if (typeof document !== 'undefined' && !world.renderHold) world.renderHold = () => { const cv = document.querySelector('canvas.breach-cutscene'); if (cv && cv.style.opacity === '1') return true; const cr = document.querySelector('canvas.breach-credits'); return !!cr && (cr.style.opacity === '' || cr.style.opacity === '1'); }; // rulletekst: ugjennomsiktig bakgrunn dekker hele skjermen
 }
 /** Hovedmenyen (src/menu/). Pausemenyens QUIT (ui/pauseMenu.js) kaller arena.openMainMenu(world). Returnerer true (håndtert). */
 export function openMainMenu(world) {

@@ -1,9 +1,13 @@
 // Breach-lasteskjerm (Hakk 27.10): svart som #boot-black, vises mens arenaen bakes over flere bilder (world.arenaBake).
 // Løses opp når bakingen er ferdig; deretter tar hovedmenyen (eller spillet med ?skipmenu=1) over.
+let fxDone = false, fxP = 0, fxLabel = ''; // Effekters sprites.warmupChunked (FX.init kjøres med warmup:false i core/loop.js)
+// Fallback: uten warmupChunked kjøres synkron warmup() her
+import('../effects/sprites.js').then(async (m) => { await (m.warmupChunked ? m.warmupChunked({ budgetMs: 8, onProgress: ({ done, total, label }) => { fxP = total ? done / total : 1; fxLabel = label || ''; } }) : m.warmup?.()); })
+  .then(() => { fxDone = true; fxP = 1; }, () => { fxDone = true; fxP = 1; });
 const look = () => globalThis.__cinderLook?.lookStats;
-const lookDone = () => { const l = look(); return !l || l.reserveDone !== false; };
-// samlet fremdrift: arenabaking (80 %) + fiendereserve (20 %)
-const prog = (b) => { const l = look(), r = l && l.reserveN ? l.reserveI / l.reserveN : 1; return Math.min(1, b.p * 0.8 + r * 0.2); };
+const lookDone = () => { const l = look(); return fxDone && (!l || l.reserveDone !== false); };
+// samlet fremdrift: arenabaking (65 %) + effektsprites (15 %) + fiendereserve (20 %)
+const prog = (b) => { const l = look(), r = l && l.reserveN ? l.reserveI / l.reserveN : 1; return Math.min(1, b.p * 0.65 + fxP * 0.15 + r * 0.2); };
 export function showLoading(world) {
   if ((!world?.arenaBake || world.arenaBake.done) && lookDone()) return Promise.resolve();
   world.arenaBake = world.arenaBake || { p: 1, label: 'Ready', done: true };
@@ -17,7 +21,7 @@ export function showLoading(world) {
   let t0 = performance.now(), raf = 0;
   // Kort på rask maskin: vises først etter 120 ms, så en rask lasting bare er svart (som før)
   const tick = () => { const b = world.arenaBake; if (performance.now() - t0 > 120) el.classList.add('bl-in');
-    const pp = prog(b); bar.style.width = Math.round(pp * 100) + '%'; pct.textContent = Math.round(pp * 100) + '%'; lab.textContent = b.done ? 'Waking the swarm' : b.label; if (!b.done || !lookDone()) raf = requestAnimationFrame(tick); };
+    const pp = prog(b); bar.style.width = Math.round(pp * 100) + '%'; pct.textContent = Math.round(pp * 100) + '%'; lab.textContent = !b.done ? b.label : !fxDone ? 'Warming effects' : 'Waking the swarm'; if (!b.done || !lookDone()) raf = requestAnimationFrame(tick); };
   raf = requestAnimationFrame(tick);
   return new Promise((res) => { const done = () => { cancelAnimationFrame(raf); bar.style.width = '100%'; pct.textContent = '100%';
     res(); setTimeout(() => el.remove(), 0); }; // menyen/svart-laget ligger allerede under når laget fjernes: ingen arenablink

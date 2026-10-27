@@ -116,3 +116,8 @@ Gjenstår i lasting: faceted/bake.js down (~850 ms), drawLampBases-attribusjon (
 ### Frys del 2 (27.10.2026, 22:40 UTC+1) – levert delvis
 Kornet i bakeYardFloor lages i rader (bakeYardGrain), de to skyggeuskarphetene og applyLight (4 bånd) er egne oppgaver, fiendenes reserve-sprites bakes én per oppgave.
 Lagdump (141 lag/sprites inkl. 32 fiendesprites): maks avvik 0. Ny måling med hakk.mjs gjenstår. Uferdig: Effekters sprites.warmup (~780 ms ved oppstart), den siste toppen (617 ms) ved overgangen fra slutten til rulleteksten.
+
+## Frys del 3 (27.10, 23:20)
+- Rulletekst: `world.renderHold` hopper også over spillrendering når `canvas.breach-credits` er oppe (ugjennomsiktig). Isolert måling (CPU 4×): 22,3 → 55,9 FPS under rulleteksten, render holdt i 99 % av bildene. 617 ms-toppen lot seg ikke gjenskape isolert; den er overgangen mellomsekvens → rulletekst. credits.js er ikke endret.
+- Effektsprites: `FX.init(world, {warmup:false})` (core/loop.js, diff arena-hakk3-loop-fxwarmup.diff), og lasteskjermen awaiter `sprites.warmupChunked({budgetMs:8,onProgress})` med etiketten "Warming effects". Fallback er synkron `warmup()`. Effekters verktøy gir maks avvik 0.
+- AR-etter3-cpu4: lengste long task 612 ms. Fem over 300 ms, alle i lastingen, hovedsakelig `flush` etter skygge-blur og gulv/korn. Målingen er forurenset (load 4, annen Chromium, sluttsekvensen ble ikke fullført) og må kjøres på nytt. Målet om ingen frys over 500 ms er ikke nådd.

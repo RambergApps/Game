@@ -122,3 +122,11 @@ Felles mål for hele teamet: Kessa Yard (brett 1, 5 bølger) skal kunne spilles 
 - Full testrunde gjennom alle 5 bølgene, med ytelsesmåling (Test).
 
 **Utenfor til etter demoen:** lagring, opplæring, bosser, brett 2–3 og de andre mellomsekvensene.
+
+## 2026-10-27 22:49–23:13 Brett 2 godkjent for bygging (Alexander)
+- 22:49: «Uavhengig av testen så kan banedesign begynne med brett 2. Først når brett 2 er klart så kan vi se på defensiv fiende ai». Stoppen «vent til jeg har spilt demoen» er opphevet.
+- Bygges i /workspace/breach-brett2 etter docs/refinery-v3.md. Ingen høyder.
+- 23:05: Fem overganger (trykkdør, stige opp, rør, stige ned, ventil/sluse), låses opp når seksjonen er ryddet, spilles som korte malte mellomsekvenser (1–2 paneler, <4 s, én linje, ingen stemme) ved trykk på utgangen.
+- S6 får tankhelse (fuel integrity).
+- Forsvarsmodus (defensiv AI) og sjefene (v2.2-utkast) venter til brett 2 er ferdig.
+- Eiere: Story (layout, bølger, overgangsmekanikk, tank), Warden-design (interaksjonstast), Effekter (sprites), Mellomsekvens-maler (paneler), Test (referanseark).

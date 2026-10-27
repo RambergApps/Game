@@ -1,4 +1,6 @@
-# Warden – status (Breach Warden-design og animasjon) – 27.10 15:58
+# Warden – status (Breach Warden-design og animasjon) – 27.10 23:33
+
+**Nå: LEDIG.** Siste: E/klikk-interaksjon ved utganger brett 2 levert (player/interact.js i breach-brett2; Story eier AUTO_ZONE=false og skjuler DOOR-markør). Skjermbilde breach-brett2/shots/warden-interakt-ledetekst.png, run.mjs OK. Overgangsanimasjoner stoppet; ammo-diff droppet.
 
 ## Ferdig
 - Dødsanim v1 (8 retninger, 1,1 s, holdt til respawn) + v2 sluttpose: beina samlet,
@@ -28,16 +30,3 @@
 
 ## Siste skjermbilder
 - shots/warden-C-cover-hel.png, warden-C-cover-for-etter.png, warden-C-cover-reis.mp4
-
-## 17:20 Dukk raskere ved slipp av sikte
-- Årsak til 1.8/6.25 s: logikken dukket allerede på ~0.10 s; bot-en i spill-brett1 holder høyre mus mens den har mål (setMouse), så Test målte siktetid. Lean teller 0.6 kun mens sub==='lean' (slutter straks ved slipp).
-- tuning: popDownTime 0.12→0.07, duckHidePeek 0.3→0.5. coverHitChance/popUpTime/blindfire urørt.
-- Før: exposed=false 0.100 s, coverDuck 0.083, visuelt nede 0.133. Etter: 0.050 / 0.033 / 0.083 (alle tre scenarioer, sandbag+barrier, maks=snitt).
-- shots/warden-C-dukk-raskt.png/.mp4. Backup: /workspace/wt/bk-dukk-1650/
-
-## 21:40 «Skyting slutter etter et par min» – ikke tilstandsheng, tom ammo
-- Lang kjøring (/workspace/wt/lang.mjs, 330 s, ekte musehendelser): stopp ved 66 s; mag 0, reserve 0, canFire-vilkår ok (move/cover, sprint false, grenadeAim false).
-- Årsak: weapons/index.js:263-265 – tomt magasin + reserve 0 gir 'empty' for alltid, ingen autobytte. Rifle 264 skudd ≈ 1 min.
-- Hofteskudd (venstre uten høyre, utenfor dekning) virker fra start: ~59/min i logg. Ingen lekket regel funnet.
-- Med påfyll (respawn hvert 30 s) 330 s uten stopp: ~300 skudd/min, blind og hofte.
-- Forslag: player/forslag/vapen-tomt-autobytte.diff (Våpen). Ingen endring i player/ eller shared/rig/.

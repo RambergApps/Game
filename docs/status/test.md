@@ -1,7 +1,8 @@
 # Status: Test og spillfølelse
-Oppdatert: 2026-10-27 23:00 (Europe/Oslo)
+Oppdatert: 2026-10-27 23:10 (Europe/Oslo)
 
 ## Åpne funn
+- Pages 2e60923: JA. md5 = snap-2236, lasteskjerm→meny, intro m/klikk→spill, bølge 1-1 klarert, 0 feil/≥400/failed. reviews/test-2026-10-27-pages-2e60923.md
 - Samlet-2229 (snap-2236): JA. Tap 1/trykk S-12/M-4, lasteskjerm→meny OK, intro/slutt uten blink, 0 feil. Intro/slutt venter på klikk – bekreft tilsiktet. reviews/qa-2026-10-27-samlet-2229.md
 - N–S-barrierer v4 ser for høye ut (Effekter).
 - Svart bånd under piren (Arena).
@@ -21,3 +22,4 @@ Oppdatert: 2026-10-27 23:00 (Europe/Oslo)
 - 19:06: Opplastingssjekk 1902 stoppet (Alexander: regenDelay 3,5, Breach laster opp). Neste: røyktest på Pages når URL kommer. Ingen balanserunder før Alexander velger spak (Husk/Lurcher).
 - 19:18 Pages-røyktest e2ddb33: **JA**. Intro, bølge 1→2 og slutt med ending-03b (200). 0 konsollfeil, 0 svar ≥400, 37/37 .ogg gir 200, 60 FPS. reviews/test-2026-10-27-pages-1907.md
 - 21:58 hakk-2103: hakking gjenskapt. Lasting 2,4 s frys (8,3 s ved CPU 4×, arena/render.js:applyLight). Sekvenser 59 FPS uten struping, 16–19 FPS ved 4× (spill 42). Årsak: story/player.js:frame (korn overlay + fullskjerm) og core/loop.js render() under sekvens. Ikke regresjon mot b804a6b. reviews/test-2026-10-27-hakk-2103.md
+- 23:32: Referanseark brett 2 utgår (Story leverer). Ledig til Breach melder brett 2 klart for test.

@@ -1,0 +1,22 @@
+<!doctype html><meta charset=utf-8><body><script type=module>
+import * as S from '../sprites.js';
+const px = (c) => { const g = c.getContext('2d'); return g.getImageData(0, 0, c.width, c.height).data; };
+const flat = (k, v, out) => { if (v && typeof v.getContext === 'function') out.push([k, v]); else if (v && typeof v === 'object') for (const [kk, vv] of Object.entries(v)) flat(k + '.' + kk, vv, out); return out; };
+const canv = () => S._spriteCacheEntries().flatMap(([k, v]) => flat(k, v, []));
+const dump = () => new Map(canv().map(([k, c]) => [k, { w: c.width, h: c.height, d: px(c) }]));
+const order = new URLSearchParams(location.search).get('order') || 'sync-first';
+const res = {}; window.__dbg = [];
+async function runSync() { S._resetSpriteCache(); const t = performance.now(); S.warmup(); res.syncMs = performance.now() - t; return dump(); }
+async function runChunk() { window.__dbg.push('sync ok'); S._resetSpriteCache(); let frameMax = 0, last = performance.now(), on = true;
+  (function tick() { const n = performance.now(); frameMax = Math.max(frameMax, n - last); last = n; if (on) requestAnimationFrame(tick); })();
+  const r = await S.warmupChunked({ budgetMs: 8, onProgress: (e) => window.__dbg.push(e.done) }); on = false; res.chunk = r; res.rafGapMaxMs = frameMax; return dump(); }
+const [A, B] = order === 'sync-first' ? [await runSync(), await runChunk()] : (() => { throw 0; })();
+let maxDiff = 0, n = 0, bad = [];
+for (const [k, a] of A) { const b = B.get(k); n++; if (!b || b.w !== a.w || b.h !== a.h) { bad.push(k); maxDiff = 255; continue; }
+  for (let i = 0; i < a.d.length; i++) { const d = Math.abs(a.d[i] - b.d[i]); if (d > maxDiff) maxDiff = d; } }
+res.sprites = n; res.chunkSprites = B.size; res.maxDiff = maxDiff; res.bad = bad;
+// lazy-sikkerhet: start chunked, bak en sprite lazy midt i, sjekk samme lerret og identiske piksler
+S._resetSpriteCache(); const p = S.warmupChunked({ budgetMs: 1 }); const lazy = S.smear(); await p; res.lazySame = S.smear() === lazy;
+res.lazyDiff = (() => { const a = A.get([...A.keys()].find((k) => canv().find(([kk, c]) => kk === k && c === lazy))).d, b = px(lazy); let m = 0; for (let i = 0; i < a.length; i++) m = Math.max(m, Math.abs(a[i] - b[i])); return m; })();
+window.__result = res; window.__done = true;
+</script>

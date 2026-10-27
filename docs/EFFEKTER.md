@@ -224,3 +224,6 @@ Kilden er nå `coverRise`/`coverDuck` fra state.js (peek 0,6 / 0,3, alltid i par
 
 ### Fragment over containertak (27.10)
 Ikke en effekt: lys pigg-flekk er fiendens kropp sett gjennom uttoningen i depth.js drawCoverToned. VFX, dekal-krok og enemies.draw-overlays av ga identisk bilde; bare å flytte fienden fjernet den. Forslag: høy dekning gir alltid deep (ingen uttoning), takleppen tegnes fortsatt. Diff: reviews/diffs/arena-silhuett-fragment.diff.
+
+## Oppvarming av sprites over flere frames (warmupChunked)
+`sprites.warmupChunked({budgetMs=8, onProgress})` → Promise. Baker de samme 89 jobbene (130 lerreter) i samme rekkefølge som `warmup()`; begge bruker `warmJobs()`. Hver sprite har egen mulberry-seed, så rekkefølgen påvirker ikke pikslene. memo hindrer dobbel baking ved lazy get/draw underveis. Bevis: `_tools/warmup-chunked.mjs` (maks avvik 0). Lengste frame ≈12,6 ms; tyngste sprite er `dustRing` ≈12 ms. Integrasjon: reviews/diffs/vfx-sprites-warmup-chunked.md.

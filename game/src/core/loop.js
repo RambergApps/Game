@@ -10,7 +10,7 @@ const call = (m, fn, ...a) => m && typeof m[fn] === 'function' && m[fn](...a);
 /** mods: { level, player, enemies, arena, weapons?, physics?, audio?, story?, hud? } – moduler med update/draw. */
 export function createLoop({ world, ctx, camera, input, mods }) {
   let acc = 0, last = 0, raf = 0, running = false; const stats = { fps: 60, steps: 0 };
-  vfx.init(world, { quality: world.settings?.vfxQuality ?? 'high' }); vfx.bindEvents(world);   // lytter på world.events (hva som er påslått: effects/bind.js MIGRATION)
+  vfx.init(world, { quality: world.settings?.vfxQuality ?? 'high', warmup: false }); // oppvarming: menu/loading.js awaiter sprites.warmupChunked vfx.bindEvents(world);   // lytter på world.events (hva som er påslått: effects/bind.js MIGRATION)
   // Ytelsesmerker (Arena eier world.perf og ?perf=1-overlegget, src/arena/perf.js). Konvensjon: mark(navn) kalles RETT FØR
   // hvert system; tiden for et system = neste merke − dette merket. 'update:end' / 'render:end' avslutter fasen.
   // Navn: update:{level,player,enemies,arena,physics,weapons,projectiles,effects} og render:{arena,fxUnder,cover,sorted,
