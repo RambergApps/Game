@@ -72,7 +72,7 @@ export function createLoop({ world, ctx, camera, input, mods }) {
     const t = ts / 1000, dt = Math.min(last ? t - last : STEP, STEP * MAX_STEPS); last = t;
     stats.fps += ((dt > 0 ? 1 / dt : 60) - stats.fps) * 0.05;
     acc += dt; while (acc >= STEP) { step(STEP); acc -= STEP; }
-    render(); raf = requestAnimationFrame(frame);
+    if (!world.renderHold?.()) render(); raf = requestAnimationFrame(frame); // renderHold (arena): mellomsekvens dekker skjermen helt
   }
   return {
     stats, step, render,

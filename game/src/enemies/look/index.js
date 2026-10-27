@@ -224,9 +224,15 @@ function idleWarm() {
 // Reserve ved lasting (før spillet tegner): idle 0 i alle 16 retninger for begge typer bakes synkront på hovedtråden
 // (32 sprites ≈ 0,2 s CPU, under lasteskjermen). Da finnes alltid en reserve, og spillbildet baker aldri selv.
 function reserveNow() {
-  const t0 = performance.now();
-  for (const type of TYPES) { const c = cacheFor(type); for (let d = 0; d < c.kind.buckets; d++) { const t1 = performance.now(); c.res.warm(keyOf('idle', d, 0), () => bakeKey(type, 'idle', d, 0)); lookStats.reserveMaxMs = Math.max(lookStats.reserveMaxMs || 0, performance.now() - t1); } }
-  lookStats.reserveMs = performance.now() - t0;
+  // Hakk 27.10 (Arena): samme sprites i samme rekkefølge, men én per oppgave (MessageChannel), så lastingen ikke fryser.
+  // Lasteskjermen (src/menu/loading.js) venter på lookStats.reserveDone. Mangler en reserve når noe tegnes, bakes den som før.
+  const jobs = []; for (const type of TYPES) { const c = cacheFor(type); for (let d = 0; d < c.kind.buckets; d++) jobs.push([c, type, d]); }
+  let ms = 0; lookStats.reserveDone = false; lookStats.reserveN = jobs.length; lookStats.reserveI = 0;
+  const one = () => { const [c, type, d] = jobs[lookStats.reserveI++]; const t1 = performance.now(); c.res.warm(keyOf('idle', d, 0), () => bakeKey(type, 'idle', d, 0)); const t = performance.now() - t1; ms += t; lookStats.reserveMaxMs = Math.max(lookStats.reserveMaxMs || 0, t); };
+  const finish = () => { lookStats.reserveMs = ms; lookStats.reserveDone = true; };
+  if (typeof MessageChannel === 'undefined') { while (lookStats.reserveI < jobs.length) one(); return finish(); }
+  const ch = new MessageChannel(); ch.port1.onmessage = () => { one(); if (lookStats.reserveI < jobs.length) ch.port2.postMessage(0); else { finish(); ch.port1.close(); } };
+  ch.port2.postMessage(0);
 }
 function startWarm() {
   if (warmStarted || typeof setTimeout === 'undefined') return; warmStarted = true; t0warm = performance.now();

@@ -1,4 +1,4 @@
-# Vapen – status (2026-10-27 17:46)
+# Vapen – status (2026-10-27 21:18)
 Oppdatert: 2026-10-27 13:20. Mål: demo av brett 1. Rot: /workspace/breach/game.
 
 ## Ferdig
@@ -26,4 +26,4 @@ Oppdatert: 2026-10-27 13:20. Mål: demo av brett 1. Rot: /workspace/breach/game.
 - Bossangrep og videre pausemeny venter til etter demoen.
 
 - S-12 kloss hold: pickBody (≤ TUNING.pointBlank.range 100 px) + bodySweep m/ny sikting (weapons/index.js). Lurcher hip 0.48→1.00. Regresjon 80–320 px: rifle/S-12 aim uendret, M-4 hip én celle ±0.15 (støy). weapons/tools/pointblank-regression.md.
-- UI: Voice-slider (settings.js/settingsScreen.js → setVoiceVolume?.(), også ved oppstart). ui/tools/voice.cjs, shots/22-voice-slider.png.
+- Kort trykk (touchpad): handleInput skyter på left||leftPressed, automat holder TUNING.input.tapHoldMs 80; semi 1 skudd/trykk. tools/tap.cjs + tap.md: 0-skudd 5–10/10 → 0/10.

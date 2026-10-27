@@ -148,7 +148,7 @@ async function play(id, o) {
   Object.assign(cv.style, { position: 'fixed', inset: '0', width: '100vw', height: '100vh', zIndex: String(o.zIndex), cursor: 'pointer', background: '#000', outline: 'none' });
   parent.appendChild(cv); cv.focus({ preventScroll: true });
   const ctx = cv.getContext('2d');
-  const grain = makeGrain();
+  const grain = makeGrain(); let grainPat = null; // mønsteret lages én gang per sekvens (Hakk 27.10), forskyves tilfeldig per bilde som før
   let W = 0, H = 0, dpr = 1, scan = null;
   const resize = () => {
     dpr = Math.min(2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight;
@@ -280,7 +280,7 @@ async function play(id, o) {
     // korn + skannlinjer
     ctx.globalAlpha = 0.07; ctx.globalCompositeOperation = 'overlay';
     const gx = Math.random() * 256, gy = Math.random() * 256;
-    ctx.fillStyle = ctx.createPattern(grain, 'repeat'); ctx.translate(-gx, -gy); ctx.fillRect(gx, gy, W, H); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = grainPat || (grainPat = ctx.createPattern(grain, 'repeat')); ctx.translate(-gx, -gy); ctx.fillRect(gx, gy, W, H); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
     ctx.fillStyle = scan; ctx.fillRect(0, bar, W, imgH);
     ctx.restore();

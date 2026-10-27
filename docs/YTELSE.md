@@ -96,3 +96,23 @@ Måling: headless Chrome, 1280×720, Kessa Yard v2, 240 bilder per runde, to run
 
 Krok-tiden er målt med performance.now rundt kallene. lampFlicker er billig og inngår ikke i tallet.
 **Under budsjettet på 0,3 ms.** Bildetiden er låst til vsync, så forskjellen synes ikke der.
+
+## Hakk ved lasting og i mellomsekvenser (27.10.2026, 22:30 UTC+1)
+Målt med Tests skript (tests/hakk-2103/hakk.mjs, CPU 4×, kald cache). Før: AR-for-cpu4, etter: AR-etter-cpu4 (shots/test/qa/hakk-2103/).
+
+| Fase | Mål | Før | Etter |
+|---|---|---|---|
+| Lasting/meny | lengste long task (frys før meny) | 6000 ms | 2233 ms |
+| Lasting/meny | sum long tasks | 8133 ms (5) | 6093 ms (8, delt opp) |
+| Intro | FPS / frames >50 ms | 16,8 / 912 | 29,8 / 49 |
+| Overgang til spill | FPS | 37,9 | 44,5 |
+| Slutt | FPS / frames >50 ms | 13,8 / 2112 | 27,3 / 156 |
+
+Tiltak: applyLight bare på spritenes utsnitt (buildSprites), arenabakingen som generator med yield mellom stegene og lasteskjerm (src/menu/loading.js),
+world.renderHold (core/loop.js hopper over render() når .breach-cutscene er opak), kornmønsteret i story/player.js lages én gang.
+Utseende: alle 61 bakte lag/sprites er piksel-identiske før/etter (maks avvik 0); skjermbildeavvik = animasjonsstøy, samme nivå som før-mot-før.
+Gjenstår i lasting: faceted/bake.js down (~850 ms), drawLampBases-attribusjon (~830 ms, trolig rastrering av gulvet), bakeYardFloor (~580 ms) – hver én udelt oppgave.
+
+### Frys del 2 (27.10.2026, 22:40 UTC+1) – levert delvis
+Kornet i bakeYardFloor lages i rader (bakeYardGrain), de to skyggeuskarphetene og applyLight (4 bånd) er egne oppgaver, fiendenes reserve-sprites bakes én per oppgave.
+Lagdump (141 lag/sprites inkl. 32 fiendesprites): maks avvik 0. Ny måling med hakk.mjs gjenstår. Uferdig: Effekters sprites.warmup (~780 ms ved oppstart), den siste toppen (617 ms) ved overgangen fra slutten til rulleteksten.

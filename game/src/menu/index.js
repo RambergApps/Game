@@ -23,6 +23,7 @@ const CREDITS = [['Arena', 'Kessa Yard, Deepwell'], ['Character', 'The Warden'],
   ['VFX', 'Fire, ash, impacts'], ['Audio', 'Score and sound'], ['Levels & Story', 'Operation Cinder']];
 
 let B = null, root = null, bg = null, popKeys = null, sel = 0, btns = [], sub = null, busy = false, logoState = null, logoRaf = 0, toastT = 0;
+import { showLoading } from './loading.js';
 const q = () => new URLSearchParams(location.search);
 
 /** Kobles på fra main.js etter at window.BREACH er satt. */
@@ -36,8 +37,9 @@ export function attach(breach) {
   B.menu = { open: openMainMenu, close: closeMainMenu, isOpen: isMainMenuOpen };
   const p = q();
   const boot = () => document.getElementById('boot-black')?.remove();   // svart fra første bilde (index.html) til menyen dekker
-  if (p.get('skipmenu') === '1' || (navigator.webdriver && p.get('menu') !== '1')) return boot();
-  openMainMenu(B.world, { boot: true }); boot();
+  // Hakk 27.10: lasteskjerm (src/menu/loading.js) til arenabakingen er ferdig, så menyen; svart hele veien
+  const go = () => { if (p.get('skipmenu') === '1' || (navigator.webdriver && p.get('menu') !== '1')) return boot(); openMainMenu(B.world, { boot: true }); boot(); };
+  showLoading(B.world).then(go);
 }
 
 export function isMainMenuOpen() { return !!root; }

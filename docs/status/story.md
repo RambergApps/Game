@@ -1,4 +1,4 @@
-# Status – Story og brett (oppdatert 2026-10-27 18:58)
+# Status – Story og brett (oppdatert 2026-10-27 21:55)
 Eier: game/src/levels/ og game/src/story/. Historie: CINDER (låst). All spilltekst på engelsk.
 
 ## Ferdig
@@ -12,15 +12,18 @@ Eier: game/src/levels/ og game/src/story/. Historie: CINDER (låst). All spillte
 
 - 2026-10-27 18:58 nytt manus (Lyd): klipp med lyd /workspace/intro-voice-clip-v3.mp4 (33,5 s) og /workspace/ending-voice-clip.mp4 (38,2 s), ending-03b med ekte bilde. Alle linjer spilt (voice.js missing 0), 0 stale, 0 kutt, 0 konsollfeil. Verktøy: reviews/story-tools/clip-voice.cjs <id> <ut> [port].
 
+## Ferdig (plan)
+- 21:55 Refinery v3 – KUN PLAN (ikke bygd): docs/refinery-v3.md/.png, generator reviews/story-tools/refinery-v3.py. 142×32, 6 seksjoner: Intake Line (liten) → Cracking Hall (stor) → Pump Room (middels) → Pipe Gallery (liten) → The Bulwark (angrep på Hunker-linje, 2 flankeganger) → Fuel Tank (hold). Hopp min 2,55, maks gap 6,74 (< dash 10). v2 urørt.
+
 ## Pågår
-- Ingenting.
+- Ingenting. Venter på Alexanders svar på v3 via Breach.
 
 ## Neste
 - Når Lyd leverer nye stemmer: kjør check-voice-timing og mål varigheter mot estimatet (~199 s totalt).
-- Refinery v2 (Hunker 2-3..2-6) – VENT til Alexander sier ja. Åpent: min. cover-hopp 2,2 ruter i yard v2.
+- Brett 2: VENT. Bygg v3 (eller v2) først når Alexander sier ja. Krever gate/sectionClear (finnes ikke i dag).
 
 ## Blokkert av
 - Lyd (nye stemmefiler; til da er de 6 sekvensene uten stemme). Alexander (brett 2).
 
 ## Siste skjermbilde
-- reviews/shots/ending-03b.png (ekte bilde, «Yeah. I’m coming up.»)
+- docs/refinery-v3.png (planart brett 2 v3)

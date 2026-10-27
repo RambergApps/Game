@@ -28,7 +28,24 @@ const fxVignette = (L) => { try { const v = fxFloor?.vignette?.(L); return typeo
 const ambientOf = (L) => fxAmbient(L) || (L.theme && L.theme.ambient) || AMBIENT;
 
 // ---------------------------------------------------------------- hovedinngang
-export function buildArenaLayers(L) {
+// Hakk 27.10: bakingen er en generator som gir fra seg kontrollen mellom tunge steg (yield = etikett).
+// buildArenaLayers kjører alt synkront (uendret for alle kallere); bakeArenaLayersAsync gir nettleseren pust mellom stegene.
+export function buildArenaLayers(L) { const g = bakeSteps(L); let r; while (!(r = g.next()).done); return r.value; }
+export const BAKE_STEPS = 32; // omtrentlig antall yield før spritene (for fremdrift)
+export function bakeArenaLayersAsync(L, onStep) {
+  const g = bakeSteps(L); let n = 0;
+  const pause = () => new Promise((res) => { if (typeof MessageChannel !== 'undefined') { const ch = new MessageChannel(); ch.port1.onmessage = () => res(); ch.port2.postMessage(0); } else setTimeout(res, 0); });
+  return (async () => { for (;;) { const r = g.next(); if (r.done) return r.value; n++; try { onStep?.(r.value, n); } catch (e) { /* valgfritt */ } await pause(); } })();
+}
+let FL = null;
+function flush(c) { try { if (!FL) FL = makeCanvas(1, 1); FL.getContext('2d').drawImage(c, 0, 0, 1, 1, 0, 0, 1, 1); } catch (e) { /* valgfritt */ } }
+// applyLight i vannrette bånd (samme utsnittsoppskrift som spritene; piksel-identisk), én oppgave per bånd
+function* lightBands(c, light, only, keepAlpha, OVER, k, n = 4) {
+  const bh = Math.ceil(c.height / n);
+  for (let y = 0; y < c.height; y += bh) { applyLight(c, light, only, keepAlpha, OVER, { x: 0, y, w: c.width, h: Math.min(bh, c.height - y) }); flush(c); yield { k }; }
+}
+function* rowsYield(g) { for (let r = g.next(); !r.done; r = g.next()) yield { k: 'floor' }; }
+function* bakeSteps(L) {
   const W = L.width, H = L.height;
   const rng = mulberry32(L.seed);
   const mk = () => { const c = makeCanvas(W * RES, H * RES); const x = c.getContext('2d'); x.scale(RES, RES); return [c, x]; };
@@ -36,37 +53,41 @@ export function buildArenaLayers(L) {
   const tm = {}; let tp = performance.now();
   const lap = (k) => { const n = performance.now(); tm[k] = Math.round(n - tp); tp = n; };
   const [floorC, fx] = mk();
+  // Hakk 27.10: asfaltkornet (Effekter) lages i rader på forhånd, og hvert lag rastreres ved stegslutt (flush), så
+  // den utsatte tegningen ikke samles i én lang oppgave senere. Ingen pikselendring.
+  if (fxFloor?.bakeYardGrain && !L._grain) { try { yield* rowsYield(fxFloor.bakeYardGrain(L, Math.ceil(W * RES), Math.ceil(H * RES), 240)); } catch (e) { L._grain = null; } }
   let fxBaked = false; try { fxBaked = !!fxFloor?.bakeYardFloor?.(fx, L, mulberry32(L.seed + 1)); } catch (e) { fxBaked = false; }
-  if (!fxBaked) drawFloor(fx, L, mulberry32(L.seed + 1)); lap('floor');
+  if (!fxBaked) drawFloor(fx, L, mulberry32(L.seed + 1)); lap('floor'); flush(floorC); yield { k: 'floor' };
   drawPlatform(fx, L);
   if (!fxBaked) drawPaint(fx, L, mulberry32(L.seed + 2)); lap('paint');
-  drawProps(fx, L, mulberry32(L.seed + 3));
-  drawClutter(fx, L, mulberry32(L.seed + 6)); lap('clutter');
-  drawShadows(fx, L); lap('shadows');
+  drawProps(fx, L, mulberry32(L.seed + 3)); flush(floorC); yield { k: 'floor' };
+  drawClutter(fx, L, mulberry32(L.seed + 6)); lap('clutter'); flush(floorC); yield { k: 'floor' };
+  yield* drawShadows(fx, L); lap('shadows'); flush(floorC); yield { k: 'shadows' };
   const objs = [...L.objects].sort((a, b) => (a.y + a.h) - (b.y + b.h) || a.x - b.x);
   const v34 = L.view === '34';
   // trekvart: lav dekning sorteres sammen med høy (frontflaten kan dekke beina på en aktør bak), så den går i topplaget
   if (!v34) for (const o of objs) if (o.type === 'low') drawObject(fx, o, mulberry32(L.seed + 100 + o.id));
   for (const o of objs) if (o.overhead) drawFeet(fx, o);
-  drawLampBases(fx, L);
+  drawLampBases(fx, L); flush(floorC); yield { k: 'shadows' };
 
   const [topC, tx] = mk();
   for (const o of objs) if (o.type === 'high' || (v34 && o.type === 'low')) drawObject(tx, o, mulberry32(L.seed + 100 + o.id));
   for (const o of objs) if (o.overhead && o.kind === 'overpipe') drawObject(tx, o, mulberry32(L.seed + 100 + o.id));
   for (const o of objs) if (o.overhead && o.kind !== 'overpipe') drawObject(tx, o, mulberry32(L.seed + 100 + o.id));
   drawWallFixtures(tx, L);
-  lap('objects');
+  lap('objects'); flush(topC); yield { k: 'objects' };
 
   // lyskart: med okklusjon for gulvet, uten for objekter
   const lightOcc = buildLightmap(L, true, true), occOnly = buildLightmap(L, true, false);
-  const lightFree = buildLightmap(L, false, true), freeOnly = buildLightmap(L, false, false); lap('lightmaps');
-  applyLight(floorC, lightOcc, occOnly, false);
+  const lightFree = buildLightmap(L, false, true), freeOnly = buildLightmap(L, false, false); lap('lightmaps'); yield { k: 'lightmaps' };
+  yield* lightBands(floorC, lightOcc, occOnly, false, 0.8, 'light');
   // 27.10 13:52: vann og kaikanter tegnes ETTER lyskartet (ikke ganget med okkludert lys/ambient/vignett/skygger – ble ~rgb 8,6,6).
   // Rekkefølge: vannflate (Effekter drawWater) → Effekters kant (drawEdge) → vår kant/kaiflate der kroken ikke tegnet.
   drawWaterBody(fx, L, mulberry32(L.seed + 7));
   drawEdgesFx(fx, L, mulberry32(L.seed + 8));
   drawWater(fx, L);
-  applyLight(topC, lightFree, freeOnly, true, 0.4); lap('apply');
+  flush(floorC); yield { k: 'light' };
+  yield* lightBands(topC, lightFree, freeOnly, true, 0.4, 'apply'); lap('apply');
   // Trekvart + dybdesortering (shared/depth.js): hvert dekningsobjekt som eget, ferdig belyst sprite, og et eget
   // «over»-lag med bare det som alltid ligger over aktører (rørbruer, gangbruer, veggarmatur, kringkasting).
   let over = null, sprites = null;
@@ -75,9 +96,9 @@ export function buildArenaLayers(L) {
     for (const o of objs) if (o.overhead && o.kind === 'overpipe') drawObject(ox, o, mulberry32(L.seed + 100 + o.id));
     for (const o of objs) if (o.overhead && o.kind !== 'overpipe') drawObject(ox, o, mulberry32(L.seed + 100 + o.id));
     drawWallFixtures(ox, L);
-    applyLight(oc, lightFree, freeOnly, true, 0.4);
+    yield* lightBands(oc, lightFree, freeOnly, true, 0.4, 'over');
     over = oc;
-    sprites = buildSprites(L, objs, mk, lightFree, freeOnly); lap('sprites');
+    sprites = yield* buildSprites(L, objs, mk, lightFree, freeOnly); lap('sprites');
   }
   drawWaterSheen(fx, L); // etter lyskartet: svak egenrefleks på fallback-vannet, så det ikke blir helt sort
   drawPuddleGlow(fx, L, mulberry32(L.seed + 5));
@@ -86,7 +107,7 @@ export function buildArenaLayers(L) {
   const [glowC, gx] = mk();
   { const r = mulberry32(L.seed + 4); let ok = false; try { ok = !!fxFloor?.drawLightPools?.(gx, L, r); } catch (e) { ok = false; } if (!ok) drawGlow(gx, L, r, !v34); } // trekvart: vindus-/takvindusglød bakes inn i spritene
 
-  lap('glow');
+  lap('glow'); yield { k: 'glow' };
   // Ytelse: topp- og glødelagene er glisne. Finn celler med innhold så de kan blittes bit for bit.
   const cells = { top: occupancy(topC, W, H), glow: occupancy(glowC, W, H) };
   if (over) cells.over = occupancy(over, W, H);
@@ -97,7 +118,7 @@ export function buildArenaLayers(L) {
 
 // Sprites per dekningsobjekt. Objekter med overlappende synlig flate tegnes i ulike runder på samme lerret,
 // så ingen naboer blør inn i hverandres sprite. Hver runde belyses med samme lyskart som topplaget.
-function buildSprites(L, objs, mk, light, lightsOnly) {
+function* buildSprites(L, objs, mk, light, lightsOnly) {
   const PAD = 8, list = [], groups = [];
   for (const o of objs) {
     if (o.overhead || (o.type !== 'high' && o.type !== 'low')) continue;
@@ -111,7 +132,8 @@ function buildSprites(L, objs, mk, light, lightsOnly) {
   for (const g of groups) {
     x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height); x.restore();
     for (const { o } of g) drawObject(x, o, mulberry32(L.seed + 100 + o.id));
-    applyLight(c, light, lightsOnly, true, 0.4);
+    // Hakk 27.10: lys bare på spritenes egne utsnitt (samme piksler – lyskartet samples i samme rutenett), ikke hele brettet per runde
+    for (const { b } of g) applyLight(c, light, lightsOnly, true, 0.4, { x: b.x0 * RES, y: b.y0 * RES, w: (b.x1 - b.x0) * RES, h: (b.y1 - b.y0) * RES });
     x.save(); x.globalCompositeOperation = 'lighter'; drawObjGlow(x, g.map((q) => q.o)); x.restore();
     for (const { o, b } of g) {
       const w = b.x1 - b.x0, h = b.y1 - b.y0, img = makeCanvas(w * RES, h * RES);
@@ -119,6 +141,7 @@ function buildSprites(L, objs, mk, light, lightsOnly) {
       list.push({ id: o.id, kind: o.kind, type: o.type, height: o.height, seed: o.seed, variant: o.variant, x: o.x, y: o.y, w: o.w, h: o.h, elev: o.elev, round: o.kind === 'tank', noOcclude: !!o.noOcclude,
         img, sx: b.x0, sy: b.y0, sw: w, sh: h });
     }
+    yield { k: 'sprites', i: groups.indexOf(g) + 1, n: groups.length };
   }
   return list;
 }
@@ -168,7 +191,15 @@ export function occupancy(c, W, H) {
 
 // resultat = albedo × (ambient + lys) + albedo × lys × OVER  (overbelysning gir «hot spots»)
 const HDR = 2;
-function applyLight(canvas, light, lightsOnly, keepAlpha, OVER = 0.8) {
+function applyLight(canvas, light, lightsOnly, keepAlpha, OVER = 0.8, rect = null) {
+  if (rect) { // utsnitt: kjør samme oppskrift på et lite lerret og skriv tilbake (heltallsforskyvning, lyskartet tegnes forskjøvet)
+    const sub = makeCanvas(rect.w, rect.h), sx = sub.getContext('2d');
+    sx.drawImage(canvas, rect.x, rect.y, rect.w, rect.h, 0, 0, rect.w, rect.h);
+    applyLight(sub, light, lightsOnly, keepAlpha, OVER, null, { dx: -rect.x, dy: -rect.y, w: canvas.width, h: canvas.height });
+    const cx = canvas.getContext('2d'); cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); cx.clearRect(rect.x, rect.y, rect.w, rect.h); cx.drawImage(sub, rect.x, rect.y); cx.restore();
+    return;
+  }
+  const lp = arguments[6] || { dx: 0, dy: 0, w: canvas.width, h: canvas.height };
   const ctx = canvas.getContext('2d');
   const albedo = makeCanvas(canvas.width, canvas.height), ax = albedo.getContext('2d');
   ax.drawImage(canvas, 0, 0);
@@ -176,12 +207,12 @@ function applyLight(canvas, light, lightsOnly, keepAlpha, OVER = 0.8) {
   const over = makeCanvas(canvas.width, canvas.height), ox = over.getContext('2d');
   ox.drawImage(canvas, 0, 0);
   ox.globalCompositeOperation = 'multiply'; ox.imageSmoothingEnabled = true; ox.imageSmoothingQuality = 'high';
-  ox.drawImage(lightsOnly, 0, 0, canvas.width, canvas.height);
+  ox.drawImage(lightsOnly, lp.dx, lp.dy, lp.w, lp.h);
   ox.globalCompositeOperation = 'destination-in'; ox.drawImage(albedo, 0, 0);
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalCompositeOperation = 'multiply';
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(light, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(light, lp.dx, lp.dy, lp.w, lp.h);
   // lyskartet er lagret med halv styrke (HDR) så sterke lys ikke klipper rødkanalen og blir gul-oliven
   const dbl = makeCanvas(canvas.width, canvas.height); dbl.getContext('2d').drawImage(canvas, 0, 0);
   ctx.globalCompositeOperation = 'lighter'; for (let k = 1; k < HDR; k++) ctx.drawImage(dbl, 0, 0);
@@ -453,7 +484,7 @@ function drawProps(ctx, L, rng) {
 // ---------------------------------------------------------------- skygger
 // Nord–sør-barrierer (kind barrier, h > w) males som smal, lav jersey-rekke (effects/cover.js v5): skyggen følger 68 % av bredden.
 function nsShadowRect(o) { if (o.kind !== 'barrier' || !(o.h > o.w)) return o; const w = o.w * 0.68; return { x: o.x + (o.w - w) / 2, y: o.y, w, h: o.h }; }
-function drawShadows(ctx, L) {
+function* drawShadows(ctx, L) {
   const W = L.width, H = L.height;
   const sc = makeCanvas(W * RES, H * RES), s = sc.getContext('2d'); s.scale(RES, RES);
   // kastet skygge mot sørøst (lys fra nordvest, høyt)
@@ -485,6 +516,7 @@ function drawShadows(ctx, L) {
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.filter = `blur(${4 * RES}px)`; ctx.globalAlpha = 0.72; ctx.drawImage(sc, 0, 0);
   ctx.restore();
+  flush(ctx.canvas); yield { k: 'shadows' }; // Hakk 27.10: de to helbrett-uskarphetene i hver sin oppgave
   // kontaktskygge (ambient occlusion) tett rundt foten
   const ac = makeCanvas(W * RES, H * RES), a = ac.getContext('2d'); a.scale(RES, RES);
   a.fillStyle = '#000';

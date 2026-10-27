@@ -524,7 +524,12 @@ export function handleInput(world, e, input, o = {}) {
   if (input.down('KeyG') && L.grenades > 0 && L.grenadeCd <= 0) L.grenadeAim = { x: m.worldX, y: m.worldY };
   else if (L.grenadeAim) { out.grenade = throwGrenade(world, e, L.grenadeAim.x, L.grenadeAim.y); L.grenadeAim = null; }
   setAiming(e, o.aiming ?? m.right, o.inCover);
-  if (m.left && o.canFire !== false && !L.grenadeAim) out.fired = tryFire(world, e, { aimAngle: o.aimAngle ?? Math.atan2(m.worldY - e.y, m.worldX - e.x), aiming: o.aiming ?? m.right, inCover: o.inCover, blind: o.blind }).fired;
+  // kort trykk (touchpad): mousedown+mouseup i samme frame gir bare leftPressed. Automat holder avtrekkeren TUNING.input.tapHoldMs etterpå.
+  // Semi: tryFire kalles maks én gang per steg og kanten (wasHeld) styrer, så left && leftPressed gir ikke dobbeltskudd.
+  const tap = TUNING.input?.tap !== false;
+  if (tap && m.leftPressed && !m.left && defOf(L).auto) L.tapUntil = world.time + (TUNING.input?.tapHoldMs ?? 80) / 1000;
+  const held = m.left || (tap && (m.leftPressed || L.tapUntil > world.time));
+  if (held && o.canFire !== false && !L.grenadeAim) out.fired = tryFire(world, e, { aimAngle: o.aimAngle ?? Math.atan2(m.worldY - e.y, m.worldX - e.x), aiming: o.aiming ?? m.right, inCover: o.inCover, blind: o.blind }).fired;
   return out;
 }
 

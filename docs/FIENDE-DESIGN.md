@@ -299,3 +299,20 @@ Kuppel lerp 0,82→1,45 med peek i dekning (dukket ellers 34 px over). memShare:
 
 ## Hunker v3b
 Peek/skudd: rifla vinklet 0,44·aim rad (~25°) til høyre, stokk 2,5 px ut, tykkere armer. HUNKER_MUZZLE = {fwd 23,3, z 27, side 12,1} (ny side). Skulderplater senkes og kuppel 0,72 når dukket. Verste fall Hunker 8,14, totalt 32,35 MiB. ?hunkerRifle=0 = gammel rifle.
+
+## Sjefsutkast v2.2 (27.10, ikke i spillet)
+Fasit: maleriene 23.10 (i hjørnet av arkene). Silhuett-test: reviews/img/cinderborn/sjefer-v2.2-silhuett.png (S/SE/E/N, alfa → svart).
+- Kiln Alpha (skala 1,6, r≈42): firbent urtidsbeist. Lang tung snute med underbitt og oppstikkende tenner, glødende kjeft med slaggdrypp, høy buet rygg med store piggplater i to rader, glødende kjerne mellom platene (svakhet, leses bakfra/N), avrundede muskuløse bein med klør, tykk avsmalnende hale. Ingen skorsteiner.
+- Ashmaw (skala 2,4, r≈75 for kroppen; armene rekker lenger): ujevn masse som stiger opp (base → bryst → skjev pukkel med horn), overlappende panserplater med glødende sprekker, tungt panserbryn, bred åpen kjeft med tannrekker oppe/nede, glødende svelg og slaggdrypp, to tunge forlemmer med fire klør, korte stumper bak. Svakhet: skrå gjellespalter på skuldre/flanker (ikke foran).
+
+## Sjefsutkast v2.1 (27.10, erstattet av v2.2)
+Fasit: maleriene kilnalpha-main.jpg / ashmaw-main.jpg (23.10), vist i hjørnet av arkene.
+- Kiln Alpha (skala 1,6, ~190×224 skjermpx i S, foreslått r ≈ 42): firbent urtidsbeist, tykke søylebein med klør (forbein kraftigst, bakbein bøyde), skrå rygg med pukkel foran, stor piggkam, tykk hale, stort lavt hode med glødende kjeft og smelteslagg som drypper. N: bakre kjerne + skorsteiner (svakhet). S: hode, kjeft, støttenner.
+- Ashmaw (skala 2,4, ~340×293 skjermpx i S, ~151 verdenspx bred, foreslått r ≈ 75): høy kuppelovn av panserplater, seks korte stolpebein, innfelt ovnskjeft med tannbue foran, skrå gjellespalter rundt ringen (svakhet), ingen runde «øyne».
+- Ark viser ekte Warden (drawWardenC, tilt 55 / zoom 2,25) og ekte fiendesprites i samme skala.
+
+## Sjefsutkast v2 (27.10, erstattet av v2.1)
+- Kode: tools-fiende-design/sjef-utkast/sjefer.js (samme fasett-rigg), ark.cjs. Vinkel: standard tilt 55 / zoom 2,25; ?view=34 = gammel 36,9° / 1,5 (eget utsnitt).
+- Kiln Alpha: lang, lav seksbent ovnsøgle, sagtakket piggkam + sidepigger, hale, stødtenner. Skala 1,55 → ca. 76×84 verdens-px (≈ 2,4×2,6 ruter). Foreslått r 34 (Kiln 18). Svakhet: bakre kjerne med åpen rist og to skorsteiner (glød #ff7a1a, aksent #fff0b0); fremre kjerne mindre under skjoldplate.
+- Ashmaw: kuppel med lagdelte plater, åtte gjelleventiler i ring (puls forskjøvet, svakhet), ovnskjeft med tenner og kjevehorn, åtte segmenterte bein. Skala 1,75 → ca. 152 verdens-px bred (≈ 4,7 ruter). Foreslått r 70 (stats har 60). Palett #101012/#2c2826, glød #ff7a1a/#ffd27a, kjeft #ff5a1a.
+- Ingen shadowBlur. Minne ikke budsjettert ennå (sjefene er ikke i cachen).

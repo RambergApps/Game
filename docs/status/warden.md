@@ -34,3 +34,10 @@
 - tuning: popDownTime 0.12→0.07, duckHidePeek 0.3→0.5. coverHitChance/popUpTime/blindfire urørt.
 - Før: exposed=false 0.100 s, coverDuck 0.083, visuelt nede 0.133. Etter: 0.050 / 0.033 / 0.083 (alle tre scenarioer, sandbag+barrier, maks=snitt).
 - shots/warden-C-dukk-raskt.png/.mp4. Backup: /workspace/wt/bk-dukk-1650/
+
+## 21:40 «Skyting slutter etter et par min» – ikke tilstandsheng, tom ammo
+- Lang kjøring (/workspace/wt/lang.mjs, 330 s, ekte musehendelser): stopp ved 66 s; mag 0, reserve 0, canFire-vilkår ok (move/cover, sprint false, grenadeAim false).
+- Årsak: weapons/index.js:263-265 – tomt magasin + reserve 0 gir 'empty' for alltid, ingen autobytte. Rifle 264 skudd ≈ 1 min.
+- Hofteskudd (venstre uten høyre, utenfor dekning) virker fra start: ~59/min i logg. Ingen lekket regel funnet.
+- Med påfyll (respawn hvert 30 s) 330 s uten stopp: ~300 skudd/min, blind og hofte.
+- Forslag: player/forslag/vapen-tomt-autobytte.diff (Våpen). Ingen endring i player/ eller shared/rig/.

@@ -13,6 +13,17 @@ function noise(w, h, R, dark, light, a = 255) { const c = canvas(w, h), x = c.ge
 export const FLOOR = Object.freeze({ base: '#2a2e33', wet: [70, 90, 110], yellow: [196, 160, 52] });
 
 /** Gulvlaget i verdenskoordinater (ctx har allerede Arenas RES-skala). Returnerer true = Arena hopper over drawFloor og drawPaint. */
+// Asfaltkornet (samme tallrekke som før), laget rad for rad: yield etter hver `rows` rader. Resultat i L._grain.
+export function* bakeYardGrain(L, gw, gh, rows = 1e9) {
+  const gc = canvas(gw, gh), gx = gc.getContext('2d'), id = gx.createImageData(gc.width, gc.height), d = id.data; let s = (L.seed >>> 0) || 7;
+  const step = gc.width * 4 * rows;
+  for (let i0 = 0; i0 < d.length; i0 += step) {
+    const i1 = Math.min(d.length, i0 + step);
+    for (let i = i0; i < i1; i += 4) { s = (s * 1664525 + 1013904223) >>> 0; const r = s / 4294967296, c = r < 0.5 ? 0 : 200; d[i] = c; d[i + 1] = c; d[i + 2] = c + (c ? 20 : 0); d[i + 3] = r < 0.03 || r > 0.975 ? 70 : Math.abs(r - 0.5) * 30; }
+    if (i1 < d.length) yield i1 / d.length;
+  }
+  gx.putImageData(id, 0, 0); L._grain = { c: gc, w: gw, h: gh };
+}
 export function bakeYardFloor(ctx, L, rng) {
   if (!L || !L.width) return false;
   const W = L.width, H = L.height, T = L.tile || 32, R = R0(rng);
@@ -25,9 +36,9 @@ export function bakeYardFloor(ctx, L, rng) {
   ctx.globalAlpha = 1;
   // asfaltkorn i full oppløsning (pikselrom)
   const m = ctx.getTransform(), gw = Math.ceil(W * m.a), gh = Math.ceil(H * m.d);
-  { const gc = canvas(gw, gh), gx = gc.getContext('2d'), id = gx.createImageData(gc.width, gc.height), d = id.data; let s = (L.seed >>> 0) || 7;
-    for (let i = 0; i < d.length; i += 4) { s = (s * 1664525 + 1013904223) >>> 0; const r = s / 4294967296, c = r < 0.5 ? 0 : 200; d[i] = c; d[i + 1] = c; d[i + 2] = c + (c ? 20 : 0); d[i + 3] = r < 0.03 || r > 0.975 ? 70 : Math.abs(r - 0.5) * 30; }
-    gx.putImageData(id, 0, 0); ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(gc, 0, 0); ctx.restore(); }
+  { let gc = L._grain?.w === gw && L._grain?.h === gh ? L._grain.c : null; // Hakk 27.10: Arena kan ha laget kornet på forhånd i biter (bakeYardGrain)
+    if (!gc) { const g = bakeYardGrain(L, gw, gh); while (!g.next().done); gc = L._grain.c; }
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(gc, 0, 0); ctx.restore(); }
   // våte partier: kald blank hinne (svak), dekkspor
   for (let i = 0; i < 16; i++) blot(ctx, R.f() * W, R.f() * H, R.r(60, 160), '60,78,96', R.r(0.06, 0.13), R.r(0.4, 0.8));
   ctx.lineCap = 'round';

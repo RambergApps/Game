@@ -9,7 +9,7 @@ import { YARD_V2 } from './yard-v2.js'; // standard for yard (27.10); ?yard=v1 g
 import { YARD_LAVT } from './yard-lavt.js'; // testvariant, bare med ?yard=lavt
 import { REFINERY } from './refinery.js';
 import { FOUNDRY } from './foundry.js'; // PLASSHOLDER – gjenbruker yard-layout
-import { occupancy, buildArenaLayers, createFx, updateFx, drawDynamic, drawFloorDynamic, drawFlashes, addFlash, ELEV, RES, OWN } from './render.js';
+import { occupancy, buildArenaLayers, bakeArenaLayersAsync, BAKE_STEPS, createFx, updateFx, drawDynamic, drawFloorDynamic, drawFlashes, addFlash, ELEV, RES, OWN } from './render.js';
 import { makeCanvas } from './paint.js';
 import { installPerf } from './perf.js';
 import { drawAmmoCrates, AMMO_BODY } from './ammo.js';
@@ -116,6 +116,11 @@ export function resolveView(world, want) {
 function yardVariant() {
   try { return typeof location !== 'undefined' ? new URLSearchParams(location.search).get('yard') : null; } catch (e) { return null; }
 }
+const BAKE_LABEL = { floor: 'Laying the yard', shadows: 'Casting shadows', objects: 'Stacking cover', lightmaps: 'Wiring the lamps', light: 'Lighting the floor', apply: 'Lighting cover', over: 'Rigging the gantries', sprites: 'Hardening cover', glow: 'Warming the glow' };
+function asyncBakeOk(world) {
+  if (world.syncBake || typeof document === 'undefined' || typeof requestAnimationFrame === 'undefined') return false;
+  try { return new URLSearchParams(location.search).get('syncbake') !== '1'; } catch (e) { return true; }
+}
 export function loadArena(world, id = 'yard', opts = {}) {
   let def = ARENAS[id] || ARENAS.yard;
   if (def === YARD) { const yv = yardVariant(); def = yv === 'v1' ? YARD : yv === 'lavt' ? YARD_LAVT : YARD_V2; } // ?yard=lavt: lav dekning i midten (testvariant)
@@ -123,7 +128,15 @@ export function loadArena(world, id = 'yard', opts = {}) {
   world.arenaView = view; world.view = view; // world.view: felles lesbar view-modus for andre moduler (Karakter, Fiende-AI)
   const ck = def.id + (def.variant ? '~' + def.variant : '') + '|' + view + '|' + (def.playerSpawn ? def.playerSpawn.x + ',' + def.playerSpawn.y : ''); // spawn i nøkkelen: bakt gulv/ENTRY følger flyttet spawn
   let entry = cache.get(ck);
-  if (!entry) { const L = buildLevel(def, view); entry = { L, layers: buildArenaLayers(L) }; cache.set(ck, entry); }
+  let fresh = false;
+  if (!entry) {
+    const L = buildLevel(def, view);
+    // Hakk 27.10: første lasting i nettleseren bakes over flere bilder (lasteskjermen i src/menu viser fremdrift).
+    // ?syncbake=1 / world.syncBake / uten DOM: synkront som før.
+    if (asyncBakeOk(world)) { entry = { L, layers: { pending: true, sprites: [], cells: {}, owner: null, W: L.width, H: L.height } }; fresh = true; }
+    else entry = { L, layers: buildArenaLayers(L) };
+    cache.set(ck, entry);
+  }
   const { L } = entry;
   // Yard v2: pirtuppen (y 29,5) skal kunne komme over HUD-panelet (topp ~y 490 av 720 skjerm-px) med følgekameraet.
   // Krav: kamera-y ≥ 944 − 110/(zoom·g) → padBottom ≈ 230 ved zoom 2,25; 240 gir ~10 px margin. Andre brett/legacy: standard (110).
@@ -148,12 +161,33 @@ export function loadArena(world, id = 'yard', opts = {}) {
   if (world._arenaState) clearCoverDecals(world); // dekaler: cachen deles mellom lastinger
   const prev = world._arenaState;
   world._arenaState = { entry, fx: createFx(L), buf: prev?.buf || null };
-  if (L.view === '34') glowBake(world._arenaState); // ved lasting, ikke midt i spillet
+  const finish = () => {
+    if (L.view === '34') glowBake(world._arenaState); // ved lasting, ikke midt i spillet
+    if (L.view === '34') { const warm = () => { try { LOWCOVER?.warmCoverSprites?.(world); } catch (e) { /* valgfritt */ } }; if (LOWCOVER) warm(); else import('../effects/cover.js').then(warm).catch(() => {}); }
+  };
+  if (entry.layers.pending) {
+    const st = world._arenaState, nSpr = L.objects.filter((o) => !o.overhead && (o.type === 'high' || o.type === 'low')).length;
+    world.arenaBake = { p: 0, label: 'Preparing', done: false };
+    if (!entry.baking) entry.baking = bakeArenaLayersAsync(L, (y, n) => {
+      const tot = BAKE_STEPS + Math.max(1, y.n || nSpr * 0.6);
+      world.arenaBake.p = Math.min(0.99, (y.k === 'sprites' ? BAKE_STEPS + y.i : n) / tot);
+      world.arenaBake.label = BAKE_LABEL[y.k] || 'Preparing';
+      world.events?.emit('arenaBakeProgress', { ...world.arenaBake });
+    }).then((ly) => {
+      Object.assign(entry.layers, ly); delete entry.layers.pending;
+      if (world._arenaState?.entry === entry) { const s2 = world._arenaState; s2.vc = null; s2.dObj = null; s2.coverList = null; finish(); try { prepareCoverDecals(world); } catch (e) { /* valgfritt */ } }
+      world.arenaBake = { p: 1, label: 'Ready', done: true };
+      world.events?.emit('arenaBaked', { id: L.id });
+    });
+  } else {
+    world.arenaBake = { p: 1, label: 'Ready', done: true };
+  }
+
   subscribe(world);
   installPerf(world); // world.perf bare med ?perf=1 (src/arena/perf.js)
   if (world.player && !world.player._arenaPlaced) { world.player.x = L.playerSpawn.x; world.player.y = L.playerSpawn.y; world.player._arenaPlaced = true; }
   world.events?.emit('arenaLoaded', { id: L.id });
-  if (L.view === '34') { const warm = () => { try { LOWCOVER?.warmCoverSprites?.(world); } catch (e) { /* valgfritt */ } }; if (LOWCOVER) warm(); else import('../effects/cover.js').then(warm).catch(() => {}); }
+  if (!entry.layers.pending) finish();
   return arena;
 }
 
@@ -207,7 +241,11 @@ export function surfaceAt(world, x, y) {
   return 'concrete';
 }
 
-export function init(world) { loadArena(world, 'yard'); }
+export function init(world) {
+  loadArena(world, 'yard');
+  // Hakk 27.10: hopp over spilltegningen mens en mellomsekvens (story/player.js, opak #000-bakgrunn) dekker skjermen helt
+  if (typeof document !== 'undefined' && !world.renderHold) world.renderHold = () => { const cv = document.querySelector('canvas.breach-cutscene'); return !!cv && cv.style.opacity === '1'; };
+}
 /** Hovedmenyen (src/menu/). Pausemenyens QUIT (ui/pauseMenu.js) kaller arena.openMainMenu(world). Returnerer true (håndtert). */
 export function openMainMenu(world) {
   if (typeof document === 'undefined') return false;
@@ -294,7 +332,7 @@ function drawLayer(ctx, s, key, v) {
 }
 
 export function draw(ctx, world, camera) {
-  const s = world._arenaState; if (!s || world._arenaSkip?.floor) return; // _arenaSkip: kun for ytelsesmåling
+  const s = world._arenaState; if (!s || world._arenaSkip?.floor || s.entry.layers.pending) return; // _arenaSkip: kun for ytelsesmåling
   const { L, layers } = s.entry, v = viewRect(ctx, camera, L);
   ctx.save();
   // bakgrunn utenfor kartet: bare hvis kartet ikke dekker skjermen (kameraet er klampet til bounds)
@@ -414,7 +452,7 @@ try { GLOW_BAKE = new URLSearchParams(location.search).get('glowbake') === '1'; 
 // (sjekket visuelt og med pikseldiff, se YTELSE.md). Bygges én gang per oppføring (deles mellom lastinger).
 function glowBake(s, force) {
   if (!GLOW_BAKE && !force) return false;
-  const ly = s.entry.layers; if (!ly.over || !ly.glow) return false;
+  const ly = s.entry.layers; if (ly.pending || !ly.over || !ly.glow) return false;
   if (!ly.overGlow) {
     // Eksakt der over-laget er dekkende: over + glød (additivt) lar seg lagre i ett lerret. Resten av gløden (på gulvet,
     // der scenen under er ukjent) blir igjen i glowRest og tegnes additivt som før, men bare i cellene med innhold.
@@ -430,7 +468,7 @@ function glowBake(s, force) {
 
 export function drawTop(ctx, world, camera) {
   world.perf?.setContext?.(ctx);
-  const s = world._arenaState; if (!s || world._arenaSkip?.top) return;
+  const s = world._arenaState; if (!s || world._arenaSkip?.top || s.entry.layers.pending) return;
   const { L, layers } = s.entry, v = viewRect(ctx, camera, L);
   // høy dekning løftes opp til 30 px nordover – utvid utsnittet litt
   const vt = { ...v, y1: Math.min(L.height, v.y1 + 50) };

@@ -164,6 +164,7 @@ export const rpm = (w) => Math.round(60 / w.fireInterval);
 // Ammokasser i arenaen (logikk i crates.js). Arena legger world.arena.ammoCrates = [{id, x, y}]; vi skriver ready/readyAt.
 export const TUNING = {
   // Kulehull på dekning via Arenas krok (weapons/decals.js). Én per avtrekk, tak per sekund, minsteavstand (verdens-px).
+  input: { tap: true, tapHoldMs: 80 },   // 27.10: kort touchpad-trykk → automat holder avtrekkeren så lenge (index.js handleInput)
   pointBlank: { pick: true, sweep: true, pickPad: 2, range: 100 },   // 27.10: index.js pickBody (sikt på kroppen under markøren i 34) + bodySweep (fiende mellom kropp og munning)
   coverDecals: { enabled: true, perSecond: 15, minDist: 3, zJitter: 8, minInterval: { default: 0.08, rifle: 0.08, shotgun: 0, marksman: 0 } },   // 27.10: løsnet (Arena baker utsatt/budsjettert, VFX hopper over ved decalHandled). Hagle: én per shotId i fx.
   ammoCrate: {
