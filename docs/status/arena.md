@@ -1,6 +1,3 @@
-# Status – Breach Arena (arena, meny, ytelse)
-Oppdatert: 2026-10-27 13:45 (UTC+1) – trinn B (Kessa Yard v2) levert, pluss zoom 2,25, lead-tak og DPR.
-## Ferdig
 - Tidligere: meny, tre arenaer, view 34, depth.js, dekaler (decals.js), perf, klemfelle-/spawnpassasjer, ?yard=lavt.
 - 27.10 13:10 Trinn A: 55° (projection.js), følgekamera, window.BREACH.PROJ.
 - 27.10 13:40 Zoom 2,25 (legacy 1,5); lead 0,30 med radielt tak 160 verdens-px; DPR = min(devicePixelRatio, 2) i main.js (all JS ser CSS-px, ?dpr=1 slår av).
@@ -28,3 +25,6 @@ Oppdatert: 2026-10-27 13:45 (UTC+1) – trinn B (Kessa Yard v2) levert, pluss zo
 - 22:40 Frys del 2 (levert delvis): kornet i rader (ground.js), skyggeblur delt, applyLight i 4 bånd, fiendereserve én per oppgave (enemies/look), lasteskjerm venter på reserve. Lagdump 141 filer maks 0. run.mjs OK. Rullet tilbake: effects/sprites.js warmup-deling, renderHold for rulletekst. Ikke målt med hakk.mjs ennå.
 - 23:20 Hakk 3: renderHold under rulletekst (22→56 FPS), warmupChunked koblet i lasteskjermen. Lengste lasteoppgave er fortsatt 612 ms (blur-flush). Ny ren måling trengs.
 - 23:32 Frysarbeidet avsluttet (beslutning fra Alexander). Arbeidet etter runde 3 er rullet tilbake: blur-bånd i render.js er fjernet, og ground.js er tilbake i hakk2-tilstanden (Effekters utkast bakeYardFloorChunked er tatt ut). run.mjs OK (resultat-2026-10-27T22-26-23.json).
+- 09:35 28.10 Lav dekning brett 1: jersey-blokk (paintJersey) erstatter NS-barriere v5, med kraftigere slagskygge og full bakkeskygge. 11 grupper (10 par/L + 27;13). Ingen enkeltstående blokker, minste klaring 1,5 ruter. cover-check, spawn-check, high-walk og dytt/nåbarhet: 0 brudd. reg-smoke OK. Differ: reviews/diffs/arena-lavdekning-*.diff.
+- 09:15 28.10 Jersey-toppen er mørkere (topp −0,32/−0,40, flanker −0,42/−0,60, front −0,22/−0,38). Lyse kanter er beholdt. Bilde: shots/arena/yard-v2/lavdekning-etter2.jpg. Plasseringen er uendret.
+- 09:25 28.10 Jersey-toppen er mørkere: topp −0,32/−0,40, flanker −0,42/−0,60, front −0,22/−0,38. Lyse kanter er beholdt. G1 er flyttet til x 11,25/12 (klaring 1,25 mot ENTRY). Nytt par G12 (2,75;14,5)+(3,5;14,5) inntil P1 stenger siktlinja vestspawn→spillerstart. Storys yard-v2.py-sjekk (kopi i /tmp): feil ingen. cover/spawn/high-walk/dytt: 0 brudd. reg-smoke OK. Bilde: lavdekning-etter2.jpg.

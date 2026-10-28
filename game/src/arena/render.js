@@ -482,8 +482,8 @@ function drawProps(ctx, L, rng) {
 }
 
 // ---------------------------------------------------------------- skygger
-// Nord–sør-barrierer (kind barrier, h > w) males som smal, lav jersey-rekke (effects/cover.js v5): skyggen følger 68 % av bredden.
-function nsShadowRect(o) { if (o.kind !== 'barrier' || !(o.h > o.w)) return o; const w = o.w * 0.68; return { x: o.x + (o.w - w) / 2, y: o.y, w, h: o.h }; }
+// 28.10: jersey-blokkene (effects/cover.js paintJersey) fyller hele fotavtrykket, så bakkeskyggen bruker hele rektangelet (som sandsekkene).
+function nsShadowRect(o) { return o; }
 function* drawShadows(ctx, L) {
   const W = L.width, H = L.height;
   const sc = makeCanvas(W * RES, H * RES), s = sc.getContext('2d'); s.scale(RES, RES);

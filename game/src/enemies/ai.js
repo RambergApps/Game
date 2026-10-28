@@ -164,6 +164,7 @@ export function stop(e) { e.path = null; e.pathIdx = 0; e.moving = false; }
 
 export function goTo(world, e, x, y, state) {
   const path = nav(world).findPath(e.x, e.y, x, y);
+  if (!(path && path.length) && (state === 'seekCover' || state === 'returnCover') && e.spot?.id != null && dist(e.x, e.y, x, y) > 24) (e._badSpots ||= new Map()).set(e.spot.id, (world.time ?? 0) + 10);   // 28.10: ingen sti → merk spot (blockedCheck tar resten)
   e.path = path && path.length ? path : [{ x, y }];
   e.pathIdx = 0;
   if (state) setState(world, e, state);

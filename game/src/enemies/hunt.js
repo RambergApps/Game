@@ -91,7 +91,7 @@ export function huntTick(world, e, dt) {
   if (e.huntDelay == null) e.huntDelay = HUNT.delay[0] + world.rng() * (HUNT.delay[1] - HUNT.delay[0]);
   if (e.sees && e.state !== 'hunt') e.hunting = false;
   if (e.contactAt == null && (e.sees || (sq.known && now - sq.known.t < 0.5))) e.contactAt = now;
-  if (e.sees) { e.lastSightAt = now; e.huntStage = 0; e.stillBlindT = 0; e.blockedT = 0; return; }
+  if (e.sees) { e.lastSightAt = now; e.huntStage = 0; e.stillBlindT = 0; blockedSeeing(world, e, dt, now); return; }   // 28.10: fastlåst-sjekk også med sikt
   if (blockedCheck(world, e, dt, now)) return;
   if (e.lastSightAt == null) e.lastSightAt = now;
   if (!e.known) e.known = { x: p.x, y: p.y, t: now, hunt: true };   // aldri null mens den er aware
@@ -183,6 +183,18 @@ function legacyStill(world, e, dt) {
 // A2 27.10: blind fiende som «går» uten å flytte seg (dytter mot hindring) i > 1 s → ny rute.
 // seekCover/returnCover: dropp den dekningen 3 s og jakt via nav. hunt: sidesteg til en gangbar celle 64–96 px unna.
 const BLOCK_STATES = new Set(['seekCover', 'returnCover', 'hunt']);
+// 28.10 (fastlåst ved defensivt spill): blockedCheck kjørte bare UTEN sikt. Fiender i seekCover/returnCover som så Warden
+// over lavt cover og presset mot coverkanten (sti mangler/hjørne) ble aldri sjekket. Med sikt: nær spot (< 24 px) → regnes som fremme;
+// ellers merkes spoten som blokkert i 10 s og fienden velger ny dekning via vanlig think() (tilstand 'hold').
+function blockedSeeing(world, e, dt, now) {
+  if ((e.state !== 'seekCover' && e.state !== 'returnCover') || !e.moving || (e.realSpeed ?? 0) >= 10) { e.blockedT = 0; return false; }
+  e.blockedT = (e.blockedT || 0) + dt;
+  if (e.blockedT < 1.0) return false;
+  e.blockedT = 0; const st = stats(world); st.blockedSee = (st.blockedSee || 0) + 1;
+  if (e.spot && Math.hypot(e.spot.x - e.x, e.spot.y - e.y) < 24) { e.path = null; e.pathIdx = 0; return true; }   // follow() → fremme
+  if (e.spot?.id != null) (e._badSpots ||= new Map()).set(e.spot.id, now + 10);
+  releaseFire(world, e); unreserve(world, e); ai.stop(e); setState(world, e, 'hold'); return true;
+}
 function blockedCheck(world, e, dt, now) {
   if (!BLOCK_STATES.has(e.state) || !e.moving || (e.realSpeed ?? 0) >= 10) { e.blockedT = 0; return false; }
   e.blockedT = (e.blockedT || 0) + dt;
@@ -190,7 +202,7 @@ function blockedCheck(world, e, dt, now) {
   e.blockedT = 0;
   const st = stats(world); st.blocked = (st.blocked || 0) + 1;
   releaseFire(world, e);
-  if (e.state !== 'hunt') { unreserve(world, e); e.noCoverUntil = now + 3; huntStep(world, e, 'blocked'); return true; }
+  if (e.state !== 'hunt') { if (e.spot?.id != null) (e._badSpots ||= new Map()).set(e.spot.id, now + 10); unreserve(world, e); e.noCoverUntil = now + 3; huntStep(world, e, 'blocked'); return true; }   // 28.10: blokkert spot velges ikke igjen på 10 s (fastlåst-fiks)
   const wk = walk(world), r = e.r || 16;
   for (let i = 0; i < 8; i++) {
     const a = world.rng() * Math.PI * 2, D = 64 + world.rng() * 32, x = e.x + Math.cos(a) * D, y = e.y + Math.sin(a) * D;

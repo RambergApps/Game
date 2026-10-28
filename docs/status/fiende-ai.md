@@ -24,7 +24,7 @@ Oppdatert: 2026-10-27 ca. 14:40. Eier: src/enemies (unntatt look/, som eies av M
 ## Hunker bygget 27.10 ~13:55
 - behaviors/hunker.js + stats.js (hunker, r 18, BODY 39/18,6, munning fra HUNKER_MUZZLE). Kun lavt cover, ryggskjold ×0,5, peek-telegraf, bytte ved flanking/2–3 salver, jakt uten cover.
 - Test (tools/hunker-test.mjs): cover ✓, skjold 5/10 ✓, telegraf 0,50/0,55 s ✓, bytte ✓, 0 konsollfeil. Ikke i levels-bølger ennå.
-## Hunker-runde 2 (27.10 ~14:20)
-- Peek/fire kun fra dekningsplass (dukket/peek → telegraph → fire, gate i setState); krøket sprint cover/crouch 0,5; egen kantavstand 20 px (def.spotOffset, kun Hunker).
+## 28.10 ~09:15 spredning/fastlåst Kessa Yard (unntak fra stand-still): reviews/fiende-ai-spredning-fastlast-2026-10-28.md
+- Årsak: blockedCheck kjørte bare uten sikt. Fiks hunt/cover/ai (blokkert spot 10 s, sikt-gren, allierte-spot-straff). 1-5 fastlåste 5 (gml)/1 (ny layout) → 0 (6 seeds), skade tatt uendret.
 ## Utredninger 27.10 (ingen kode): forsvarsmodus (rettet mot refinery-v3 S5) + sjefer
 - reviews/fiende-ai-forsvarsmodus-2026-10-27.md · reviews/fiende-ai-sjefer-2026-10-27.md (Alpha 1050 HP/60–90 s, Ashmaw 3200/armor 0/3,5–4,5 min, kasser+fase-refill). GODKJENT SOM PLAN 27.10 21:53, se toppen av notatet – ikke bygg før Alexander sier fra.)

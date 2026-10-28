@@ -1,28 +1,25 @@
 # Status – Mellomsekvens-maler
-Oppdatert: 2026-10-27 23:08
+Oppdatert: 2026-10-28 00:05
 
 ## Ferdig
-- 7 sekvenser / 24 paneler godkjent og live.
-- NYTT: ending-03b (gjenforening ved heisburet) levert 27.10: game/img/story/ending-03b.webp (1920×1080, 246 kB, q85).
-  - Sammenligning: reviews/img/story-ending-panels-03b.png. Kamerasjekk: reviews/img/ending-03b-cam-check.png.
-  - Råbilder: reviews/img/mellomsekvens-raw/ending-03b-a.jpg (forkastet: cyan visir på troppen, 4 figurer) og ending-03b-b.jpg (valgt).
-  - Kamerabane (Story): [1.0,.5,.58]→[1.15,.5,.42], 7 s. Blåmåling: kun Warden har cyan/blått.
+- Brett 1: 7 sekvenser og 24 paneler er godkjent og live, pluss ending-03b (27.10).
+- Brett 2-overganger: 8 paneler er godkjent av Breach 28.10 og ligger i /workspace/breach-brett2/game/img/story/:
+  refinery-door-01/02, ladder-up-01, pipe-01/02, ladder-down-01, valve-01/02.
+  - Objektene følger Effekters ark (brett2-overganger-ark.png og -v2.png). Det røde rattet (#6b2c22) står på en lav søyle til høyre for døren og slusen.
+  - Kontaktark: breach-brett2/reviews/img/brett2-overganger-kontaktark-1/2/2b/3.
+  - Råbilder og gamle versjoner ligger i breach-brett2/reviews/img/mellomsekvens-raw/.
+  - Story har fått beskjed om å legge panelene inn i PAINTED_PANELS i kopien.
 - Stilguide: reviews/mellomsekvens-stilguide-2026-10-23.md. Review: reviews/mellomsekvens-2026-10-23.md.
 
 ## Pågår
-- NY ORDRE (Breach 27.10 23:07, godkjent av Alexander): 5 overgangssekvenser på brett 2 (raffineriet), 1–2 paneler hver (justert av Breach 23:08; under ca. 4 s, én tekstlinje, ingen stemme): trykkdør, stige opp, sprukket rør, stige ned til nedgravd stilling, ventil/sluse til tankgården. Kontaktark til Breach når de første er klare.
+- Ingenting. STANDBY. Breach stoppet 00:03 og sa at maleriene er ferdige. ladder-up-01 har fått mørk jernstige (00:03), og retusjen av chevronen ble avbrutt uten endring.
 
 ## Neste (bare på ordre)
-- Eventuell ommaling av ending-03b (synligere sprekk i visiret, buret på bakken).
-- Ommaling for Warden variant C, yard-clear-02 landfiks, skarpere oppskalering.
+- Ommaling for Warden variant C, landfiks i yard-clear-02, skarpere oppskalering.
 
 ## Blokkert av
-- Overgangene: venter på tekst og panelbeskrivelser fra Story. Story og brett må legge ending-03b inn i cutscenes.js og PAINTED_PANELS.
+- Ingenting.
 
 ## Siste skjermbilde
-- reviews/img/story-ending-panels-03b.png
-
-## 27.10 23:12 – brett 2-overganger (i /workspace/breach-brett2)
-- Levert til vurdering: refinery-door-01/-02, refinery-ladder-up-01/-02 (kontaktark: breach-brett2/reviews/img/brett2-overganger-kontaktark-1.png).
-- Neste (ved gjenopptak): pipe-01/-02 (pipe-03 utgår), ladder-down-01/-02, valve-01/-02.
-- 23:13 PAUSE: venter på referanseark med spillskjermbilder fra Story før flere brett 2-paneler. Endelig liste: door-01/02, ladder-up-01 (=Kiln), pipe-01/02, ladder-down-01, valve-01/02.
+- /workspace/breach-brett2/reviews/img/brett2-overganger-kontaktark-3.png
+- 00:05 ladder-up-01: stige gjort mørk korrodert jern med oransje kant (1 redigering). Gammel: raw/refinery-ladder-up-01-lysstige.webp.

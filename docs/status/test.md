@@ -23,3 +23,4 @@ Oppdatert: 2026-10-27 23:10 (Europe/Oslo)
 - 19:18 Pages-røyktest e2ddb33: **JA**. Intro, bølge 1→2 og slutt med ending-03b (200). 0 konsollfeil, 0 svar ≥400, 37/37 .ogg gir 200, 60 FPS. reviews/test-2026-10-27-pages-1907.md
 - 21:58 hakk-2103: hakking gjenskapt. Lasting 2,4 s frys (8,3 s ved CPU 4×, arena/render.js:applyLight). Sekvenser 59 FPS uten struping, 16–19 FPS ved 4× (spill 42). Årsak: story/player.js:frame (korn overlay + fullskjerm) og core/loop.js render() under sekvens. Ikke regresjon mot b804a6b. reviews/test-2026-10-27-hakk-2103.md
 - 23:32: Referanseark brett 2 utgår (Story leverer). Ledig til Breach melder brett 2 klart for test.
+- 23:34: Røyktest c7adc18 AVLYST (Alexander via Breach), stoppet. Kjører ingenting før ny beskjed fra Breach.

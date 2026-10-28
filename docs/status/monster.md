@@ -25,4 +25,5 @@ Oppdatert 2026-10-27
 - Ingenting. FYI: Fiende-AI bruker HUNKER_MUZZLE.side 12,1 (verifisert, reviews/img/fiende-ai/2026-10-27-hunker-muzzle-side.png).
 
 ## Siste skjermbilde
+- 28.10 00:16: Samleark alle fiender levert til Breach: reviews/img/fiender-oversikt.png (bosser = utklipp v2.2).
 - reviews/img/cinderborn/sjefer-v2.2-silhuett.png, *-v2-ark.png (internt)

@@ -32,43 +32,47 @@ export const YARD_V2 = {
     ['ledge', 32, 14.375, 4.75, 0.625],
     ['sandbag', 7, 18.25, 2, 0.75],
     ['sandbag', 4.25, 14.75, 1.375, 0.75],  // Story P1 (27.10)
+    ['barrier', 2.75, 14.5, 0.75, 1],     // G12 (28.10): par inntil P1, stenger siktlinja vestspawn → spillerstart (erstatter #3)
+    ['barrier', 3.5, 14.5, 0.75, 1],
     ['sandbag', 30.5, 17.25, 2, 0.75],      // Story P2 (27.10)
     ['sandbag', 10.25, 24, 1.25, 0.75],     // Story P3 (27.10)
-    ['barrier', 11.5, 21.25, 0.75, 1],
-    ['barrier', 11.5, 23.625, 0.75, 1],
-    ['barrier', 5.25, 17.5, 0.75, 1],
+    ['barrier', 11.25, 19.5, 0.75, 1],    // Arena 28.10 lav dekning G1: par (#1+#2 slått sammen; x 11,25 gir 1,25 klaring mot ENTRY, Story-krav)
+    ['barrier', 12, 19.5, 0.75, 1],
     ['crates', 9, 17, 2, 1],
     ['sandbag', 13, 22, 3, 1],
-    ['barrier', 16.125, 22.5, 0.75, 1],
-    ['barrier', 20.125, 22, 0.75, 1],
+    ['barrier', 19, 22, 0.75, 1],         // G2: par langs løperuten (flyttet 1,125 vest for klaring mot kassene)
+    ['barrier', 19.75, 22, 0.75, 1],
     ['crates', 22, 22.5, 2, 1],
-    ['barrier', 33.5, 18.5, 1.25, 0.75],
-    ['barrier', 33.5, 19.25, 0.75, 1],
-    ['barrier', 28.625, 18.5, 0.75, 1],
+    ['barrier', 34, 18.5, 1.25, 0.75],    // G10: eksisterende L flyttet 0,5 øst (klaring mot sandsekk P2)
+    ['barrier', 34, 19.25, 0.75, 1],
+    ['barrier', 28.125, 18.5, 0.75, 1],   // G3: L (flyttet 0,5 vest)
+    ['barrier', 28.125, 19.5, 1.25, 0.75],
     ['sandbag', 25, 16, 2, 1],
-    ['barrier', 5.625, 14.75, 0.75, 1],
     ['sandbag', 8, 11, 3, 1],
-    ['barrier', 8.125, 12.5, 0.75, 1],
-    ['barrier', 13.125, 15.75, 0.75, 1],
+    ['barrier', 8.125, 13.5, 0.75, 1],    // G4: L (flyttet 1 sør, bort fra sandsekken)
+    ['barrier', 8.125, 14.5, 1.25, 0.75],
+    ['barrier', 13.125, 15.75, 0.75, 1],  // G5: par
+    ['barrier', 13.875, 15.75, 0.75, 1],
     ['crates', 17, 14, 2, 1],
-    ['barrier', 21.125, 13, 0.75, 1],
+    ['barrier', 21.125, 13, 0.75, 1],     // G6: L
+    ['barrier', 21.125, 14, 1.25, 0.75],
     ['sandbag', 26, 12, 1, 2],
     ['barrier', 27, 13, 2, 1],
     ['barrels', 11, 8, 1, 1],
     ['barrier', 15, 9, 3, 1],
     ['crates', 19, 7, 1, 2],
     ['sandbag', 24, 8, 2, 1],
-    ['barrier', 6.125, 7.5, 0.75, 1],
+    ['barrier', 6.125, 7.5, 0.75, 1],     // G7: par
+    ['barrier', 6.875, 7.5, 0.75, 1],
     ['sandbag', 12, 5, 2, 1],
+    ['barrier', 16.375, 4.5, 0.75, 1],    // G8: par
     ['barrier', 17.125, 4.5, 0.75, 1],
     ['crates', 24, 5, 2, 1],
-    ['barrier', 28.125, 5, 0.75, 1],
     ['crates', 26, 6, 2, 1],
-    ['barrier', 34.125, 6.5, 0.75, 1],
+    ['barrier', 34.125, 6.5, 0.75, 1],    // G9: par (østover, bort fra ledge)
+    ['barrier', 34.875, 6.5, 0.75, 1],
     ['sandbag', 35, 10, 2, 1],
-    ['barrier', 33.5, 12, 1.75, 0.75],
-    ['barrier', 33.5, 11, 0.75, 1],
-    ['barrier', 35, 18, 0.75, 1],
+    // Arena 28.10: L (33,5;11–12) fjernet – plattformen mellom ledge og sandsekk 35;10 gir ikke 1,5 rute klaring noe sted
   ],
   zones: {'platform': {'x': 32, 'y': 4, 'w': 7, 'h': 10.5, 'kind': 'raised', 'h_px': 24}, 'ramp': {'x': 30, 'y': 9, 'w': 2, 'h': 3, 'kind': 'ramp', 'dir': 'E'}},
   ammoCrates: [[13.5, 21], [20.5, 17.5], [34, 9], [16, 8.4]],

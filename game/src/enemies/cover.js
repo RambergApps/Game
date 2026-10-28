@@ -94,6 +94,7 @@ export function firingPoint(world, spot, tx, ty) {
 export function scoreSpot(world, e, spot, tx, ty, opts) {
   const owner = opts.reserved.get(spot.id);
   if (owner && owner !== e) return -Infinity;
+  if (e._badSpots && (e._badSpots.get(spot.id) ?? -1) > (world.time ?? 0)) return -Infinity;   // 28.10: blokkert/uten sti nylig
   const dT = dist(spot.x, spot.y, tx, ty);
   if (dT < opts.minRange || dT > opts.maxRange) return -Infinity;
   const q = protection(world, spot, tx, ty);
@@ -111,6 +112,11 @@ export function scoreSpot(world, e, spot, tx, ty, opts) {
   for (const o of opts.others) {                            // spre laget
     const d = dist(o.x, o.y, spot.x, spot.y);
     if (d < 96) s -= (96 - d) / 22;
+  }
+  for (const [id, o] of opts.reserved) {                   // 28.10 spredning: ikke ta spot tett ved en alliert sin reserverte spot
+    if (o === e || o.dead || id === spot.id || !o.spot) continue;
+    const d = dist(o.spot.x, o.spot.y, spot.x, spot.y);
+    if (d < 80) s -= (80 - d) / 20;
   }
   // Hold linja: ikke-flankere skal holde seg i lagets front (flanking er tokenstyrt)
   if (opts.front !== undefined) {

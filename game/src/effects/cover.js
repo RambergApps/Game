@@ -49,7 +49,7 @@ const LN = Math.max(0, -LIGHT_DIR.y), LW = Math.max(0, -LIGHT_DIR.x);
 
 // Hver maler får (c, R, S): S = { w, d (topp-dybde, forkortet), f (fronthøyde, forkortet), g (forkorting), horiz }
 // Toppflaten ligger i y ∈ [0, d], fronten i [d, d + f]. Lang akse er x når horiz; ellers ligger objektet nord–sør.
-function paintNSBarrier(c, R, S) { return (globalThis.__BREACH_NSV === 4 ? paintNSBarrierV4 : paintNSBarrierV5)(c, R, S); }
+function paintNSBarrier(c, R, S) { return paintJersey(c, R, S); } // 28.10: jersey-blokk erstatter v5 (v4/v5 beholdt under for sammenligning)
 // v5 (27.10): lang, lav jersey-rekke. Toppen senket (front bare 28 % av løftet), tverrprofil fot–flanke–rygg–flanke–fot,
 // tydelige tverrfuger ca. hver 1,5 rute (leses som liggende seksjoner, ikke søyle), sørende med jersey-trapes + gul/svart stripe.
 function paintNSBarrierV5(c, R, S) {
@@ -265,7 +265,45 @@ function paintTunnel(c, R, S) {   // kulvert med åpning mot sør: tak (sylinder
   c.fillStyle = 'rgba(0,0,0,0.4)'; c.fillRect(0, fy, w, 0.7);
   speckle(c, R, 0, 0, w, d + f, Math.round(w * (d + f) / 12), [40, 34, 28], 0.1, 0.35);
 }
-const PAINT = { barrier: paintBarrier, sandbag: paintSandbag, crates: paintCrates, barrels: paintBarrels, tunnel: paintTunnel };
+// Arena (Breach 28.10, lav dekning): massiv lav jersey-blokk. Topp komprimert så fronten blir >= ~55 % av toppdybden.
+function paintJersey(c, R, S) {
+  const { w, f } = S, d0 = S.d, CON = tint([112, 113, 110], R.r(0.9, 1.0));
+  const y0 = f * 0.42, ft = Math.max(f * 0.55, d0 * 0.5), top = d0 + f - y0 - ft; c.save(); c.translate(0, y0);          // toppflate y∈[0,top], front y∈[top, d0+f]
+  const n = S.horiz ? Math.max(1, Math.round(w / 40)) : 1, gap = n > 1 ? 1.2 : 0, sw = (w - gap * (n - 1)) / n;
+  const yb = d0 + f - y0;
+  // slagskygge mot SØ (som sandsekkene) + kontakt-AO
+  for (let q = 5; q >= 0; q--) { const e = q * 1.3; c.fillStyle = 'rgba(0,0,0,0.21)'; c.beginPath();
+    c.moveTo(w * 0.1, yb - 1); c.lineTo(w + 4 + e, yb - 1); c.lineTo(w + 6 + e, yb + 4 + e * 0.6); c.lineTo(2 + e * 0.4, yb + 4 + e * 0.6); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(w - 1, ft * 0.2); c.lineTo(w + 4 + e, ft * 0.35 + 2); c.lineTo(w + 4 + e, yb + 2); c.lineTo(w - 1, yb); c.closePath(); c.fill(); }
+  c.fillStyle = 'rgba(0,0,0,0.75)'; c.fillRect(-0.5, yb - 0.6, w + 1.5, 1.6);
+  for (let j = 0; j < n; j++) {
+    const x0 = j * (sw + gap), x1 = x0 + sw, ins = sw * 0.2, fs = sw * 0.08;
+    // TOPP: smal rygg + skrå flanker sett ovenfra
+    c.fillStyle = rgb(CON, -0.42); c.fillRect(x0, 0, ins, top);                                   // vestflanke (lys side mot lys)
+    c.fillStyle = grad(c, 0, 0, 0, top, [[0, rgb(CON, -0.32)], [1, rgb(CON, -0.4)]]); c.fillRect(x0 + ins, 0, sw - 2 * ins, top);
+    c.fillStyle = rgb(CON, -0.6); c.fillRect(x1 - ins, 0, ins, top);                             // østflanke mørk
+    c.fillStyle = rgb(CON, 0.55); c.fillRect(x0 + ins, 0, sw - 2 * ins, 0.9);                     // lys toppkant nord
+    c.fillStyle = rgb(CON, 0.45); c.fillRect(x0 + ins, top - 0.8, sw - 2 * ins, 0.8);             // lys kant topp→front
+    c.fillStyle = 'rgba(0,0,0,0.35)'; c.fillRect(x1 - ins, 0, 0.6, top);
+    // FRONT: jersey-profil (rygg → skrå flanke → loddrett fot)
+    const yk = top + ft * 0.55;
+    c.fillStyle = grad(c, 0, top, 0, yk, [[0, rgb(CON, -0.22)], [1, rgb(CON, -0.38)]]);
+    c.beginPath(); c.moveTo(x0 + ins, top); c.lineTo(x1 - ins, top); c.lineTo(x1 - fs, yk); c.lineTo(x0 + fs, yk); c.closePath(); c.fill();
+    c.fillStyle = rgb(CON, -0.05); c.beginPath(); c.moveTo(x0, 0); c.lineTo(x0 + ins, 0); c.lineTo(x0 + ins, top); c.lineTo(x0 + fs, yk); c.lineTo(x0, yk); c.closePath(); c.fill(); // vest-silhuett
+    c.fillStyle = rgb(CON, -0.5); c.beginPath(); c.moveTo(x1, 0); c.lineTo(x1 - ins, 0); c.lineTo(x1 - ins, top); c.lineTo(x1 - fs, yk); c.lineTo(x1, yk); c.closePath(); c.fill();
+    c.fillStyle = grad(c, 0, yk, 0, yb, [[0, rgb(CON, -0.34)], [1, rgb(CON, -0.52)]]); c.fillRect(x0, yk, sw, yb - yk);   // fot
+    c.fillStyle = 'rgba(255,255,255,0.18)'; c.fillRect(x0 + fs, yk - 0.4, sw - 2 * fs, 0.7);    // knekk-highlight
+    if (S.hz && j === 0 || n === 1) hazard(c, x0 + 1, yk + (yb - yk) * 0.22, sw - 2, (yb - yk) * 0.5, 1.6);
+    // slitasje: avskallinger på kanter
+    for (let q = 0; q < 4; q++) { const cx = x0 + R() * sw, cy = R() < 0.5 ? top : yk; c.fillStyle = rgb(CON, R() < 0.5 ? -0.6 : 0.3, 0.9);
+      c.beginPath(); c.moveTo(cx, cy - 0.6); c.lineTo(cx + R.r(1, 2.5), cy + R.r(0, 1)); c.lineTo(cx + R.r(-1, 1), cy + R.r(1, 2)); c.fill(); }
+    c.save(); c.beginPath(); c.rect(x0, 0, sw, yb); c.clip(); speckle(c, R, x0, 0, sw, yb, Math.round(sw * yb / 6), [50, 50, 48], 0.15, 0.45); c.restore();
+    c.fillStyle = 'rgba(10,10,10,0.75)'; c.fillRect(x0 + sw * 0.44, top * 0.45, sw * 0.12, 1.4);   // løftehull
+  }
+  c.restore();
+}
+function paintBarrierMix(c, R, S) { return S.w <= 64 ? paintJersey(c, R, S) : paintBarrier(c, R, S); }
+const PAINT = { barrier: paintBarrierMix, sandbag: paintSandbag, crates: paintCrates, barrels: paintBarrels, tunnel: paintTunnel };
 
 function build(kind, o, H, P, qx, qy, seed) {
   const lift = H * P.zScale, g = qy / qx, horiz = o.w >= o.h, so = shadowOffset(H);
@@ -276,7 +314,7 @@ function build(kind, o, H, P, qx, qy, seed) {
   const S = { w: o.w, d, f, g, H, dw: o.h, horiz, hz: R() < 0.65 };
   // bakkeskygge (myk, i bakkeplanet, langs SHADOW_DIR) + kontakt-AO ved foten. Fotavtrykket ligger i y ∈ [f, f + d].
   const fx0 = 0, fy0 = f, fw = o.w, fh = d, sx = Math.min(6, so.x), sy = Math.min(6, so.y) * g;   // Arena klipper spriten 8 px utenfor rektangelet; resten av bakkeskyggen tegner Arena (drawShadows)
-  const nsB = !horiz && kind === 'barrier';
+  const nsB = kind === 'barrier' && Math.max(o.w, o.h) <= 64; // 28.10: alle lave jersey-blokker (≤ 2 ruter) har egen slagskygge i paintJersey
   if (!nsB) for (let q = 4; q >= 0; q--) { const e = q * 1.2; c.fillStyle = `rgba(0,0,0,${0.13})`; c.beginPath();
     c.moveTo(fx0 - e * 0.3, fy0 - e * 0.3 * g); c.lineTo(fx0 + fw + e * 0.3, fy0 - e * 0.3 * g); c.lineTo(fx0 + fw + sx + e, fy0 + sy - e * g); c.lineTo(fx0 + fw + sx + e, fy0 + fh + sy + e * g); c.lineTo(fx0 + sx - e * 0.5, fy0 + fh + sy + e * g); c.lineTo(fx0 - e * 0.3, fy0 + fh + e * 0.3 * g); c.closePath(); c.fill(); }
   if (!nsB) { c.fillStyle = grad(c, 0, d + f - 1, 0, d + f + 3 * g, [[0, 'rgba(0,0,0,0.8)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(-1.5, d + f - 1, o.w + 3, 3 * g + 1); }   // 27.10: klammer – før lakk fillRect ut for NS-barrierer (hard svart strek under)
