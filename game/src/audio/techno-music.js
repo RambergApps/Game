@@ -15,7 +15,7 @@ if (typeof location !== 'undefined') { const m = /[?&]techgain=(-?[\d.]+)/.exec(
 const RATES = [22050, 32000, 32000];
 export const LOAD_TIMEOUT_S = 9; // v1.13: reserve-musikk først etter 9 s uten dekodet v3
 const BASE = new URL('../../assets/music/', import.meta.url);
-const LEVEL = 0.62;          // tilpasset så v3 ligger på omtrent samme nivå som yard-music.js i kamp (målt med _meter)
+const LEVEL = 1.24;          // v1.14: +6,0 dB (var 0,62) etter Alexanders valg (prøver i breach-lyd-forslag/volum). Ingen clamp: out-gain kan være > 1
 const UP = [0, 0.32, 0.62];  // score over UP[n] → minst nivå n+1
 const DOWN = [0, 0.2, 0.45]; // under DOWN[n] → ned fra nivå n+1 (hysterese)
 const HOLD_BARS = 4;         // minste tid på et nivå før det kan gå ned
