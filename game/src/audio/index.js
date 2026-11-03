@@ -17,6 +17,7 @@
 import { AudioEngine } from './engine.js';
 import { createMusic } from './music.js';
 import { createYardMusic } from './yard-music.js';
+import { createTechnoMusic, LOAD_TIMEOUT_S } from './techno-music.js';
 import { createVoice } from './voice.js';
 import { SOUNDS } from './sfx.js';
 import { createCredits, createMenuMusic } from './stingers.js';
@@ -28,6 +29,9 @@ import { lineOfSight } from '../core/geom.js';
 let ac = null, engine = null, music = null, world = null;
 let wantMusic = false, lastExternalUpdate = 0, driver = null;
 // v1.7: music = aktiv spillmusikk (yard-music.js i brett 1 «yard», ellers music.js). voice = cutscene-stemmer.
+// v1.12: techno = lagdelt v3-musikk fra filer (techno-music.js); yard/cinder er reserve til filene er dekodet.
+let techno = null, techTrack = null;
+const TECH_OFF = typeof location !== 'undefined' && /[?&]music=old\b/.test(location.search);
 let cinderMusic = null, yardMusic = null, musicId = null, voice = null, lastShotDuck = 0, calmT = 0;
 let waveBoost = 0, heat = 0, lastIntensity = -1, manualIntensity = null;
 // CINDER (v1.4.1): radio.js er skrevet om – announcer = nasjonal nødkringkasting (AM), command = militær feltradio,
@@ -222,7 +226,7 @@ export function menuStart() {
   stingerUntil = Math.max(stingerUntil, nowMs() + (wasMenu ? 1100 : 700)); // intro-kringkastingen starter etter stingeren
 }
 export function getState() {
-  return { ready: !!engine, state: ac?.state ?? 'none', intensity: music?.intensity ?? 0, voices: engine?.activeVoices() ?? 0, played: { ...played }, driver: !!driver, cutscene: cutscene?.id ?? null, fallenShort: !!cutscene?.short, level: curLevel, pendingLevelStart, radioBed: !!bed?.active, broadcast: BROADCAST_ENABLED, paused: !!engine?.paused, outputLatency: ac ? (ac.outputLatency || ac.baseLatency || 0) : 0, menuMusic: !!menuMus?.active, menuGain: menuMus ? +menuMus.output.gain.value.toFixed(4) : 0, menuEvents: menuEventsSeen, scene: scene?.id ?? null, musicId, ...settings, voiceState: voice?.state() ?? null };
+  return { ready: !!engine, state: ac?.state ?? 'none', intensity: music?.intensity ?? 0, voices: engine?.activeVoices() ?? 0, played: { ...played }, driver: !!driver, cutscene: cutscene?.id ?? null, fallenShort: !!cutscene?.short, level: curLevel, pendingLevelStart, radioBed: !!bed?.active, broadcast: BROADCAST_ENABLED, paused: !!engine?.paused, outputLatency: ac ? (ac.outputLatency || ac.baseLatency || 0) : 0, menuMusic: !!menuMus?.active, menuGain: menuMus ? +menuMus.output.gain.value.toFixed(4) : 0, menuEvents: menuEventsSeen, scene: scene?.id ?? null, musicId, techno: techno?.state() ?? null, techTrack, musicSrc: !music ? 'none' : music === techno ? 'v3' : music === yardMusic ? 'yard-old' : 'cinder-old', oldStarts, techFallback, ...settings, voiceState: voice?.state() ?? null };
 }
 export const SOUND_NAMES = Object.keys(SOUNDS);
 
@@ -238,13 +242,16 @@ export function unlock() {
     engine.setVoice(settings.voice);
     cinderMusic = createMusic(ac, engine.music, engine.reverbSend);
     yardMusic = createYardMusic(ac, engine.music, engine.reverbSend);
-    music = musicId === 'yard' ? yardMusic : cinderMusic;
-    voice = createVoice(ac, engine.voice, { onSpeech: (on) => { engine.duckRadio(on); if (on) count('_voice'); } });
+    techno = TECH_OFF ? null : createTechnoMusic(ac, engine.music);
+    for (const m of [yardMusic, cinderMusic]) { const st = m.start; m.start = (...a) => { oldStarts++; return st(...a); }; } // v1.13: telling for test
+    music = (techno && techTrack) ? techno : (musicId === 'yard' ? yardMusic : cinderMusic); // v1.13: stille til v3 er dekodet
+    voice = createVoice(ac, engine.voice, { onSpeech: (on) => { engine.duckRadio(on); techno?.voiceDuck(on); if (on) count('_voice'); } });
     scene = createScene(ac, engine.radio, engine.reverbSend);
     unlockedAt = nowMs();
     ensureMeter();
     if (wantMenu) startMenuMusic();
     else if (wantMusic) music.start(ac.currentTime + 0.05);
+    if (techTrack) loadTechno(techTrack);
   }
   if (ac.state === 'suspended') ac.resume().catch(() => {});
 }
@@ -278,7 +285,7 @@ export function init(w) {
     const s = weaponSound(p);
     if (dedupeShot(p, s)) return;
     play(s, pos(p));
-    musicDuck(4, 220, true);
+    musicDuck(4, 220, true); techno?.note('shot');
     chamberFallback(p);
     if (p.team === 'enemy' || p.projectile?.team === 'enemy') heat += 0.025; else heat += 0.01;
   });
@@ -345,10 +352,10 @@ export function init(w) {
     if (isSac(p) || (p.grenade && sacs.has(p.grenade))) { play('acidBurst', pos(p)); if (p.grenade) sacs.delete(p.grenade); }
     else if (/acid|sac/.test(String(p.kind ?? ''))) play('acidBurst', pos(p));
     else play('explosion', { ...pos(p), kind: p.kind ?? 'frag', ...(p.kind === 'small' || (num(p.radius) !== undefined && p.radius < 50) ? { gain: 0.6 } : {}) }); // v1.5: kind velger lyd ('frag' = standard granat)
-    heat += 0.15; musicDuck(8, 900);
+    heat += 0.15; musicDuck(8, 900); techno?.note('explosion');
   });
   // ---- CINDER (Historie låst 23.10): Cinderborn fra under bakken. Se cinder.js. ----
-  on('spawnWarn', (p) => musicDuck(6, 500));
+  on('spawnWarn', (p) => { musicDuck(6, 500); techno?.note('spawnWarn'); });
   on('spawnWarn', (p) => play('spawnWarn', { ...pos(p), type: ctype({ type: p.type }, p.variant), warn: num(p.t) ?? num(p.duration) ?? 0.9 }));
   on('spawnRise', (p) => { play('spawnRise', { ...pos(p), type: ctype({ type: p.type ?? p.entity?.type, variant: p.entity?.variant }, p.variant) }); heat += 0.03; });
   on('telegraph', (p) => {
@@ -402,8 +409,8 @@ export function init(w) {
   on(CUTSCENE_EVENTS.start, (p) => cutsceneStart(p));
   on(CUTSCENE_EVENTS.line, (p) => cutsceneLine(p));
   on(CUTSCENE_EVENTS.end, (p) => cutsceneEnd(p));
-  on('waveStart', () => { play('waveStart', {}); musicDuck(6, 500); calmT = 0; waveBoost = Math.max(waveBoost, 0.85); });
-  on('waveEnd', () => { play('waveEnd', {}); waveBoost = Math.min(waveBoost, 0.15); heat = 0; calmT = 3; });
+  on('waveStart', () => { play('waveStart', {}); musicDuck(6, 500); techno?.note('waveStart'); calmT = 0; waveBoost = Math.max(waveBoost, 0.85); });
+  on('waveEnd', () => { play('waveEnd', {}); waveBoost = Math.min(waveBoost, 0.15); heat = 0; calmT = 3; techno?.note('waveEnd'); });
   // Nivåer: levelStart spilles når spillet faktisk går (etter evt. cutsceneBefore), ikke oppå kringkastingen.
   on('levelStart', (p) => {
     curLevel = p.level ?? p.id ?? world?.level?.n ?? curLevel; pendingLevelStart = true;
@@ -708,7 +715,7 @@ function tick(dt) {
   if (p?.dead) target = 0.05;
   if (manualIntensity !== null) target = manualIntensity;
   if (music && Math.abs(target - lastIntensity) > 0.02) { music.setIntensity(target); lastIntensity = target; }
-  music?.update(dt);
+  music?.update(dt, alive ? world.enemies.filter((e) => e && !e.dead).length : 0);
   credits?.update();
   menuMus?.update();
 
@@ -738,15 +745,59 @@ export function draw(ctx, w, camera) { /* lyd tegner ingenting */ }
 
 // ---------------- v1.7: valg av spillmusikk og sidechain ----------------
 /** arenaLoaded → 'yard' (brett 1) bruker yard-music.js, andre brett music.js. Bytter med kort kryssfade. */
+// v1.12: brett → v3-spor. Brett 3 (underground-foundry) bruker Deepwell inntil eget spor finnes (samme industristil, ingen ny dekoding).
+const TECH_FOR = { yard: 'yard', 'refinery-crossroads': 'refinery', refinery: 'refinery', 'refinery-v1': 'refinery', 'underground-foundry': 'refinery' };
 function selectMusic(id) {
+  techTrack = TECH_OFF ? null : (TECH_FOR[id] ?? null);
+  if (techTrack && engine && techno) { // v1.13: ingen reserve-musikk under lasting – stille, så v3 med kort fade-in
+    if (music !== techno) { music?.fadeOut(0.4); music = techno; }
+    loadTechno(techTrack);
+  }
+  else if (!techTrack && music === techno && engine) { techno.fadeOut(1.2); music = musicId === 'yard' ? yardMusic : cinderMusic; if (wantMusic && !wantMenu) music.start(engine.ac.currentTime + 0.4); }
   const want = id === 'yard' ? 'yard' : 'cinder';
   if (want === musicId) return;
   musicId = want;
   if (!engine) return; // unlock() velger når AudioContext finnes
+  if (music === techno && techTrack) return; // v3 aktiv: setTrack tar byttet i loadTechno
   const next = want === 'yard' ? yardMusic : cinderMusic;
   if (music && music !== next) music.fadeOut(1.2);
   music = next; lastIntensity = -1;
 }
+/** v1.12: last (fetch + dekod) v3-sporet etter at brettet er lastet; reserve-musikken spiller til det er klart. */
+// v1.13: start i stillhet; v3 tones inn (0,8 s) når den er dekodet. Reserve (yard-music/music.js) bare ved feil eller
+// tidsavbrudd (LOAD_TIMEOUT_S = 9 s). Kommer v3 etter tidsavbrudd, tones reserven ut før v3 starter (ingen overlapp).
+let oldStarts = 0;
+let techFallback = false, techTimer = 0, techT0 = 0;
+const techLog = [];
+function techFallbackOn(name, why) {
+  if (techTrack !== name || techFallback || !engine) return;
+  techFallback = true; techLog.push({ ev: 'fallback', why, t: +(engine.ac.currentTime - techT0).toFixed(2) }); count('_technoFallback');
+  if (techno?.output) techno.fadeOut(0.2);
+  music = musicId === 'yard' ? yardMusic : cinderMusic; lastIntensity = -1;
+  if (wantMusic && !wantMenu) music.start(engine.ac.currentTime + 0.05);
+}
+function loadTechno(name) {
+  if (!techno) return;
+  techno.expect(name);
+  const already = techno.state().track === name && techno.ready?.(name);
+  if (already) return;
+  if (techno.state().track && techno.state().track !== name) techno.fadeOut(0.4); // forrige brett sitt spor ut
+  techFallback = false; techT0 = engine.ac.currentTime; techLog.push({ ev: 'load', name, t: 0 });
+  clearTimeout(techTimer); techTimer = setTimeout(() => techFallbackOn(name, 'timeout'), LOAD_TIMEOUT_S * 1000);
+  techno.load(name).then((ok) => {
+    clearTimeout(techTimer);
+    if (techTrack !== name || !engine) return;
+    if (!ok) return techFallbackOn(name, 'error');
+    let delay = 0.05;
+    if (techFallback) { music?.fadeOut(0.6); delay = 0.7; techFallback = false; } // reserve ut først, så v3
+    techno.setTrack(name); music = techno; lastIntensity = -1; count('_technoOn');
+    techLog.push({ ev: 'v3', t: +(engine.ac.currentTime - techT0 + delay).toFixed(2) });
+    if (wantMusic && !wantMenu) techno.start(engine.ac.currentTime + delay, 0.8);
+  });
+}
+export function _technoLog() { return techLog.slice(); }
+/** Test: tving v3-nivå 1..3 (null = automatisk). */
+export function _technoLevel(n) { techno?.forceLevel(n ?? null); return techno?.state() ?? null; }
 /** Sidechain på aktiv musikk (bare yard-music har duck). Skudd: maks én duck per 150 ms. */
 function musicDuck(db, ms, isShot = false) {
   if (!engine || !music?.duck || wantMenu) return;
@@ -758,4 +809,14 @@ export function _tap() {
   if (!engine) return null;
   if (!engine._tapDest) { engine._tapDest = engine.ac.createMediaStreamDestination(); engine.clip.output.connect(engine._tapDest); }
   return engine._tapDest.stream;
+}
+
+/** Test (v1.13): kompressor-reduksjon (dB) og peak (dBFS) før og etter sikkerhetsklipperen. */
+let dynPre = null, dynBuf = null;
+export function _dyn() {
+  if (!engine) return null;
+  if (!dynPre) { dynPre = engine.ac.createAnalyser(); dynPre.fftSize = 2048; engine.comp.connect(dynPre); dynBuf = new Float32Array(2048); }
+  dynPre.getFloatTimeDomainData(dynBuf); let pk = 0; for (const v of dynBuf) pk = Math.max(pk, Math.abs(v));
+  const m = _meter(true);
+  return { compRed: +engine.comp.reduction.toFixed(2), prePeak: +(20 * Math.log10(pk || 1e-9)).toFixed(2), postPeak: m.peak, rms: m.rms };
 }

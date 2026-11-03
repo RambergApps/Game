@@ -169,3 +169,43 @@ ved hver slider-endring (verifisert live 26.10). Ingen endring trengs hos Våpen
   - Sidechain: `shot` −4 dB (maks én gang per 150 ms), `explosion` −8 dB, `waveStart` og `spawnWarn` −6 dB.
   - Følger musikkvolum, mute, pause og menyovergangen fra v1.6 (samme musikkbuss).
 - `_tap()`: MediaStream av ferdig miks, til testopptak (tools/voice/clip.cjs).
+
+## v1.12 – lagdelt tekno-musikk v3 (techno-music.js)
+- **Filer:** `game/assets/music/{yard,refinery}-int{1,2,3}.ogg`.
+  - Opus mono: int1 48 kbps, int2/3 64 kbps, totalt 6,6 MB.
+  - Kilde: `/workspace/breach-lyd-forslag/src/techno-loop-v3.js`.
+- **Spor per brett:** `yard` → Yard (128 BPM, 80 takter, 150 s), `refinery-crossroads` → Deepwell (132 BPM, 88 takter, 160 s), `underground-foundry` → Deepwell inntil videre.
+- **Lasting:** filene lastes og dekodes først ved `arenaLoaded` (ikke ved oppstart). Gammel musikk (yard-music.js og music.js) spiller til de er klare, og fortsetter hvis lastingen feiler.
+  - Dekodingen bruker `OfflineAudioContext` i lav rate: int1 22,05 kHz, int2/3 32 kHz, mono.
+  - Minne: Yard 51,6 MB og Deepwell 55,1 MB, mot ca. 173 MB i 48 kHz stereo. Bare gjeldende spor holdes i minnet.
+- **Avspilling:** 3 `AudioBufferSourceNode` med `loop=true` startes på samme `ac`-tid, så de er sample-synkrone og sømløse.
+- **Nivåbytte:** kryssfade over 2 slag, som starter på neste taktgrense.
+- **Kamp-score:**
+  - Bidrag: bølge aktiv 0,3, `spawnWarn` 0,45 (faller over 10 s), skudd siste 8 s 0,012 per skudd (maks 0,35), eksplosjoner siste 8 s 0,12 per stk (maks 0,3), levende fiender 0,05 per stk (maks 0,25).
+  - Alternativt brukes 0,6 × den gamle intensiteten, hvis den er høyere.
+  - Opp: over 0,32 → nivå 2, over 0,62 → nivå 3.
+  - Ned: under 0,2 (fra 2) eller 0,45 (fra 3), etter minst 4 takter på nivået, ett trinn om gangen.
+- **Ducking:**
+  - Skudd, eksplosjon og spawnWarn: halv dybde av yard-music.
+  - Stemme: −7 dB via `onSpeech`.
+  - Pause og mellomsekvens: eksisterende `engine.setPaused` (ca. −18 dB pluss lavpass).
+- **Volum:** følger musikkbussen, altså `setMusicVolume` og musikkslideren i ui/settings.js.
+- **Test:**
+  - `getState().techno` → `{ track, level, score, lanes, pos, mb, … }`.
+  - `_technoLevel(1..3|null)` tvinger et nivå.
+  - `?music=old` slår v3 av.
+
+## v1.13 – stille oppstart og nivå per spor
+- **Oppstart:**
+  - Når et brett med v3-spor lastes, er musikken stille til sporet er dekodet. Deretter tones v3 inn på 0,8 s.
+  - Forrige brett sitt v3-spor tones ut på 0,4 s. `techno.expect(spor)` hindrer at det gamle sporet startes på nytt mens det nye lastes.
+- **Reserve:**
+  - `yard-music.js` / `music.js` brukes bare når lastingen eller dekodingen feiler, eller etter `LOAD_TIMEOUT_S = 9` s.
+  - Kommer v3 etter tidsavbruddet, tones reserven ut (0,6 s) før v3 starter, så de overlapper ikke.
+  - `?music=old` virker som før.
+- **Nivå per spor:** `TRACKS[spor].gainDb` legges på LEVEL. Begge står på 0 dB, fordi Deepwell v3 og Yard v3 er like i spillet (≤ 2 dB per nivå, 0,0–0,1 LU i filene). `?techgain=<dB>` overstyrer Deepwell, for test.
+- **Test:**
+  - `getState()` → `musicSrc` ('v3' | 'yard-old' | 'cinder-old'), `oldStarts`, `techFallback`.
+  - `_technoLog()` gir tidslinjen for lasting og fallback.
+  - `_dyn()` gir kompressor-reduksjon og peak før/etter klipperen.
+  - Probe: `reviews/musikk-v3-innkobling-2026-11-03/probe-v113.cjs` (MODE=levels|timeline|fail|slow).
