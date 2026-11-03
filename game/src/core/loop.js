@@ -51,7 +51,10 @@ export function createLoop({ world, ctx, camera, input, mods }) {
     // world.depthSorted = true betyr at draw() IKKE skal tegne selve aktøren (bare siktelinjer, varsler o.l.).
     mark('render:sorted');
     world.depthSorted = world.view === '34' && canSort(world);
-    if (world.depthSorted) drawSorted(ctx, world, camera, { cover: mods.arena?.coverObjects?.(world), drawCover: mods.arena?.drawCoverObject });
+    mark('render:levelWorld'); const lvObj = mods.level?.worldActors?.(world) || null;           // valgfritt: nivåobjekter (brett 2-overganger) y-sortert med figurene
+    if (world.depthSorted) call(mods.level, 'drawWorldFloor', ctx, world, camera);   // brett 2 v10: gulvlys/striper for overgangene under figurene
+    if (world.depthSorted) drawSorted(ctx, world, camera, { cover: mods.arena?.coverObjects?.(world), drawCover: mods.arena?.drawCoverObject, extra: lvObj || undefined });
+    else if (lvObj) call(mods.level, 'drawWorld', ctx, world, camera);
     mark('render:enemies');    call(mods.enemies, 'draw', ctx, world, camera);            // aktører (eller bare tillegg når depthSorted)
     mark('render:player');     call(mods.player, 'draw', ctx, world, camera);
     mark('render:weapons');    call(mods.weapons, 'draw', ctx, world, camera);            // sporstreker, granater, kastbane (ÉN gang per ramme)

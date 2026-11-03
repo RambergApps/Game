@@ -1,29 +1,25 @@
-# Status – Story og brett (oppdatert 2026-10-27 21:55)
-Eier: game/src/levels/ og game/src/story/. Historie: CINDER (låst). All spilltekst på engelsk.
+# Status – Story og brett (oppdatert 2026-10-28 13:36)
+Eier: game/src/levels/ og game/src/story/. Historie: CINDER (låst). Spilltekst engelsk.
+Brett 2 bygges KUN i kopien /workspace/breach-brett2. Sikkerhetskopi: /workspace/wt/bk-brett2-2026-10-28-muren/ (før porting: -pre-muren/).
 
-## Ferdig
-- Brett 1 (Kessa Yard, 5 bølger), restartWave, død→kontroll < 4 s, kort 3-velg-1, tastefiks (keyup/mouseup + input.reset()). Hunker ikke i brett 1.
-- 2026-10-27 18:49 Manus for stemme (godkjent av Alexander) bygget inn i cutscenes.js: 35 replikker / 26 talerbytter (før 44/36). Siste replikk «All of us. Coming home.». fallen urørt (maxDuration 2,3, fadeOut 0,25).
-- Nytt panel ending-03b (img/story/ending-03b.webp, ekte bilde) i PAINTED_PANELS, cam [1.0,.5,.58]→[1.15,.5,.42] 7 s. Fallback: placeholder ending-03.webp hvis eget bilde mangler. 25 malte paneler.
-- Tekstvakt i player.js: manifestoppføring brukes bare når text matcher linjen; sekvens med utdatert manifest spilles uten stemme (cutsceneLine id «<sekvens>~stale-voice») i stedet for feil stemme. Ingen endring i audio/*.
-- src/story/img/intro.json synket med nye linjer.
-- Nøkkelliste til Lyd: reviews/story-manus-lyd-noekler-2026-10-27.md (35 nøkler, 24 nye, 11 gjenbruk).
-- check-voice-timing v3 (tekstavvik): 0 brudd, 24 tekstavvik, 2 uten manifest (forventet til Lyd leverer). reg-smoke OK, run.mjs OK.
+**Brett 2 avsluttet etter Muren v2B per Alexander 13:24; restpunkter i reviews/brett2-restpunkter.md venter.**
 
-- 2026-10-27 18:58 nytt manus (Lyd): klipp med lyd /workspace/intro-voice-clip-v3.mp4 (33,5 s) og /workspace/ending-voice-clip.mp4 (38,2 s), ending-03b med ekte bilde. Alle linjer spilt (voice.js missing 0), 0 stale, 0 kutt, 0 konsollfeil. Verktøy: reviews/story-tools/clip-voice.cjs <id> <ut> [port].
+## Ferdig (brett 2, i kopien)
+- Layout 187×46 (refinery-v3.js), S1–S6 lukket, 0 lekkasjer, to S3→S4-utganger. Mål: reviews/brett2-maal.md.
+- S5 «Muren v2B» erstatter Ringborgen (portet 13:25 fra mock-festning-v2b): mur øst–vest y 22–24, vestmur, port med stolper og overligger, tårn, sandsekker, tank, drepesone 10,2 ruter, sørlinje y 34,2, hakk ved S6-rattet. Markør: reviews/MUREN-GEO-KLAR.
+- Tegning: arena/fort.js og effects/fort-cover.js, koblet i render.js, kinds.js, arena/index.js og cover.js.
+- Fiende-AIs fiende-ai-defense-S5-muren.diff lagt inn (spawn b1–b3/brear + defense axis 'y'). Ringborgen-defense er borte.
+- HUD S5: «Breach the Wall. Take the gate.»
+- v10: objektene dybdesortert med Warden; overganger uendret.
+- Tester 2026-10-28 13:36: reg-smoke + reg-smoke-brett2 OK, S5-røyktest OK (0 konsollfeil), fullkjøring S1→S6 (S3 nord) vunnet, hold 75 s, til brett 3.
+- BUILD i kopien: 2026-10-28 13:36.
 
-## Ferdig (plan)
-- 21:55 Refinery v3 – KUN PLAN (ikke bygd): docs/refinery-v3.md/.png, generator reviews/story-tools/refinery-v3.py. 142×32, 6 seksjoner: Intake Line (liten) → Cracking Hall (stor) → Pump Room (middels) → Pipe Gallery (liten) → The Bulwark (angrep på Hunker-linje, 2 flankeganger) → Fuel Tank (hold). Hopp min 2,55, maks gap 6,74 (< dash 10). v2 urørt.
-
-## Pågår
-- Ingenting. Venter på Alexanders svar på v3 via Breach.
+## Kjente avvik (godkjent i mocken, ikke rettet)
+- Min-hopp 0,0: murstykker kant i kant, og ventil 132;33,65 overlapper sørlinja 133;34,2.
+- Hakk-container 153,5;25 ligger 0,6 fra S6-rattet og 1,0 fra åpningen. Rattet nås nordfra.
+- Fiende-AI: b1/b3 1,49 og ankre W/E 0,94 ruter fra portåpningen (bevisst).
+- Kopiens yard-v2.js er eldre enn /workspace/breach (mangler Arenas G1/G12) – må ikke kopieres over.
 
 ## Neste
-- Når Lyd leverer nye stemmer: kjør check-voice-timing og mål varigheter mot estimatet (~199 s totalt).
-- Brett 2: VENT. Bygg v3 (eller v2) først når Alexander sier ja. Krever gate/sectionClear (finnes ikke i dag).
-
-## Blokkert av
-- Lyd (nye stemmefiler; til da er de 6 sekvensene uten stemme). Alexander (brett 2).
-
-## Siste skjermbilde
-- docs/refinery-v3.png (planart brett 2 v3)
+1. Restpunkter: reviews/brett2-restpunkter.md.
+2. Breach laster opp (ikke Story og brett).

@@ -29,6 +29,7 @@ export const CONTROLS_LAYOUT = [
     [K('F'), 'Melee strike'],
   ] },
   { section: 'Game', col: 0, rows: [
+    [K('E') + K('Click'), 'Interact at exits (when the prompt shows) – otherwise E is cover'],
     [K('Esc'), 'Pause menu / back'],
   ] },
 ];

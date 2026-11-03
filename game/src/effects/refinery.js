@@ -78,13 +78,13 @@ function paintValve(c, R, S) {
   // hevet ratt: spindelhus, kastet skygge, tykk felg med lys/mørk side, eiker, nav
   const nW = horiz ? Math.max(1, Math.round(w / 40)) : Math.max(1, Math.round(S.dw / 40)), up = Math.min(F * 0.5, 6 * g);
   for (let i = 0; i < nW; i++) {
-    const cx = horiz ? ix + W * (i + 0.5) / nW : ix + W / 2, cy0 = horiz ? y0 + d / 2 : y0 + d * (i + 0.5) / nW, r = Math.min(horiz ? W / nW : W, horiz ? d / g : d / nW / g) * 0.36, cy = cy0 - up;
+    const cx = horiz ? ix + W * (i + 0.5) / nW : ix + W / 2, cy0 = horiz ? y0 + d / 2 : y0 + d * (i + 0.5) / nW, r = Math.min(horiz ? W / nW : W, horiz ? d / g : d / nW / g) * 0.26, cy = cy0 - up;   // mindre ratt: rødt = interaksjon, kun ved dør/sluse
     blot(c, cx + 2.2, cy0 + 1.6 * g, r * 1.25, '0,0,0', 0.55, g);
     c.fillStyle = grad(c, cx - 2, 0, cx + 2, 0, [[0, rgb(STEEL, 0.15)], [1, rgb(STEEL, -0.45)]]); c.fillRect(cx - 1.8, cy, 3.6, up + 0.5);   // spindel
-    const RIM = [96, 38, 26]; c.lineWidth = Math.max(1.4, r * 0.28);
+    const RIM = [74, 66, 58]; /* grått/rustent stål, ikke rødt */ c.lineWidth = Math.max(1.4, r * 0.28);
     c.strokeStyle = rgb(RIM, -0.45); c.beginPath(); c.ellipse(cx + 0.4, cy + 0.5, r, r * g, 0, 0, TAU); c.stroke();
     c.strokeStyle = rgb(RIM, -0.05); c.beginPath(); c.ellipse(cx, cy, r, r * g, 0, 0, TAU); c.stroke();
-    c.lineWidth = Math.max(0.5, r * 0.09); c.strokeStyle = 'rgba(230,170,140,0.45)'; c.beginPath(); c.ellipse(cx, cy, r, r * g, 0, Math.PI * 1.05, Math.PI * 1.55); c.stroke();
+    c.lineWidth = Math.max(0.5, r * 0.09); c.strokeStyle = 'rgba(190,180,165,0.35)'; c.beginPath(); c.ellipse(cx, cy, r, r * g, 0, Math.PI * 1.05, Math.PI * 1.55); c.stroke();
     c.lineWidth = Math.max(0.7, r * 0.12); c.strokeStyle = rgb(RIM, -0.3); for (let s = 0; s < 3; s++) { const an = s * Math.PI / 3 + R() * 0.3; c.beginPath(); c.moveTo(cx - Math.cos(an) * r, cy - Math.sin(an) * r * g); c.lineTo(cx + Math.cos(an) * r, cy + Math.sin(an) * r * g); c.stroke(); }
     c.fillStyle = rgb(STEEL, 0.2); c.beginPath(); c.ellipse(cx, cy, r * 0.22, r * 0.22 * g, 0, 0, TAU); c.fill(); c.fillStyle = 'rgba(0,0,0,0.5)'; c.beginPath(); c.ellipse(cx + 0.3, cy + 0.2, r * 0.08, r * 0.08 * g, 0, 0, TAU); c.fill();
     for (let k = 0; k < 4; k++) if (R() < 0.6) { c.fillStyle = 'rgba(70,40,22,0.6)'; const an = R() * TAU; c.fillRect(cx + Math.cos(an) * r - 0.6, cy + Math.sin(an) * r * g - 0.4, 1.4, 0.9); }

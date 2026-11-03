@@ -13,6 +13,7 @@ import { createController, readIntent } from './controller.js';
 import { stepState, setState, driveRig, startMelee, startStagger, startDeath, leaveCover } from './state.js';
 import { drawHpBar, drawVignette } from './hud.js';
 import * as fx from './fx.js';
+import { initInteract, updateInteract, drawInteract } from './interact.js';   // E ved utganger, brett 2
 
 // Trekvart-stil for Warden – ÉN linje å bytte når den endelige figuren (A/B) er valgt. ?oblique = gammel reserve.
 const STYLE_34 = (typeof location !== 'undefined' && new URLSearchParams(location.search).has('oblique')) ? oblique : (typeof location !== 'undefined' && new URLSearchParams(location.search).has('faceted')) ? faceted : paintedC;
@@ -21,6 +22,7 @@ const offs = [];
 const W = (world) => world.modules?.weapons || weaponsMod;
 
 export function init(world) {
+  initInteract();
   for (const off of offs.splice(0)) off();
   if (P?.offWeapon) { P.offWeapon(); P.offWeapon = null; }
   const maxHp = world.playerStats?.maxHp ?? T.maxHp;
@@ -101,6 +103,7 @@ export function update(dt, world) {
   const p = P.p, I = P.intent = readIntent(P.ctl, world, dt);
   { const a = Math.atan2(I.aimY - p.y, I.aimX - p.x); if (Number.isFinite(a)) P.aim = a; else { P.aim = Number.isFinite(P.aim) ? P.aim : 0; if (!Number.isFinite(I.aimX) || !Number.isFinite(I.aimY)) { I.aimX = p.x + Math.cos(P.aim) * 100; I.aimY = p.y + Math.sin(P.aim) * 100; } } }   // 27.10: NaN-mus (f.eks. før første museflytt) skal ikke forgifte riggen
   if (p.dead && P.st.name !== 'death') startDeath(P);
+  if (!p.dead) updateInteract(world, P, I);   // E i ulåst overgangssone → overgang i stedet for dekning
   stepState(P, I, dt);
   p.state = P.st.name; p.aim = P.aim;
   // våpen: spilleren gir bare positur/tilstand
@@ -239,6 +242,7 @@ export function drawHud(ctx, world, camera) {
   drawHpBar(ctx, world, p, P);
   wpn.drawHud?.(ctx, world, p, {});
   ctx.restore();
+  drawInteract(ctx, world, camera);
 }
 
 /** Test/feilsøking: intern tilstand og rigg. */

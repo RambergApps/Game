@@ -1,5 +1,5 @@
 # Status: Breach Fiende-AI (fiendeoppførsel, boss, lagring)
-Oppdatert: 2026-10-27 ca. 14:40. Eier: src/enemies (unntatt look/, som eies av Monsterdesign).
+Oppdatert: 2026-10-28 ca. 14:15. Eier: src/enemies (unntatt look/, som eies av Monsterdesign).
 
 ## Ferdig
 - Husk/Lurcher/Kiln/Spitter: dekning, peek, telegraf ≥ 0,4 s, squad-tokens (maks 2 skyttere), stagger, spawnWithWarning. source på 100 % av treff, e.muzzle {x,y,z}.
@@ -21,10 +21,18 @@ Oppdatert: 2026-10-27 ca. 14:40. Eier: src/enemies (unntatt look/, som eies av M
 ## Core: lowCoverProtecting (27.10 ~17:00, combat.js tillatt kun her)
 - Vinkelrett+alle kroppspunkter (16:43). Hunker-munning: HUNKER_MUZZLE.fwd/side, side til høyre for coverFacing (weapon.js muzzleXY).
 
-## Hunker bygget 27.10 ~13:55
-- behaviors/hunker.js + stats.js (hunker, r 18, BODY 39/18,6, munning fra HUNKER_MUZZLE). Kun lavt cover, ryggskjold ×0,5, peek-telegraf, bytte ved flanking/2–3 salver, jakt uten cover.
-- Test (tools/hunker-test.mjs): cover ✓, skjold 5/10 ✓, telegraf 0,50/0,55 s ✓, bytte ✓, 0 konsollfeil. Ikke i levels-bølger ennå.
+## Hunker bygget 27.10: behaviors/hunker.js + stats.js; test tools/hunker-test.mjs ✓, 0 konsollfeil.
+## 28.10 ~10:40 S5 Ringborgen (ekte layout): breach-brett2/reviews/fiende-ai-s5-ringborgen-2026-10-28.md – punkter låst uten avvik, 28.10-fiks portet til brett2/enemies; 0–2 «fastlåste» hunkers i hunt bak dekke (trolig OK), skade 239–406.
 ## 28.10 ~09:15 spredning/fastlåst Kessa Yard (unntak fra stand-still): reviews/fiende-ai-spredning-fastlast-2026-10-28.md
 - Årsak: blockedCheck kjørte bare uten sikt. Fiks hunt/cover/ai (blokkert spot 10 s, sikt-gren, allierte-spot-straff). 1-5 fastlåste 5 (gml)/1 (ny layout) → 0 (6 seeds), skade tatt uendret.
 ## Utredninger 27.10 (ingen kode): forsvarsmodus (rettet mot refinery-v3 S5) + sjefer
 - reviews/fiende-ai-forsvarsmodus-2026-10-27.md · reviews/fiende-ai-sjefer-2026-10-27.md (Alpha 1050 HP/60–90 s, Ashmaw 3200/armor 0/3,5–4,5 min, kasser+fase-refill). GODKJENT SOM PLAN 27.10 21:53, se toppen av notatet – ikke bygg før Alexander sier fra.)
+## 28.10 10:15– forsvarsmodus S5 (klarsignal Alexander 10:13): breach-brett2/src/enemies/defense.js (ny) + 6 hooks i index.js; config som diff til Story (reviews/diffs/fiende-ai-defense-S5.diff). Av uten bølge-config. Bygget og testet (se resultater), se breach-brett2/reviews/fiende-ai-forsvarsmodus-opplegg-2026-10-28.md.
+- 28.10 12:21 forsvarsmodus runde 2: ammo-målinger (ingen halv-skade-effekt, intet forslag), brett 1 identisk m/u hooks, N/S-fiks + sonevakt i defense.js, flanketest OK. Se reviews/fiende-ai-forsvarsmodus-opplegg-2026-10-28.md.
+- 28.10 12:45 bekreftende S5: stuck 0/0 i alle kjøringer med modus etter N/S-fiks; defense.js gjort generell (akse x/y, ingen S5-koordinater i kode). S5-ankrene er midlertidige og venter på at Alexander godkjenner «Muren».
+- 28.10 13:00 determinisme: ikke Storys 11:24-endringer (kopi fra før 11:24 varierer også). Kilder: weapons/decals.js:26 (kulehull trekker world.rng avhengig av arena-bake/tid) og shared/rig/rig.js:257 (rekyl-jitter med Math.random → munning → falloff-skade). Med begge stubbet: 6/6 like hasher i S5-probe, brett 1 (1-4/1-5, seed 1–3) likt 2× og med/uten hooks. Forslag: reviews/diffs/fiende-ai-determinisme-{decals,rig}.diff. Ikke i enemies/ eller riggen.
+## 28.10 ~14:15 S5 Muren v2B ferdig – brett 2 avsluttet for Fiende-AI
+- Notat: breach-brett2/reviews/fiende-ai-s5-muren-2026-10-28.md. Diff: reviews/diffs/fiende-ai-defense-S5-muren.diff (Story la den inn 13:26). axis 'y', dir −1; ankre W/M/E ved porten; retrett nordover til y 16,5–20.
+- defense.js: pila følger dir. Ny fiks: «forbi linjen» krever nå at spilleren er innenfor ringens bredde på tvers av aksen. Gammel S5 axis-x er uendret innenfor ringen (samme hash).
+- 20 riggkjøringer (storm/forsiktig × på/av × seed 1–5): 0 fastlåste med gammel og ny telling, 0 feil, andel ved anker 0,86–0,87 med modus mot 0,26–0,28 uten, 87–96 % i HOLD-sonen etter retrett. 1 timeout (storm s4).
+- Restpunkter, skal ikke bygges: tårnskyttere, Kiln Alpha. RNG-fiks fortsatt bare som diff.

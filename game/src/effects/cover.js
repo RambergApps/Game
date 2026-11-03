@@ -6,7 +6,7 @@
 import { PROJ as PROJ0 } from '../shared/projection.js';
 import { LIGHT_DIR, shadowOffset } from '../shared/light.js';
 
-const KINDS = { barrier: 'barrier', sandbag: 'sandbag', sandbags: 'sandbag', crates: 'crates', pallet: 'crates', crate: 'crates', barrels: 'barrels', barrel: 'barrels', tunnel: 'tunnel' };
+const KINDS = { barrier: 'barrier', sandbag: 'sandbag', sandbags: 'sandbag', crates: 'crates', pallet: 'crates', crate: 'crates', barrels: 'barrels', barrel: 'barrels', tunnel: 'tunnel', valve: 'valve' };
 export function canDrawCover(kind) { return !!KINDS[kind]; }
 const cache = new Map(); let cacheBytes = 0; const MAX_BYTES = 160e6;
 
@@ -304,8 +304,59 @@ function paintJersey(c, R, S) {
 }
 function paintBarrierMix(c, R, S) { return S.w <= 64 ? paintJersey(c, R, S) : paintBarrier(c, R, S); }
 const PAINT = { barrier: paintBarrierMix, sandbag: paintSandbag, crates: paintCrates, barrels: paintBarrels, tunnel: paintTunnel };
+// Brett 2 (Effekter 28.10, godkjent 09:10): lav industriell stålbarriere / ventilskap med tydelig volum (front ≈ halve toppdybden).
+function paintSteelLow(c, R, S, mode) {
+  const { w, f } = S, d0 = S.d, BASE = mode === 'cab' ? tint([[74, 86, 76], [88, 84, 70], [70, 76, 84]][Math.floor(R() * 3)], R.r(0.95, 1.08)) : tint([92, 96, 98], R.r(0.92, 1.05));
+  const y0 = f * 0.2, yb = d0 + f - y0, ft = Math.max(f * 0.75, d0 * 0.68), top = yb - ft, ch = Math.min(ft * 0.2, 3);
+  c.save(); c.translate(0, y0);
+  const n = S.horiz ? Math.max(1, Math.round(w / 34)) : 1, gap = n > 1 ? 1.4 : 0, sw = (w - gap * (n - 1)) / n;
+  for (let q = 5; q >= 0; q--) { const e = q * 1.4; c.fillStyle = 'rgba(0,0,0,0.17)'; c.beginPath();
+    c.moveTo(w * 0.05, yb - 1); c.lineTo(w + 4 + e, yb - 1); c.lineTo(w + 6 + e, yb + 4 + e * 0.6); c.lineTo(2 + e * 0.4, yb + 4 + e * 0.6); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(w - 1, top * 0.3); c.lineTo(w + 4 + e, top * 0.4 + 2); c.lineTo(w + 4 + e, yb + 2); c.lineTo(w - 1, yb); c.closePath(); c.fill(); }
+  c.fillStyle = 'rgba(0,0,0,0.8)'; c.fillRect(-0.5, yb - 0.6, w + 1.5, 1.6);
+  for (let j = 0; j < n; j++) {
+    const x0 = j * (sw + gap), x1 = x0 + sw, se = Math.min(2.2, sw * 0.1);
+    // TOPP: mørk riflet stålplate med fasede kanter
+    c.fillStyle = rgb(BASE, -0.52); c.fillRect(x0, 0, sw, top);
+    c.save(); c.beginPath(); c.rect(x0 + 1, 1, sw - 2, top - 2); c.clip(); c.fillStyle = rgb(BASE, -0.36);
+    for (let yy = 1.5; yy < top; yy += 2.6) for (let xx = x0 + ((yy * 1.7) % 3); xx < x1; xx += 3.2) c.fillRect(xx, yy, 1.4, 0.6);
+    c.restore();
+    c.fillStyle = rgb(BASE, 0.55); c.fillRect(x0, 0, sw, 0.9); c.fillRect(x0, 0, 0.8, top);          // lys NV-kant
+    c.fillStyle = rgb(BASE, -0.6); c.fillRect(x1 - se, 0, se, top);                                    // mørk østside
+    // FASE mellom topp og front (fanger lyset)
+    c.fillStyle = rgb(BASE, 0.5); c.beginPath(); c.moveTo(x0, top); c.lineTo(x1 - se, top); c.lineTo(x1 - se, top + ch); c.lineTo(x0, top + ch); c.closePath(); c.fill();
+    c.fillStyle = rgb(BASE, -0.55); c.fillRect(x1 - se, top, se, ch);
+    // FRONT: naglet plate med avstivere
+    const fy = top + ch, fh = yb - fy;
+    c.fillStyle = grad(c, 0, fy, 0, yb, [[0, rgb(BASE, -0.02)], [1, rgb(BASE, -0.4)]]); c.fillRect(x0, fy, sw - se, fh);
+    c.fillStyle = rgb(BASE, -0.68); c.fillRect(x1 - se, fy, se, fh);
+    for (let xx = x0 + 4; xx < x1 - se - 2; xx += Math.max(6, sw / 3)) { c.fillStyle = 'rgba(255,255,255,0.13)'; c.fillRect(xx, fy, 0.7, fh); c.fillStyle = 'rgba(0,0,0,0.4)'; c.fillRect(xx + 0.7, fy, 0.8, fh); }
+    for (let xx = x0 + 1.8; xx < x1 - se - 1; xx += 3.6) for (const yy of [fy + 1.3, yb - 1.6]) { c.fillStyle = 'rgba(0,0,0,0.5)'; c.fillRect(xx + 0.3, yy + 0.3, 1, 1); c.fillStyle = rgb(BASE, 0.4); c.fillRect(xx, yy, 0.9, 0.9); }
+    if (mode !== 'cab' && (S.hz || n === 1)) hazard(c, x0 + 0.5, fy + fh * 0.36, sw - se - 1, fh * 0.32, 1.5);
+    if (mode === 'cab') { c.strokeStyle = 'rgba(0,0,0,0.55)'; c.lineWidth = 0.7; c.strokeRect(x0 + 2, fy + 2.4, sw - se - 4, fh - 5); c.fillStyle = 'rgba(210,205,190,0.55)'; c.beginPath(); c.arc(x0 + sw * 0.72, fy + fh * 0.45, 1.6, 0, Math.PI * 2); c.fill(); c.fillStyle = rgb([90, 92, 94], 0.1); c.fillRect(x0 + 3, fy + fh * 0.45, 3, 1.2); }
+    for (let q = 0; q < sw / 4; q++) if (R() < 0.75) { c.fillStyle = `rgba(${R() < 0.75 ? '110,56,24' : '22,18,14'},${R.r(0.3, 0.6)})`; c.fillRect(x0 + R() * (sw - se), fy + R.r(0, 0.4) * fh, R.r(0.6, 1.3), fh * R.r(0.25, 0.6)); }
+    c.fillStyle = grad(c, 0, fy + fh * 0.6, 0, yb, [[0, 'rgba(60,36,18,0)'], [1, 'rgba(60,36,18,0.55)']]); c.fillRect(x0, fy + fh * 0.6, sw, fh * 0.4);
+    for (let q = 0; q < 3; q++) { c.fillStyle = 'rgba(120,62,26,0.55)'; c.fillRect(x0 + R() * sw, R() * top, R.r(1.5, 4), R.r(1, 2.5)); }
+    c.save(); c.beginPath(); c.rect(x0, 0, sw, yb); c.clip(); speckle(c, R, x0, 0, sw, yb, Math.round(sw * yb / 7), [30, 28, 24], 0.12, 0.4); c.restore();
+    if (mode === 'cab') { // grått/rustent ratt på toppen (IKKE rødt – rødt = interaksjon)
+      const cx = x0 + sw / 2, cy = top * 0.5 - 2, r = Math.min(sw * 0.3, 7); c.fillStyle = 'rgba(0,0,0,0.5)'; c.beginPath(); c.ellipse(cx + 1.5, cy + 2.5, r, r * 0.6, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = rgb([80, 82, 84], -0.2); c.fillRect(cx - 1.2, cy, 2.4, 2.5);
+      c.lineWidth = 1.6; c.strokeStyle = rgb([84, 74, 64], -0.4); c.beginPath(); c.ellipse(cx + 0.3, cy + 0.4, r, r * 0.6, 0, 0, Math.PI * 2); c.stroke();
+      c.strokeStyle = rgb([96, 88, 78], 0.05); c.beginPath(); c.ellipse(cx, cy, r, r * 0.6, 0, 0, Math.PI * 2); c.stroke();
+      c.lineWidth = 0.8; for (let s = 0; s < 3; s++) { const an = s * Math.PI / 3; c.beginPath(); c.moveTo(cx - Math.cos(an) * r, cy - Math.sin(an) * r * 0.6); c.lineTo(cx + Math.cos(an) * r, cy + Math.sin(an) * r * 0.6); c.stroke(); }
+    }
+  }
+  c.restore();
+}
 
-function build(kind, o, H, P, qx, qy, seed) {
+import { paintLoophole } from './fort-cover.js'; // MOCKUP Ringborgen v1
+// TEMAVALG: lav-dekningsmaler per arena. Brett 2 (BOARD 02 / refinery-crossroads) → stål; alt annet → standard (brett 1: jersey i /workspace/breach).
+export function lowCoverTheme(L) { return L && (L.board === 'BOARD 02' || L.id === 'refinery-crossroads') ? 'steel' : ''; }
+const STEEL = { barrier: (c, R, S) => (S.w <= 64 && S.dw <= 64 ? paintSteelLow(c, R, S, 'bar') : PAINT.barrier(c, R, S)), valve: (c, R, S) => paintSteelLow(c, R, S, 'cab') };
+const steelKind = (theme, kind, o) => theme === 'steel' && (kind === 'valve' || (kind === 'barrier' && Math.max(o.w, o.h) <= 64));
+
+function build(kind, o, H, P, qx, qy, seed, theme) {
+  const st = steelKind(theme, kind, o);
   const lift = H * P.zScale, g = qy / qx, horiz = o.w >= o.h, so = shadowOffset(H);
   const PL = 3, PT = 3, PR = Math.ceil(Math.max(0, so.x)) + 5, PB = Math.ceil(Math.max(0, so.y)) + 5;
   const d = o.h * g, f = lift * g, W = Math.ceil((o.w + PL + PR) * qx), Hh = Math.ceil((o.h + lift + PT + PB) * qy);
@@ -314,24 +365,24 @@ function build(kind, o, H, P, qx, qy, seed) {
   const S = { w: o.w, d, f, g, H, dw: o.h, horiz, hz: R() < 0.65 };
   // bakkeskygge (myk, i bakkeplanet, langs SHADOW_DIR) + kontakt-AO ved foten. Fotavtrykket ligger i y ∈ [f, f + d].
   const fx0 = 0, fy0 = f, fw = o.w, fh = d, sx = Math.min(6, so.x), sy = Math.min(6, so.y) * g;   // Arena klipper spriten 8 px utenfor rektangelet; resten av bakkeskyggen tegner Arena (drawShadows)
-  const nsB = kind === 'barrier' && Math.max(o.w, o.h) <= 64; // 28.10: alle lave jersey-blokker (≤ 2 ruter) har egen slagskygge i paintJersey
+  const nsB = kind === 'barrier' && Math.max(o.w, o.h) <= 64 || st; // 28.10: jersey (brett 1) og stål (brett 2) har egen slagskygge
   if (!nsB) for (let q = 4; q >= 0; q--) { const e = q * 1.2; c.fillStyle = `rgba(0,0,0,${0.13})`; c.beginPath();
     c.moveTo(fx0 - e * 0.3, fy0 - e * 0.3 * g); c.lineTo(fx0 + fw + e * 0.3, fy0 - e * 0.3 * g); c.lineTo(fx0 + fw + sx + e, fy0 + sy - e * g); c.lineTo(fx0 + fw + sx + e, fy0 + fh + sy + e * g); c.lineTo(fx0 + sx - e * 0.5, fy0 + fh + sy + e * g); c.lineTo(fx0 - e * 0.3, fy0 + fh + e * 0.3 * g); c.closePath(); c.fill(); }
   if (!nsB) { c.fillStyle = grad(c, 0, d + f - 1, 0, d + f + 3 * g, [[0, 'rgba(0,0,0,0.8)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(-1.5, d + f - 1, o.w + 3, 3 * g + 1); }   // 27.10: klammer – før lakk fillRect ut for NS-barrierer (hard svart strek under)
   if (globalThis.__COVER_DEBUG) { c.fillStyle = '#f00'; c.fillRect(0, 0, o.w, d); c.fillStyle = '#0f0'; c.fillRect(0, d, o.w, f); }
   else {
-    if (!horiz && (kind === 'barrier' || kind === 'sandbag' || kind === 'crates')) paintNS(kind, c, R, S); else PAINT[kind](c, R, S);
+    if (o.fort && kind === 'barrier') paintLoophole(c, R, S); else if (st) STEEL[kind](c, R, S); else if (!horiz && (kind === 'barrier' || kind === 'sandbag' || kind === 'crates')) paintNS(kind, c, R, S); else PAINT[kind](c, R, S);
     c.globalCompositeOperation = 'source-atop';   // matt skitt over objektet (ikke skyggen: den er under, men source-atop treffer alt; holdes svakt)
     for (let i = 0; i < 3; i++) stain(c, R, R() * o.w, R() * d, R.r(4, 10), R.r(3, 6) * g, [28, 24, 20], R.r(0.12, 0.25));
     c.globalCompositeOperation = 'source-over';
   }
   return { c: cv, pl: PL, pt: PT, pr: PR, pb: PB, lift, bytes: cv.width * cv.height * 4 };
 }
-function sprite(kind, o, H, P, sx, sy) {
+function sprite(kind, o, H, P, sx, sy, theme = '') {
   const qx = step(sx), qy = qx * step(sy / Math.max(1e-6, sx) * 4) / 4, seed = seedOf(o);   // forkortingen (sy/sx) kvantiseres i kvarttrinn
-  const key = `${kind}|${o.w}|${o.h}|${H}|${seed}|${qx}|${qy}|${P.zScale.toFixed(4)}`;
+  const key = `${o.fort ? 'fort' : ''}${theme}|${kind}|${o.w}|${o.h}|${H}|${seed}|${qx}|${qy}|${P.zScale.toFixed(4)}`;
   let s = cache.get(key);
-  if (!s) { s = build(kind, o, H, P, qx, qy, seed); cache.set(key, s); cacheBytes += s.bytes; while (cacheBytes > MAX_BYTES && cache.size > 1) { const k = cache.keys().next().value; cacheBytes -= cache.get(k).bytes; cache.delete(k); } }
+  if (!s) { s = build(kind, o, H, P, qx, qy, seed, theme); cache.set(key, s); cacheBytes += s.bytes; while (cacheBytes > MAX_BYTES && cache.size > 1) { const k = cache.keys().next().value; cacheBytes -= cache.get(k).bytes; cache.delete(k); } }
   return s;
 }
 
@@ -341,9 +392,10 @@ function sprite(kind, o, H, P, sx, sy) {
  *  Returnerer true hvis typen ble tegnet, false hvis typen ikke er vår. */
 export function drawLowCover(ctx, o, a3, a4, a5) {
   const kind = o && kindOf(o); if (!kind) return false;
+  const theme = lowCoverTheme(a3 && a3.PROJ ? a3.arena : (a3 && (a3.arena || a3.level))); if (kind === 'valve' && theme !== 'steel') return false;   // ventil: bare brett 2, ellers Arenas egen tegning
   if (globalThis.__LCLOG && !o.__l) { o.__l = 1; globalThis.__LCLOG.push({ k: kind, x: o.x, y: o.y, w: o.w, h: o.h, height: o.height, elev: o.elev }); }
   const { P, part } = args(a3, a4, a5), H = heightOf(o, P), m = ctx.getTransform ? ctx.getTransform() : { a: 1, b: 0, c: 0, d: 1 };
-  const sx = Math.hypot(m.a, m.b) || 1, sy = Math.hypot(m.c, m.d) || 1, s = sprite(kind, o, H, P, sx, sy);
+  const sx = Math.hypot(m.a, m.b) || 1, sy = Math.hypot(m.c, m.d) || 1, s = sprite(kind, o, H, P, sx, sy, theme);
   const L = s.lift, img = s.c, iw = img.width, ih = img.height, ww = o.w + s.pl + s.pr, wh = o.h + L + s.pt + s.pb;
   const x = o.x - s.pl, y = o.y - L - s.pt;
   if (!part) ctx.drawImage(img, x, y, ww, wh);
@@ -353,6 +405,7 @@ export function drawLowCover(ctx, o, a3, a4, a5) {
 /** Forhåndstegn sprites for alle lave dekninger i world (world.level.objects / world.objects / world.covers) ved zoomtrinn 1, 2, 4. */
 export function warmCoverSprites(world, zooms = [1, 2, 4]) {
   const P = (world && world.PROJ) || PROJ0, list = (world && (world.level?.objects || world.objects || world.covers || world.arena?.objects)) || [];
-  let n = 0; for (const o of list) { const k = kindOf(o); if (!k) continue; for (const z of zooms) { sprite(k, o, heightOf(o, P), P, z, z * (P.groundScaleY || 1)); n++; } } return n;
+  const th = lowCoverTheme(world && (world.arena || world.level));
+  let n = 0; for (const o of list) { const k = kindOf(o); if (!k || (k === 'valve' && th !== 'steel')) continue; for (const z of zooms) { sprite(k, o, heightOf(o, P), P, z, z * (P.groundScaleY || 1), th); n++; } } return n;
 }
 export function _coverCacheStats() { return { sprites: cache.size, mb: +(cacheBytes / 1e6).toFixed(1) }; }

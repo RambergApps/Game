@@ -20,7 +20,7 @@ export const SPEAKERS = ['announcer', 'command', 'warden', 'caption'];
 export const SPEAKER_LABEL = { announcer: 'BROADCAST', command: 'RADIO' };
 
 /** Panel-id-er som har fått malt bilde i game/img/story/<id>.webp. Maleren legger til id her ved levering. */
-export const PAINTED_PANELS = new Set(['intro-01', 'intro-02', 'intro-03', 'intro-04', 'yard-clear-01', 'yard-clear-02', 'yard-clear-03',
+export const PAINTED_PANELS = new Set(['refinery-door-01', 'refinery-door-02', 'refinery-ladder-up-01', 'refinery-pipe-01', 'refinery-pipe-02', 'refinery-ladder-down-01', 'refinery-valve-01', 'refinery-valve-02', 'intro-01', 'intro-02', 'intro-03', 'intro-04', 'yard-clear-01', 'yard-clear-02', 'yard-clear-03',
   'ashmaw-rise-01', 'ashmaw-rise-02', 'ashmaw-rise-03', 'ashmaw-rise-04', 'ending-01', 'ending-02', 'ending-03', 'ending-04', 'ending-03b',
   'fallen-01', 'refinery-clear-01', 'refinery-clear-02', 'refinery-clear-03', 'refinery-clear-04',
   'foundry-core-01', 'foundry-core-02', 'foundry-core-03', 'foundry-core-04']);
@@ -67,6 +67,66 @@ export const CUTSCENES = {
     ],
   },
   // Etter Kiln Alpha (2-6): Okafor ser boreriggen. «We drilled into their house.» Ordre: forsegl brønnen.
+  // --- Brett 2 v3: overgangssekvenser (kopi breach-brett2, manus reviews/brett2-overganger-manus.md). 1–2 paneler, ingen stemme.
+  'refinery-door': {
+    id: 'refinery-door', title: 'Pressure Door',
+    trigger: 'Brett 2: S1 → S2, utgangen etter 2-1.', when: 'Brett 2: S1 → S2, utgangen etter 2-1.',
+    timing: { fadeIn: 0.3, fadeOut: 0.25, panelFade: 0.25, cps: 70, autoAdvance: 0.45 }, maxDuration: 3.9,   // < 4 s uten tastetrykk (Breach 27.10 23:09)
+    panels: [
+      P('refinery-door-01', 'refineryBurning', { transition: 'fade', textDelay: 0.2, lines: [
+        { speaker: 'command', who: 'HALE', text: 'Door’s sealed. Force it.' },
+      ] }),
+      P('refinery-door-02', 'refineryBurning', { transition: 'cut', textDelay: 0.2, lines: [
+        { speaker: 'warden', text: 'Big room. Lots of eyes.' },
+      ] }),
+    ],
+  },
+  'refinery-ladder-up': {
+    id: 'refinery-ladder-up', title: 'Ladder Up',
+    trigger: 'Brett 2: S2 → S3, utgangen etter 2-2.', when: 'Brett 2: S2 → S3, utgangen etter 2-2.',
+    timing: { fadeIn: 0.3, fadeOut: 0.25, panelFade: 0.25, cps: 70, autoAdvance: 0.45 }, maxDuration: 3.9,   // < 4 s uten tastetrykk (Breach 27.10 23:09)
+    panels: [
+      P('refinery-ladder-up-01', 'foundryDescent', { transition: 'fade', textDelay: 0.2, lines: [
+        { speaker: 'command', who: 'OKAFOR', text: 'Pump room. Stay quiet.' },
+      ] }),
+    ],
+  },
+  'refinery-pipe': {
+    id: 'refinery-pipe', title: 'Cracked Pipe',
+    trigger: 'Brett 2: S3 → S4, utgangen etter 2-3.', when: 'Brett 2: S3 → S4, utgangen etter 2-3.',
+    timing: { fadeIn: 0.3, fadeOut: 0.25, panelFade: 0.25, cps: 70, autoAdvance: 0.45 }, maxDuration: 3.9,   // < 4 s uten tastetrykk (Breach 27.10 23:09)
+    panels: [
+      P('refinery-pipe-01', 'foundryDescent', { transition: 'fade', textDelay: 0.2, lines: [
+        { speaker: 'command', who: 'BRANDT', text: 'That pipe runs straight into the gallery.' },
+      ] }),
+      P('refinery-pipe-02', 'refineryBurning', { transition: 'cut', textDelay: 0.2, lines: [
+        { speaker: 'warden', text: 'Something’s been crawling through here.' },
+      ] }),
+    ],
+  },
+  'refinery-ladder-down': {
+    id: 'refinery-ladder-down', title: 'Ladder Down',
+    trigger: 'Brett 2: S4 → S5, utgangen etter 2-4.', when: 'Brett 2: S4 → S5, utgangen etter 2-4.',
+    timing: { fadeIn: 0.3, fadeOut: 0.25, panelFade: 0.25, cps: 70, autoAdvance: 0.45 }, maxDuration: 3.9,   // < 4 s uten tastetrykk (Breach 27.10 23:09)
+    panels: [
+      P('refinery-ladder-down-01', 'foundryDescent', { transition: 'fade', textDelay: 0.2, lines: [
+        { speaker: 'command', who: 'HALE', text: 'They’ve dug in below you. Hunkers on the line.' },
+      ] }),
+    ],
+  },
+  'refinery-valve': {
+    id: 'refinery-valve', title: 'Sluice Valve',
+    trigger: 'Brett 2: S5 → S6, utgangen etter 2-5.', when: 'Brett 2: S5 → S6, utgangen etter 2-5.',
+    timing: { fadeIn: 0.3, fadeOut: 0.25, panelFade: 0.25, cps: 70, autoAdvance: 0.45 }, maxDuration: 3.9,   // < 4 s uten tastetrykk (Breach 27.10 23:09)
+    panels: [
+      P('refinery-valve-01', 'refineryBurning', { transition: 'fade', textDelay: 0.2, lines: [
+        { speaker: 'command', who: 'OKAFOR', text: 'That valve opens the sluice to the tank yard.' },
+      ] }),
+      P('refinery-valve-02', 'refineryBurning', { transition: 'cut', textDelay: 0.2, lines: [
+        { speaker: 'command', who: 'HALE', text: 'That tank goes, the whole refinery goes. Hold it, Warden.' },
+      ] }),
+    ],
+  },
   'refinery-clear': {
     id: 'refinery-clear', chapter: 'CHAPTER 03', title: 'The Deepwell',
     trigger: 'Etter bølge 2-6 (Kiln Alpha), før nivå 3. Erkjennelsen: brønnen er inngangen.', when: 'After wave 2-6 (Kiln Alpha), before level 3. The realisation: the well is the way in.',

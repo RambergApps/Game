@@ -12,6 +12,7 @@ import { PROJ } from '../shared/projection.js';
 // Breach Effekter: gulv og lys (src/effects/ground.js). Valgfri – mangler filen eller svarer den false, brukes tegningen her.
 let fxFloor = null;
 try { fxFloor = await import('../effects/ground.js'); } catch (e) { fxFloor = null; }
+import { drawFortContainer, drawFortWall, drawFortPost, drawFortTower, drawFortLintel, drawFortGateFloor } from './fort.js'; // MOCKUP Ringborgen v1
 import { drawTank, drawUnit, drawPipeline, drawPipes, drawValve, drawOverpipe, drawCatwalk } from './kinds.js';
 
 export const RES = 2;            // oppløsning på offscreen-lag (px per verdens-px)
@@ -138,7 +139,7 @@ function* buildSprites(L, objs, mk, light, lightsOnly) {
     for (const { o, b } of g) {
       const w = b.x1 - b.x0, h = b.y1 - b.y0, img = makeCanvas(w * RES, h * RES);
       img.getContext('2d').drawImage(c, b.x0 * RES, b.y0 * RES, w * RES, h * RES, 0, 0, w * RES, h * RES);
-      list.push({ id: o.id, kind: o.kind, type: o.type, height: o.height, seed: o.seed, variant: o.variant, x: o.x, y: o.y, w: o.w, h: o.h, elev: o.elev, round: o.kind === 'tank', noOcclude: !!o.noOcclude,
+      list.push({ id: o.id, kind: o.kind, type: o.type, height: o.height, seed: o.seed, variant: o.variant, x: o.x, y: o.y, w: o.w, h: o.h, elev: o.elev, round: o.kind === 'tank', noOcclude: !!o.noOcclude, fort: !!(o.opts && o.opts.fort),
         img, sx: b.x0, sy: b.y0, sw: w, sh: h });
     }
     yield { k: 'sprites', i: groups.indexOf(g) + 1, n: groups.length };
@@ -359,7 +360,7 @@ function drawPaint(ctx, L, rng) {
   const P = L.paint || {};
   p.strokeStyle = Y; p.lineWidth = 2.2;
   for (const o of L.objects) {
-    if (o.kind === 'container' || o.kind === 'stack') { p.setLineDash([]); p.strokeRect(o.x - 7, o.y - 7, o.w + 14, o.h + 14); }
+    if ((o.kind === 'container' && o.opts.fort !== 'wall') || o.kind === 'stack') { p.setLineDash([]); p.strokeRect(o.x - 7, o.y - 7, o.w + 14, o.h + 14); }
     if (o.kind === 'tank') {
       // sikkerhetssirkel med varselstriper rundt tanker
       const cx = o.x + o.w / 2, cy = o.y + o.h / 2, r = Math.min(o.w, o.h) / 2 + 12;
@@ -482,8 +483,8 @@ function drawProps(ctx, L, rng) {
 }
 
 // ---------------------------------------------------------------- skygger
-// 28.10: jersey-blokkene (effects/cover.js paintJersey) fyller hele fotavtrykket, så bakkeskyggen bruker hele rektangelet (som sandsekkene).
-function nsShadowRect(o) { return o; }
+// 28.10: lave blokker (jersey brett 1 / stål brett 2) fyller hele fotavtrykket, så bakkeskyggen bruker hele rektangelet.
+function nsShadowRect(o, L) { return o; }
 function* drawShadows(ctx, L) {
   const W = L.width, H = L.height;
   const sc = makeCanvas(W * RES, H * RES), s = sc.getContext('2d'); s.scale(RES, RES);
@@ -507,7 +508,7 @@ function* drawShadows(ctx, L) {
       continue;
     }
     s.globalAlpha = o.type === 'high' ? 1 : 0.8;
-    const r = nsShadowRect(o); if (r !== o) { dx *= 0.28; dy *= 0.28; }   // NS-barriere v5: smal, lav jersey (Effekter 27.10)
+    const r = nsShadowRect(o, L); if (r !== o) { dx *= 0.28; dy *= 0.28; }   // NS-barriere v5: smal, lav jersey (Effekter 27.10)
     s.beginPath();
     s.moveTo(r.x, r.y); s.lineTo(r.x + r.w, r.y); s.lineTo(r.x + r.w + dx, r.y + dy);
     s.lineTo(r.x + r.w + dx, r.y + r.h + dy); s.lineTo(r.x + dx, r.y + r.h + dy); s.lineTo(r.x, r.y + r.h);
@@ -523,7 +524,7 @@ function* drawShadows(ctx, L) {
   for (const o of L.objects) {
     if (o.overhead) continue;
     if (o.kind === 'tank') { const R = Math.min(o.w, o.h) / 2 + 1; a.beginPath(); a.arc(o.x + o.w / 2, o.y + o.h / 2 + 1, R, 0, Math.PI * 2); a.fill(); continue; }
-    const r = nsShadowRect(o), p = r === o ? 3 : 1;
+    const r = nsShadowRect(o, L), p = r === o ? 3 : 1;
     a.fillRect(r.x - p, r.y - 2, r.w + p * 2, r.h + (r === o ? 5 : 3));
   }
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -534,14 +535,14 @@ function* drawShadows(ctx, L) {
 // ---------------------------------------------------------------- objekter
 function drawObject(ctx, o, rng) {
   switch (o.kind) {
-    case 'container': return drawContainer(ctx, o.x, o.y, o.w, o.h, o.elev, CONTAINER_COLORS[o.opts.color ?? 0], rng, 0);
+    case 'container': if (o.opts.fort === 'wall') return drawFortWall(ctx, o, rng); if (o.opts.fort) return drawFortContainer(ctx, o, rng); return drawContainer(ctx, o.x, o.y, o.w, o.h, o.elev, CONTAINER_COLORS[o.opts.color ?? 0], rng, 0);
     case 'stack': {
       const lo = o.stackBase || 18; // nederste container (trekvart: halve høyden)
       drawContainer(ctx, o.x, o.y, o.w, o.h, lo, CONTAINER_COLORS[o.opts.color2 ?? 4], rng, 0, true);
       return drawContainer(ctx, o.x + (o.w > o.h ? 2 : 0), o.y, o.w - (o.w > o.h ? 4 : 0), o.h, o.elev, CONTAINER_COLORS[o.opts.color ?? 0], rng, lo);
     }
     case 'wall': return drawWall(ctx, o, rng);
-    case 'building': return drawBuilding(ctx, o, rng);
+    case 'building': if (o.opts.fort === 'tower') return drawFortTower(ctx, o, rng); if (o.opts.fort === 'post') return drawFortPost(ctx, o, rng); return drawBuilding(ctx, o, rng);
     case 'barrier': case 'ledge': return drawBarrier(ctx, o, rng);
     case 'sandbag': return drawSandbags(ctx, o, rng);
     case 'crates': return drawCrates(ctx, o, rng);
@@ -552,13 +553,14 @@ function drawObject(ctx, o, rng) {
     case 'pipeline': return drawPipeline(ctx, o, rng);
     case 'pipes': return drawPipes(ctx, o, rng);
     case 'valve': return drawValve(ctx, o, rng);
-    case 'overpipe': return drawOverpipe(ctx, o, rng);
+    case 'overpipe': if (o.opts.fort === 'lintel') return drawFortLintel(ctx, o, rng); return drawOverpipe(ctx, o, rng);
     case 'catwalk': return drawCatwalk(ctx, o, rng);
   }
 }
 
 // fotplater for ben til løftede objekter (gulvlaget)
 function drawFeet(ctx, o) {
+  if (o.opts && o.opts.fort === 'lintel') return drawFortGateFloor(ctx, o);
   const horiz = o.w >= o.h, pts = [];
   if (o.kind === 'overpipe') {
     if (horiz) { for (let i = 8; i < o.w; i += 128) pts.push([o.x + i, o.y + 3], [o.x + i, o.y + o.h - 3]); pts.push([o.x + o.w - 12, o.y + 3], [o.x + o.w - 12, o.y + o.h - 3]); }

@@ -86,7 +86,7 @@ export function drawSorted(ctx, world, camera, opts = {}) {
   const lim = opts.hideFrac ?? 0.12, canTone = opts.tone !== false && toneReady(ctx);
   if (opts.silhouettes !== false && nCover) {
     for (let i = 0; i < n; i++) {
-      const it = order[i]; if (it.kind !== ACTOR) continue;
+      const it = order[i]; if (it.kind !== ACTOR || it.ref.noSil) continue;   // noSil: nivåobjekter (brett 2) får aldri silhuett
       let cov = 0, any = false; it.deep = false;
       // Breach 27.10 14:09: helt dukket fiende (cover 1, peek 0 – alle typer) får ikke silhuett bak LAV dekning; bare høy (container/vegg) teller.
       // Warden (team 'player') beholder dagens regel.

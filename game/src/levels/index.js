@@ -24,12 +24,13 @@ import { showCutscene, showCredits, preloadCutscene } from '../story/index.js';
 import { openCards, drawCards } from './cards.js';
 import { drawHud as drawLevelHud } from './hud.js';
 import { loadFont } from './ui-kit.js';
+import * as B2 from './brett2.js'; // brett 2: seksjon-ryddet + tankhelse (no-op uten L.transitions/L.tank)
 
 const dirs = new WeakMap();
 
 // MIDLERTIDIG (krav fra Breach 23.10): Heavy og Grenadier er ikke klare i enemies/.
 // data.js beholder riktige typer; her byttes de ut ved innhopp. Fjern linjen/sett {} når de er klare.
-const READY_TYPES = ['grunt', 'flanker', 'heavy', 'grenadier'];
+const READY_TYPES = ['grunt', 'flanker', 'heavy', 'grenadier', 'hunker'];
 const FIRST_BREAK = 3;      // s før første bølge i et nivå
 const RETRY_BREAK = 2.5;    // s før bølgen startes på nytt etter død (spilleren har kontroll i pausen)
 const DEATH_FALL = 2.0;     // s: fall (0,45 s, rig death-klipp) + ~1,5 s liggende før respawn/game over
@@ -107,6 +108,7 @@ export function startLevel(world, n = 1, opts = {}) {
   world.level = Object.assign(world.level || {}, { n, id: L.id, name: L.name, wave: 0, waveId: null, objective: L.objective });
   loadArenaFor(world, L);
   clearField(world, d);
+  if (L.transitions) { B2.resetSections(world); B2.skipTo(world, L, first); }
   placePlayer(world, d, true);
   world.events.emit('levelStart', { level: n, id: L.id });
   const tok = d.token;
@@ -157,12 +159,19 @@ export function update(dt, world) {
       break;
     case 'wave': runWave(dt, world, d); break;
   }
+  if (d.level?.tank || d.level?.transitions) B2.update(dt, world, d, (id) => playCutscene(world, d, id));
 }
 
 export function draw() {}
 
+/** Verdenslaget (core/loop.js, etter cover-laget, før figurene): brett 2-overgangsobjekter. No-op ellers. */
+export function drawWorldFloor(ctx, world) { if (world._brett2?.d?.level?.transitions) B2.drawWorldFloor(ctx, world); }
+export function worldActors(world) { return world._brett2?.d?.level?.transitions ? B2.worldActors(world) : null; }
+export function drawWorld(ctx, world, camera) { if (world._brett2?.d?.level?.transitions) B2.drawWorld(ctx, world, camera); }
+
 export function drawHud(ctx, world, camera) {
   const d = D(world);
+  if (d.level?.tank || d.level?.transitions) B2.drawHud(ctx, world, camera, d);
   drawLevelHud(ctx, world, camera, d);
   if (d.cards) drawCards(ctx, d.cards, d.n);
 }
@@ -182,6 +191,7 @@ function beginWave(world, d, i, { retry = false, skipCutscene = false } = {}) {
       d.hold = { t: 0, need: w.objective.seconds, inZone: false };
     }
     world.level.wave = i + 1; world.level.waveId = w.id;
+    if (L.tank) B2.onWaveBegin(world, L, w);
     if (w.type === 'boss' && !startBoss(world, d, w)) {
       // Ingen boss-API ennå: hopp over bølgen, men hold flyten (waveStart → waveEnd) intakt.
       world.events.emit('waveStart', { level: d.n, wave: i + 1, id: w.id, name: w.name, boss: w.boss });
@@ -191,7 +201,7 @@ function beginWave(world, d, i, { retry = false, skipCutscene = false } = {}) {
     d.phase = 'wave';
     const boss = w.type === 'boss';
     d.banner = { kicker: retry ? 'REGROUP' : boss ? 'FINAL' : `WAVE ${i + 1} OF ${L.waves.length}`, title: w.name.toUpperCase(),
-      sub: w.objective.type === 'hold' ? `Hold the core for ${w.objective.seconds} seconds.` : boss ? 'Break her vents. Keep her in the shaft.' : null,
+      sub: w.objective.sub ? w.objective.sub : w.objective.type === 'hold' ? `Hold the core for ${w.objective.seconds} seconds.` : boss ? 'Break her vents. Keep her in the shaft.' : null,
       t0: now(), dur: boss ? 3.2 : 2.6, col: boss ? '#ff7a1a' : '#ffb347' };
     world.events.emit('waveStart', { level: d.n, wave: i + 1, id: w.id, name: w.name });
   };
@@ -310,6 +320,7 @@ function enterBossPhase(d, n) {
 function finishWave(world, d, { skipped = false } = {}) {
   const L = d.level, w = d.wave, i = d.wi;
   d.phase = 'between'; d.waveDone = true; d.hold = d.hold ? { ...d.hold, inZone: true } : null;
+  if (L.transitions) B2.onWaveEnd(world, L, w);
   world.events.emit('waveEnd', skipped ? { level: d.n, wave: i + 1, id: w.id, skipped: true } : { level: d.n, wave: i + 1, id: w.id });
   const last = i >= L.waves.length - 1;
   const tok = d.token;

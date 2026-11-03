@@ -78,30 +78,59 @@ export const LEVELS = [
     objective: 'Hold the crossroads. Keep them off the fuel.',
     cutsceneAfter: 'refinery-clear',
     playerSpawn: 'spawnA',
+    // Brett 2 v3 (Story 27.10, docs/refinery-v3.md): 6 seksjoner liten→stor→middels→liten→angrep→hold. Arena-punktene
+    // (arena/refinery-v3.js, ruter) vinner; disse normaliserte (187×44, større rom 23:25) er fallback. Ingen porter: hver bølge spawner i sin seksjon.
     spawnPoints: {
-      spawnA:    { x: 0.42, y: 0.94, dir: 'S' },  // Spawn A (Warden)
-      north:     { x: 0.52, y: 0.04, dir: 'N' },  // Spawn B (fiende)
-      northwest: { x: 0.22, y: 0.10, dir: 'NW' }, // ved raffineritårnet
-      northeast: { x: 0.80, y: 0.08, dir: 'NE' }, // ved prosessenheten
-      west:      { x: 0.04, y: 0.40, dir: 'W' },  // Flank route (venstre)
-      east:      { x: 0.96, y: 0.70, dir: 'E' },  // Flank route under rørbroen
+      spawnA: { x: 0.0294, y: 0.8636, dir: 'E' },
+      s1bend: { x: 0.0909, y: 0.4432, dir: 'N' },
+      s1end: { x: 0.1043, y: 0.6136, dir: 'E' },
+      s2far: { x: 0.3476, y: 0.8409, dir: 'E' },
+      s2north: { x: 0.2674, y: 0.1250, dir: 'N' },
+      s2east: { x: 0.3529, y: 0.1364, dir: 'E' },
+      s2south: { x: 0.2032, y: 0.8636, dir: 'S' },
+      s3north: { x: 0.4652, y: 0.1705, dir: 'N' },
+      s3east: { x: 0.4840, y: 0.5455, dir: 'E' },
+      s4north: { x: 0.6203, y: 0.1705, dir: 'N' },
+      s4south: { x: 0.6203, y: 0.5568, dir: 'S' },
+      b1: { x: 0.7594, y: 0.4682, dir: 'W' },
+      b2: { x: 0.7701, y: 0.4409, dir: 'W' },
+      b3: { x: 0.7807, y: 0.4682, dir: 'W' },
+      brear: { x: 0.7701, y: 0.4000, dir: 'W' },
+      bnorth: { x: 0.7487, y: 0.1136, dir: 'N' },
+      bsouth: { x: 0.7487, y: 0.8636, dir: 'S' },
+      s6north: { x: 0.9198, y: 0.1705, dir: 'N' },
+      s6south: { x: 0.9412, y: 0.8182, dir: 'S' },
+      s6east: { x: 0.9786, y: 0.5000, dir: 'E' },
     },
+    zones: { tank: { x: 0.9118, y: 0.4886, r: 0.0160 } },
+    // Seksjonsoverganger: liste og logikk i levels/brett2.js (TRANSITIONS; stiger S2→S3 opp, S4→S5 ned; resten TBD).
+    transitions: 'brett2',
+    // Tankhelse i holdet (v3): fiender innen 2 ruter fra FUEL 01 trekker 2 %/s, Kiln 5 %/s. 0 % = tapt (som død).
+    tank: { rect: { x: 173, y: 17, w: 5, h: 9 }, reach: 2, drain: 0.02, drainHeavy: 0.05 },
     waves: [
-      { id: '2-1', name: 'Pipe Row', objective: { type: 'clear' }, maxAlive: 6, breakAfter: 6, upgradeAfter: false,
-        groups: [g('grunt', 4, 'north', 1, 1.0), g('flanker', 2, 'west', 6, 2.0)] },
-      { id: '2-2', name: N.heavy, objective: { type: 'clear' }, maxAlive: 4, breakAfter: 7, upgradeAfter: true,
-        groups: [g('heavy', 1, 'north', 2), g('grunt', 2, 'north', 3, 1.5)] },                // NY: heavy (lav total)
-      { id: '2-3', name: 'Three Ways', objective: { type: 'clear' }, maxAlive: 7, breakAfter: 6, upgradeAfter: false,
-        groups: [g('grunt', 4, 'north', 1, 1.0), g('flanker', 2, 'east', 5, 2.0), g('flanker', 2, 'west', 9, 2.0)] },
-      { id: '2-4', name: 'Shell and Spine', objective: { type: 'clear' }, maxAlive: 7, breakAfter: 7, upgradeAfter: true,
-        groups: [g('heavy', 1, 'north', 1), g('grunt', 2, 'northwest', 2, 1.2), g('grunt', 2, 'northeast', 4, 1.2),
-                 g('flanker', 2, 'east', 10, 2.0)] },
-      { id: '2-5', name: 'The Flare', objective: { type: 'clear' }, maxAlive: 8, breakAfter: 7, upgradeAfter: false,
-        groups: [g('heavy', 1, 'north', 1), g('grunt', 4, 'north', 2, 1.0), g('flanker', 2, 'west', 6, 2.0),
-                 g('heavy', 1, 'northeast', 12), g('flanker', 1, 'east', 14)] },
-      { id: '2-6', name: N.kilnAlpha, objective: { type: 'clear' }, maxAlive: 9, breakAfter: 0, upgradeAfter: true,
-        groups: [g('heavy', 1, 'north', 1, 1.2, 'alpha'), g('grunt', 3, 'northwest', 2, 1.0), g('grunt', 3, 'northeast', 2, 1.0),
-                 g('flanker', 2, 'west', 7, 1.5), g('flanker', 2, 'east', 9, 1.5), g('heavy', 1, 'north', 16)] }, // MINI-BOSS: Kiln Alpha
+      { id: '2-1', name: 'Intake Line', objective: { type: 'clear' }, maxAlive: 4, breakAfter: 5, upgradeAfter: false,     // S1 liten – Lurcher i svingen
+        groups: [g('grunt', 2, 's1bend', 1, 1.2), g('flanker', 2, 's1bend', 4, 2.0), g('grunt', 1, 's1end', 8)] },
+      { id: '2-2', name: 'Cracking Hall', objective: { type: 'clear' }, maxAlive: 5, breakAfter: 6, upgradeAfter: true,    // S2 stor – Husk på avstand
+        groups: [g('grunt', 2, 's2far', 1, 1.2), g('grunt', 2, 's2north', 3, 1.2), g('grenadier', 1, 's2east', 7), g('grunt', 2, 's2east', 10, 1.2), g('flanker', 2, 's2south', 14, 1.5)] },
+      { id: '2-3', name: 'Pump Room', objective: { type: 'clear' }, maxAlive: 5, breakAfter: 6, upgradeAfter: true,        // S3 middels – tett, Kiln nært
+        groups: [g('heavy', 1, 's3north', 1), g('grunt', 2, 's3east', 2, 1.2), g('hunker', 1, 's3east', 6), g('grunt', 1, 's3north', 9)] },
+      { id: '2-4', name: 'Pipe Gallery', objective: { type: 'clear' }, maxAlive: 5, breakAfter: 5, upgradeAfter: false,     // S4 liten – rørgangene
+        groups: [g('flanker', 2, 's4north', 1, 1.5), g('grunt', 2, 's4south', 3, 1.2), g('flanker', 1, 's4south', 8)] },
+      { id: '2-5', name: 'The Bulwark', hudObjective: 'Breach the Wall. Take the gate.', objective: { type: 'clear' }, maxAlive: 10, breakAfter: 6, upgradeAfter: true,     // S5 angrep – linja er bemannet fra start
+        // Forsvarsmodus – Muren v2B (Fiende-AI 28.10, reviews/fiende-ai-s5-muren-2026-10-28.md). axis 'y', dir −1: Warden kommer sørfra
+        // (drepesonen y 24–35), hunkerne holder porten (x 142,5–145,5) og trekker seg nordover mot tanken. Ruter. Fjern feltet = av.
+        defense: { axis: 'y', dir: -1,
+          anchors: [{ id: 'W', x: 142.0, y: 21.2, r: 1.5 }, { id: 'M', x: 144.0, y: 19.6, r: 2 }, { id: 'E', x: 146.0, y: 21.2, r: 1.5 }],
+          ring: { x0: 137.5, y0: 17, x1: 152.5, y1: 22 },          // borggården innenfor muren
+          breachX: 21, fallbackX: 18,                               // langs y: Warden nord for y 21 = gjennom porten; retrettlinje y 18
+          sideX: [17, 27], sideAnchors: ['W', 'E'],                 // sidefelt langs y 17–27, vest/øst for ringen → W/E (øst = sideporten)
+          fallbackSpots: [{ x: 136.2, y: 19.5 }, { x: 139.9, y: 18.1 }, { x: 144.0, y: 17.6 }, { x: 150.1, y: 18.1 }, { x: 153.8, y: 19.0 }],   // ly bak sandsekker/tårn
+          holdZone: { x0: 135, y0: 16.5, x1: 155.5, y1: 20 } },
+        groups: [g('hunker', 1, 'b1', 0, 0), g('hunker', 1, 'b2', 0, 0), g('hunker', 1, 'b3', 0, 0), g('grunt', 2, 'brear', 0, 1.0),
+                 g('grenadier', 1, 'brear', 1), g('flanker', 2, 'bnorth', 12, 1.5), g('grunt', 2, 'bsouth', 25, 1.2), g('grunt', 2, 'brear', 32, 1.2)] },
+      { id: '2-6', name: N.kilnAlpha, objective: { type: 'hold', zone: 'tank', seconds: 75, sub: 'Hold the tank for 75 seconds. Keep them off the fuel.' }, maxAlive: 9, breakAfter: 0, upgradeAfter: true, // S6 hold (som v2, uten fuel integrity)
+        groups: [g('grunt', 3, 's6north', 1, 1.0), g('grunt', 3, 's6south', 3, 1.0), g('heavy', 1, 's6east', 15, 1.2, 'alpha'), g('flanker', 2, 's6north', 20, 1.5),
+                 g('hunker', 2, 's6south', 26, 2.5), g('grenadier', 1, 's6north', 34), g('flanker', 2, 's6south', 42, 1.5), g('heavy', 1, 's6east', 50), g('grunt', 4, 's6north', 58, 1.0), g('flanker', 2, 's6east', 64, 1.5)] },
     ],
   },
   {

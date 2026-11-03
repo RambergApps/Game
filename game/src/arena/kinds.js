@@ -3,6 +3,7 @@
 //   high    : tank, unit, pipeline
 //   low     : pipes, valve
 //   overhead: overpipe, catwalk  (ingen kollisjon – går over hodet, tegnes i topplaget)
+import { drawFortTankMarks } from './fort.js';
 import { shade, rgba, roundRect, hazard, blot } from './paint.js';
 
 const Y = '#c9a227';
@@ -79,6 +80,7 @@ export function drawTank(ctx, o, rng) {
   o._beacons = [{ x: cx - R * 0.68, y: ty - R * 0.68 }, { x: cx + R * 0.68, y: ty + R * 0.6 }];
   o._vents = o.opts.vent ? [{ x: cx, y: ty, big: true }] : [];
   o._topCircle = { x: cx, y: ty, r: R };
+  if (o.opts.fort) drawFortTankMarks(ctx, o, cx, cy, R, e, ty); // MOCKUP Ringborgen v1
 }
 
 // ---------------------------------------------------------------- prosessenhet

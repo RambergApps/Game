@@ -10,7 +10,7 @@ export function drawHud(ctx, world, camera, D) {
   const W = ctx.canvas.width, H = ctx.canvas.height;
   const u = clamp(Math.min(W / 1600, H / 900), 0.62, 1.5);
   ctx.save(); ctx.textBaseline = 'alphabetic';
-  if (D.zone && camera) drawZone(ctx, world, camera, D, u);
+  if (D.zone && camera && !D.level?.tank) drawZone(ctx, world, camera, D, u);
   if (camera) drawPings(ctx, camera, D, u);
   if (D.phase !== 'done') drawObjective(ctx, D, u);
   if (D.hold) drawHold(ctx, D, u, W);
@@ -36,7 +36,7 @@ function drawObjective(ctx, D, u) {
   spaced(ctx, tag, x, y, 3.5 * u);
   // mål
   ctx.font = font(19 * u, 400); ctx.fillStyle = 'rgba(232,226,212,0.86)';
-  ctx.textAlign = 'left'; ctx.fillText(L.objective, x, y + 25 * u);
+  ctx.textAlign = 'left'; ctx.fillText(L.waves?.[D.wi]?.hudObjective || L.objective, x, y + 25 * u);   // per-bølge mål (Story 28.10: S5)
   // bølge-segmenter
   const n = L.waves.length, sw = 30 * u, sh = 6 * u, gy = y + 42 * u;
   for (let i = 0; i < n; i++) {

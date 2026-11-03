@@ -8,6 +8,7 @@ import { YARD } from './yard.js';
 import { YARD_V2 } from './yard-v2.js'; // standard for yard (27.10); ?yard=v1 gir gammel layout
 import { YARD_LAVT } from './yard-lavt.js'; // testvariant, bare med ?yard=lavt
 import { REFINERY } from './refinery.js';
+import { REFINERY_V3 } from './refinery-v3.js'; // brett 2 v3 (Story, kopi breach-brett2) – forslag til Arena
 import { FOUNDRY } from './foundry.js'; // PLASSHOLDER – gjenbruker yard-layout
 import { occupancy, buildArenaLayers, bakeArenaLayersAsync, BAKE_STEPS, createFx, updateFx, drawDynamic, drawFloorDynamic, drawFlashes, addFlash, ELEV, RES, OWN } from './render.js';
 import { makeCanvas } from './paint.js';
@@ -21,7 +22,7 @@ export { coverHitPoint, addCoverDecal, clearCoverDecals, decalStats, drawPending
 
 export const TILE = 32;
 // Id-ene matcher levels/data.js. 'refinery' er alias for 'refinery-crossroads'.
-export const ARENAS = { yard: YARD, 'refinery-crossroads': REFINERY, 'underground-foundry': FOUNDRY, refinery: REFINERY };
+export const ARENAS = { yard: YARD, 'refinery-crossroads': REFINERY_V3, 'underground-foundry': FOUNDRY, refinery: REFINERY_V3, 'refinery-v1': REFINERY };
 export const ARENA_IDS = ['yard', 'refinery-crossroads', 'underground-foundry'];
 // overhead (overpipe, catwalk) har ingen type – de er dekor over hodet og havner ikke i world.cover
 const TYPE = { wall: 'high', building: 'high', container: 'high', stack: 'high', cratestack: 'high', tank: 'high', unit: 'high', pipeline: 'high',
@@ -413,8 +414,8 @@ export function drawCoverObject(ctx, o, world) {
   if (v && (o.x + o.w < v.x0 - 8 || o.x > v.x1 + 8 || o.y + o.h < v.y0 - 8 || o.y - o.elev > v.y1 + 8)) return;
   if (o.ammo) { drawAmmoCrates(ctx, o._c, o.elev, s ? s.fx.t : 0); return; }
   if (LOWCOVER && o.type === 'low' && o.lc !== false && (!LOWCOVER.canDrawCover || LOWCOVER.canDrawCover(o.kind))) {
-    _lcEnv.time = s ? s.fx.t : 0;
-    try { if (LOWCOVER.drawLowCover(ctx, o.lc || (o.lc = { id: o.id, x: o.x, y: o.y, w: o.w, h: o.h, kind: o.kind, type: 'low', height: o.height, elev: o.elev, seed: o.seed, variant: o.variant }), _lcEnv)) return; }
+    _lcEnv.time = s ? s.fx.t : 0; _lcEnv.arena = world.arena;   // temavalg i effects/cover.js (lowCoverTheme)
+    try { if (LOWCOVER.drawLowCover(ctx, o.lc || (o.lc = { id: o.id, x: o.x, y: o.y, w: o.w, h: o.h, kind: o.kind, type: 'low', height: o.height, elev: o.elev, seed: o.seed, variant: o.variant, fort: !!(o.fort || (o.opts && o.opts.fort)) }), _lcEnv)) return; }
     catch (e) { o.lc = false; console.warn('[arena] drawLowCover', e); }
   }
   // Ytelse (regresjon 13:24): spritene ligger i RES=2 og ble skalert med utjevning hver frame (~50 objekter →

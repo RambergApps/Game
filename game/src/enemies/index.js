@@ -19,6 +19,8 @@ import { onScreen, ATTACK_STATES } from './onscreen.js';
 import { releaseFire } from './squad.js';
 const stats = (globalThis.__breachOffscreen ||= {});
 import { makeBoss, bossTick, bossInit } from './boss.js';
+import { installDefense, defenseWorld, defenseTick, drawDefense } from './defense.js';   // forsvarsmodus 28.10 (av uten bølge-config)
+import { getWave } from '../levels/data.js';
 import { spawnWithWarning, updateSpawns, pendingSpawns, clearPendingSpawns, spawnState, _bindCreate } from './spawn.js';
 import './look/index.js';   // Monsterdesign: tegning per type (eier src/enemies/look/)
 registerState('staggered', staggeredState);
@@ -125,6 +127,7 @@ export function init(world) {
   inited.add(world);
   // P1 (23.10): source.x/y/entity/weapon/variant i ALLE treff fylles nå av core (combat.js hitSource, fra p.srcX/srcY som
   // fireWeapon setter). Vår midlertidige sourceForHit-lytter er fjernet.
+  installDefense(world, (p) => getWave(p.level, p.wave - 1)?.defense);   // forsvarsmodus 28.10: gjør ingenting uten `defense` i bølgen
   bossInit(world);   // bossDefeated ved bossens død (boss.js)
   // Hører spillerens skudd
   world.events.on('shot', ({ team, owner }) => {
@@ -155,6 +158,7 @@ export function update(dt, world) {
   decayPlayerSuppression(world, dt);
   updateWeapons(dt, world);   // kun når loopen ikke har mods.weapons (testsiden); hovedspillet: loopen kaller weapons.update
   updateGrenades(dt, world);
+  defenseWorld(world, dt);   // forsvarsmodus 28.10 (no-op uten config)
   updateSpawns(world, createEnemy);   // innhopp med varsel (spawnWithWarning → 'spawnWarn' … createEnemy)
   for (const e of world.enemies) {
     if (!e.def) continue; // fremmede entiteter (f.eks. plassholdere) ignoreres
@@ -180,6 +184,7 @@ export function update(dt, world) {
     STATES[e.state].update(world, e, dt);
     ai.integrate(world, e, dt);
     ai.behavior(e).tick?.(world, e, dt);
+    if (e.defense) defenseTick(world, e, dt);   // forsvarsmodus 28.10
     const wantCrouch = e.state === 'inCover' || e.state === 'suppressed' || e.state === 'reloadDuck' ? 1 : (e.def.moveCrouch && (e.state === 'seekCover' || e.state === 'returnCover')) ? e.def.moveCrouch : 0;
     if (e.def.moveCrouch && (e.state === 'seekCover' || e.state === 'returnCover')) e.crouch = Math.max(e.crouch, e.def.moveCrouch);   // Hunker: krøket sprint 0,5 med en gang
     e.crouch += (wantCrouch - e.crouch) * Math.min(1, dt * 10);
@@ -249,7 +254,7 @@ function nearMisses(world, e) {
   }
 }
 
-export function draw(ctx, world, camera) { drawEnemies(ctx, world, camera); drawWeapons(ctx, world, camera); }
+export function draw(ctx, world, camera) { drawEnemies(ctx, world, camera); drawWeapons(ctx, world, camera); drawDefense(ctx, world); }
 
 export { ENEMY_TYPES, registerState, getSquad, STATES, poseOf, grenadeState, drawActor };
 export { spawnWithWarning, pendingSpawns, clearPendingSpawns, spawnState };
